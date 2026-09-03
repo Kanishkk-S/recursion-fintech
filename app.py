@@ -583,13 +583,28 @@ async def underwrite_loan_application(request: Request, requested_amount: Option
     # Support both wrapped and raw credential payloads
     if isinstance(body, dict) and "verifiable_credential" in body:
         credential = body["verifiable_credential"]
-        loan_amount = float(body.get("requested_amount_inr", requested_amount or 30000.0))
     elif isinstance(body, dict) and "credentialSubject" in body:
         credential = body
-        loan_amount = float(body.get("requested_amount_inr", requested_amount or 30000.0))
     else:
         credential = body
-        loan_amount = float(requested_amount or 30000.0)
+
+    # Parse requested loan amount across multiple standard parameter aliases
+    loan_amount = 30000.0
+    if isinstance(body, dict):
+        val = (
+            body.get("loan_amount_requested") or
+            body.get("requested_amount_inr") or
+            body.get("requested_amount") or
+            body.get("requested_loan") or
+            requested_amount
+        )
+        if val is not None:
+            try:
+                loan_amount = float(val)
+            except (ValueError, TypeError):
+                loan_amount = 30000.0
+    elif requested_amount is not None:
+        loan_amount = float(requested_amount)
 
     # 1. Cryptographic Signature Verification
     is_valid, error_msg, audit_meta = _verify_vc_cryptography(credential)
@@ -607,7 +622,16 @@ async def underwrite_loan_application(request: Request, requested_amount: Option
 
     # 2. Evaluate with Counterfactual Underwriting Engine
     subject = credential.get("credentialSubject", {})
-    evaluation = generate_counterfactual_pathway(loan_amount, subject)
+    cri = float(subject.get("cashFlowResilienceScore", 788))
+    consistency = float(subject.get("consistencyRatio", 0.93))
+    inflow = float(subject.get("averageMonthlyInflowINR") or subject.get("monthlyInflowGte") or 25000.0)
+
+    evaluation = generate_counterfactual_pathway(
+        current_cri=cri,
+        current_consistency=consistency,
+        monthly_inflow=inflow,
+        requested_loan=loan_amount
+    )
 
     evaluation["underwriting_audit"] = {
         "verification_status": "CRYPTOGRAPHICALLY_VERIFIED_AUTHENTIC",
