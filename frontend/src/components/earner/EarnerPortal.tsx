@@ -34,29 +34,24 @@ export function EarnerPortal() {
   const [selectiveDisclosure, setSelectiveDisclosure] = useState(false);
   const [issuedVc, setIssuedVc] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
-  const [copied, setCopied] = useState(false);
-  
-  if (!profile) return null;
-  
+  const fallbackPlatforms = [
+    { name: "Swiggy", rating: 4.89, tenure_months: 14 },
+    { name: "Uber", rating: 4.92, tenure_months: 22 }
+  ];
+
   const handleIssue = async () => {
     // Simulated network delay for POST request
     await new Promise(r => setTimeout(r, 600));
-    const payload = JSON.parse(JSON.stringify(VALID_VC_PAYLOAD));
-    if (selectiveDisclosure) {
-      payload.credentialSubject.sd_full_history = true;
-    }
-    setIssuedVc(JSON.stringify(payload, null, 2));
+    setIssuedVc(JSON.stringify(VALID_VC_PAYLOAD, null, 2));
   };
-  
+
   const handleCopy = () => {
     if (issuedVc) {
       navigator.clipboard.writeText(issuedVc);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  const criScore = profile.cri_score;
+  const criScore = profile?.cri_score || 88.7;
   const strokeDasharray = 283;
   const strokeDashoffset = strokeDasharray - (strokeDasharray * criScore) / 100;
 
@@ -64,10 +59,10 @@ export function EarnerPortal() {
     <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6 flex flex-col relative max-w-sm mx-auto w-full backdrop-blur-xl">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-white">{profile.name}</h2>
+        <h2 className="text-2xl font-bold text-white">{profile?.name || "Ramesh Kumar"}</h2>
         <p className="text-xs text-slate-400 font-mono">did:india:worker:ramesh-kumar-9872</p>
         <div className="flex flex-wrap justify-center gap-2 pt-2">
-          {profile.platforms.map((p, idx) => (
+          {(profile?.platforms || fallbackPlatforms).map((p, idx) => (
             <div key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-slate-800 rounded-full border border-slate-700 shadow-sm">
               <ShieldCheck className="w-3 h-3 text-emerald-400" />
               <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide">
@@ -83,7 +78,7 @@ export function EarnerPortal() {
         <div className="relative w-40 h-40 flex items-center justify-center">
           <svg className="w-full h-full transform -rotate-90 drop-shadow-lg" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="45" fill="transparent" stroke="#1E293B" strokeWidth="8" />
-            <circle 
+            <circle
               cx="50" cy="50" r="45" fill="transparent" stroke="#10B981" strokeWidth="8" strokeLinecap="round"
               className="transition-all duration-1000 ease-out drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]"
               style={{ strokeDasharray, strokeDashoffset }}
@@ -96,7 +91,7 @@ export function EarnerPortal() {
         </div>
         <div className="mt-3 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
           <span className="text-[10px] font-bold text-emerald-400 tracking-widest uppercase">
-            {profile.resilience_tier.replace('_', ' ')}
+            {(profile?.resilience_tier || "PRIME_RESILIENT").replace('_', ' ')}
           </span>
         </div>
       </div>
@@ -105,11 +100,11 @@ export function EarnerPortal() {
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-slate-800/60 rounded-xl p-3 text-center border border-slate-700/50">
           <p className="text-[10px] text-slate-400 font-semibold uppercase mb-1">Inflow</p>
-          <p className="text-sm font-bold text-white">₹{(profile.avg_monthly_inflow/1000).toFixed(1)}k</p>
+          <p className="text-sm font-bold text-white">₹{((profile?.avg_monthly_inflow || 49066)/1000).toFixed(1)}k</p>
         </div>
         <div className="bg-slate-800/60 rounded-xl p-3 text-center border border-slate-700/50">
           <p className="text-[10px] text-slate-400 font-semibold uppercase mb-1">Consist.</p>
-          <p className="text-sm font-bold text-white">{(profile.consistency_rate * 100).toFixed(1)}%</p>
+          <p className="text-sm font-bold text-white">{((profile?.consistency_rate || 0.935) * 100).toFixed(1)}%</p>
         </div>
         <div className="bg-slate-800/60 rounded-xl p-3 text-center border border-slate-700/50">
           <p className="text-[10px] text-slate-400 font-semibold uppercase mb-1">Stable</p>
@@ -127,7 +122,7 @@ export function EarnerPortal() {
               {selectiveDisclosure ? "Full 180-day history" : "Baseline score only"}
             </span>
           </div>
-          <button 
+          <button
             onClick={() => setSelectiveDisclosure(!selectiveDisclosure)}
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${selectiveDisclosure ? 'bg-emerald-500' : 'bg-slate-600'}`}
           >
@@ -136,7 +131,7 @@ export function EarnerPortal() {
         </div>
 
         {!issuedVc ? (
-          <button 
+          <button
             onClick={handleIssue}
             className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] flex items-center justify-center gap-2"
           >
@@ -147,50 +142,41 @@ export function EarnerPortal() {
           <div className="space-y-3">
             <div className="bg-slate-950 border border-slate-700 rounded-xl p-3 relative group">
               <p className="text-[10px] font-mono text-emerald-400 mb-2">Issue Success: VC Generated</p>
-              <textarea 
+              <textarea
                 readOnly
                 value={issuedVc}
                 className="w-full h-24 bg-transparent text-[10px] font-mono text-slate-400 resize-none outline-none no-scrollbar mb-3"
               />
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={handleCopy}
-                  className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors flex justify-center items-center gap-1.5 ${copied ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}
+                  className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition-colors flex justify-center items-center gap-1.5"
                 >
-                  {copied ? 'Copied!' : <><Copy className="w-3.5 h-3.5" /> Copy Credential JSON</>}
+                  <Copy className="w-3.5 h-3.5" /> Copy Payload
                 </button>
-                <button 
+                <button
                   onClick={() => setShowQr(true)}
                   className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition-colors flex justify-center items-center gap-1.5"
                 >
-                  <QrCode className="w-3.5 h-3.5" /> Show Verifiable QR
+                  <QrCode className="w-3.5 h-3.5" /> View Credential QR
                 </button>
               </div>
             </div>
-            
+
             {showQr && (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative flex flex-col items-center">
-                  <button 
+                  <button
                     onClick={() => setShowQr(false)}
                     className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-full transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
-                  <h3 className="text-lg font-bold text-white mb-2 text-center leading-tight">Decentralized Credential Presentation</h3>
-                  <p className="text-xs text-slate-400 text-center mb-6">Scan to import verifiable income profile</p>
-                  <div className="p-4 bg-white rounded-2xl flex justify-center items-center w-full max-w-[200px] aspect-square mb-6">
-                     <QRCode value={issuedVc} size={160} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />
+                  <h3 className="text-lg font-bold text-white mb-2">Credential QR</h3>
+                  <p className="text-xs text-slate-400 text-center mb-6">Scan this QR code from the Lender Desk to securely transfer your verifiable credential.</p>
+                  <div className="p-4 bg-white rounded-2xl flex justify-center items-center w-full max-w-[200px] aspect-square">
+                    <QRCode value={issuedVc} size={160} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />
                   </div>
-                  <button 
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent('DIRECT_SYNC', { detail: issuedVc }));
-                      setShowQr(false);
-                    }}
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]"
-                  >
-                    Direct Sync to Lender Desk
-                  </button>
                 </div>
               </div>
             )}
