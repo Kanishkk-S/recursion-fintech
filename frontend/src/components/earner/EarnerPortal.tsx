@@ -57,14 +57,14 @@ export function EarnerPortal() {
   const strokeDashoffset = strokeDasharray - (strokeDasharray * criScore) / 100;
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6 flex flex-col relative max-w-sm mx-auto w-full backdrop-blur-xl">
+    <div className="bg-slate-900/40 border border-white/5 rounded-3xl p-8 shadow-2xl space-y-6 flex flex-col relative max-w-sm mx-auto w-full backdrop-blur-xl transition-all duration-300 hover:shadow-emerald-500/10 hover:border-white/10">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-white">{profile?.name || "Ramesh Kumar"}</h2>
-        <p className="text-xs text-slate-400 font-mono">did:india:worker:ramesh-kumar-9872</p>
+        <h2 className="text-2xl font-bold text-white tracking-tight">{profile?.name || "Ramesh Kumar"}</h2>
+        <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">did:india:worker:ramesh-kumar-9872</p>
         <div className="flex flex-wrap justify-center gap-2 pt-2">
           {(profile?.platforms || fallbackPlatforms).map((p, idx) => (
-            <div key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-slate-800 rounded-full border border-slate-700 shadow-sm">
+            <div key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-slate-900/60 rounded-full border border-white/5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-white/10 hover:shadow-emerald-500/10">
               <ShieldCheck className="w-3 h-3 text-emerald-400" />
               <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide">
                 {p.name} ★{p.rating} ({p.tenure_months} mos)
@@ -77,7 +77,7 @@ export function EarnerPortal() {
       {/* Gauge */}
       <div className="flex flex-col items-center justify-center pt-2 pb-4">
         <div className="relative w-40 h-40 flex items-center justify-center">
-          <svg className="w-full h-full transform -rotate-90 drop-shadow-lg" viewBox="0 0 100 100">
+          <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="45" fill="transparent" stroke="#1E293B" strokeWidth="8" />
             <circle
               cx="50" cy="50" r="45" fill="transparent" stroke="#10B981" strokeWidth="8" strokeLinecap="round"
@@ -143,33 +143,42 @@ export function EarnerPortal() {
         {!issuedVc ? (
           <button
             onClick={handleIssue}
-            className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] flex items-center justify-center gap-2"
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] flex items-center justify-center gap-2"
           >
             <Lock className="w-4 h-4" />
             Issue Cryptographic Credential
           </button>
         ) : (
           <div className="space-y-3">
-            <div className="bg-slate-950 border border-slate-700 rounded-xl p-3 relative group">
-              <p className="text-[10px] font-mono text-emerald-400 mb-2">Issue Success: VC Generated</p>
-              <textarea
-                readOnly
-                value={issuedVc}
-                className="w-full h-24 bg-transparent text-[10px] font-mono text-slate-400 resize-none outline-none no-scrollbar mb-3"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCopy}
-                  className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition-colors flex justify-center items-center gap-1.5"
-                >
-                  <Copy className="w-3.5 h-3.5" /> Copy Payload
-                </button>
-                <button
-                  onClick={() => setShowQr(true)}
-                  className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition-colors flex justify-center items-center gap-1.5"
-                >
-                  <QrCode className="w-3.5 h-3.5" /> View Credential QR
-                </button>
+            <div className="bg-[#050505] border border-white/10 rounded-xl overflow-hidden relative group shadow-2xl transition-all duration-300 hover:border-white/20">
+              <div className="bg-slate-900/60 border-b border-white/10 px-3 py-2 flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                </div>
+                <p className="text-[10px] font-mono text-emerald-400 ml-2 tracking-widest uppercase opacity-80">VC_Generated</p>
+              </div>
+              <div className="p-3">
+                <textarea
+                  readOnly
+                  value={issuedVc}
+                  className="w-full h-24 bg-transparent text-[10px] font-mono text-emerald-400 resize-none outline-none no-scrollbar mb-3"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCopy}
+                    className="flex-1 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-white/5 hover:border-white/10 hover:shadow-emerald-500/10 rounded-lg text-xs font-semibold transition-all duration-300 hover:-translate-y-1 flex justify-center items-center gap-1.5"
+                  >
+                    <Copy className="w-3.5 h-3.5" /> Copy Payload
+                  </button>
+                  <button
+                    onClick={() => setShowQr(true)}
+                    className="flex-1 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-white/5 hover:border-white/10 hover:shadow-emerald-500/10 rounded-lg text-xs font-semibold transition-all duration-300 hover:-translate-y-1 flex justify-center items-center gap-1.5"
+                  >
+                    <QrCode className="w-3.5 h-3.5" /> View Credential QR
+                  </button>
+                </div>
               </div>
             </div>
 

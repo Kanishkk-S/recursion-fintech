@@ -8,16 +8,18 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-emerald-900/10 blur-[120px] pointer-events-none rounded-full" />
         <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased flex flex-col">
+    <div className="bg-[#0B0F19] text-slate-100 min-h-screen font-sans antialiased flex flex-col relative overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-emerald-900/10 blur-[120px] pointer-events-none rounded-full" />
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-[#070b14]/90 border-b border-slate-800/80 px-6 py-4 transition-all flex items-center justify-between shrink-0">
+      <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-[#0B0F19]/80 border-b border-white/5 px-6 py-4 transition-all flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <Zap className="w-6 h-6 text-emerald-400" />
           <div>
@@ -44,27 +46,26 @@ function App() {
       </header>
 
       {/* Floating Scenario Preset Toolbar */}
-      <div className="sticky top-[73px] z-30 w-full bg-slate-900/90 border-b border-slate-800 backdrop-blur-md px-6 py-2.5 flex flex-wrap gap-4 items-center justify-between">
+      <div className="sticky top-[80px] z-30 max-w-fit mx-auto bg-slate-900/40 border border-white/5 backdrop-blur-xl px-6 py-2 rounded-full flex flex-wrap gap-4 items-center justify-center shadow-2xl mt-4">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-xs tracking-wider text-slate-300">⚡ EVALUATION PRESETS</span>
-          <span className="text-[10px] text-slate-500 font-mono hidden sm:inline border-l border-slate-700 pl-2 ml-1">ONE-CLICK VERIFICATION WORKFLOWS</span>
+          <span className="font-semibold text-[10px] tracking-widest text-slate-300 uppercase font-mono">⚡ EVALUATION PRESETS</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 border-l border-white/10 pl-4">
           <button 
             onClick={() => window.dispatchEvent(new CustomEvent('TRIGGER_SCENARIO', { detail: 'A' }))}
-            className="px-3 py-1.5 rounded-lg border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 text-[10px] font-bold uppercase tracking-wider transition-colors"
+            className="px-3 py-1.5 rounded-full border border-white/5 text-emerald-300 hover:bg-gradient-to-r hover:from-emerald-500/20 hover:to-transparent hover:border-emerald-500/30 text-[10px] font-bold uppercase tracking-widest transition-all duration-300"
           >
             Scenario A: ₹30k Standard
           </button>
           <button 
             onClick={() => window.dispatchEvent(new CustomEvent('TRIGGER_SCENARIO', { detail: 'B' }))}
-            className="px-3 py-1.5 rounded-lg border border-rose-500/40 text-rose-300 hover:bg-rose-500/10 text-[10px] font-bold uppercase tracking-wider transition-colors"
+            className="px-3 py-1.5 rounded-full border border-white/5 text-rose-300 hover:bg-gradient-to-r hover:from-rose-500/20 hover:to-transparent hover:border-rose-500/30 text-[10px] font-bold uppercase tracking-widest transition-all duration-300"
           >
             Scenario B: Fraud Tamper Halt
           </button>
           <button 
             onClick={() => window.dispatchEvent(new CustomEvent('TRIGGER_SCENARIO', { detail: 'C' }))}
-            className="px-3 py-1.5 rounded-lg border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 text-[10px] font-bold uppercase tracking-wider transition-colors"
+            className="px-3 py-1.5 rounded-full border border-white/5 text-amber-300 hover:bg-gradient-to-r hover:from-amber-500/20 hover:to-transparent hover:border-amber-500/30 text-[10px] font-bold uppercase tracking-widest transition-all duration-300"
           >
             Scenario C: ₹75k Remediation
           </button>

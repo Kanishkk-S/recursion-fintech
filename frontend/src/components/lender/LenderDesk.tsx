@@ -329,12 +329,12 @@ export function LenderDesk() {
   };
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6 w-full max-w-2xl mx-auto backdrop-blur-xl">
-      <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+    <div className="bg-slate-900/40 border border-white/5 rounded-3xl p-8 shadow-2xl space-y-6 w-full max-w-2xl mx-auto backdrop-blur-xl transition-all duration-300 hover:shadow-emerald-500/10 hover:border-white/10">
+      <div className="flex items-center gap-3 border-b border-white/5 pb-4">
         <Monitor className="w-6 h-6 text-blue-500" />
         <div>
-          <h2 className="text-lg font-bold text-white">Lender Verification Desk</h2>
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Institutional Underwriting Terminal</p>
+          <h2 className="text-lg font-bold text-white tracking-tight">Lender Verification Desk</h2>
+          <p className="text-[10px] text-slate-500 uppercase tracking-widest font-mono">Institutional Underwriting Terminal</p>
         </div>
       </div>
 
@@ -356,13 +356,23 @@ export function LenderDesk() {
               </button>
             </div>
 
-            <div className="h-40 rounded-xl border border-slate-700/50 bg-slate-950 overflow-hidden focus-within:border-blue-500/50 transition-colors p-3">
-              <textarea
-                value={vcPayload}
-                onChange={(e) => setVcPayload(e.target.value)}
-                className="w-full h-full bg-transparent text-[10px] font-mono text-slate-400 outline-none resize-none no-scrollbar"
-                spellCheck={false}
-              />
+            <div className="bg-[#050505] border border-white/10 rounded-xl overflow-hidden relative group shadow-2xl transition-all duration-300 hover:border-white/20">
+              <div className="bg-slate-900/60 border-b border-white/10 px-3 py-2 flex items-center justify-between">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                </div>
+                <p className="text-[10px] font-mono text-emerald-400 opacity-80 uppercase tracking-widest">VC_Payload_Inspector</p>
+              </div>
+              <div className="p-3">
+                <textarea
+                  value={vcPayload}
+                  onChange={(e) => setVcPayload(e.target.value)}
+                  className="w-full h-32 bg-transparent text-[10px] font-mono text-emerald-400 outline-none resize-none no-scrollbar"
+                  spellCheck={false}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -405,7 +415,7 @@ export function LenderDesk() {
             id="btn-underwrite"
             onClick={handleUnderwrite}
             disabled={loading}
-            className="w-full py-4 rounded-xl font-bold text-sm transition-all bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-4 rounded-xl font-bold text-sm transition-all duration-300 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] flex items-center justify-center gap-2 disabled:opacity-50 hover:-translate-y-1"
           >
             {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <> <Activity className="w-5 h-5" /> Run Automated Underwriting Engine </>}
           </button>
