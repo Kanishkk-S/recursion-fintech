@@ -25,8 +25,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [selectedTab, setSelectedTab] = useState<'worker' | 'lender'>('worker');
 
-  // Input States
-  const [emailInput, setEmailInput] = useState<string>('');
+  // Input States - Initialized from localStorage
+  const [emailInput, setEmailInput] = useState<string>(() => {
+    try {
+      return localStorage.getItem('gignite_last_email') || '';
+    } catch {
+      return '';
+    }
+  });
+
   const [notFoundPrompt, setNotFoundPrompt] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -49,6 +56,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setErrorMessage('Please enter your email address.');
       setNotFoundPrompt(null);
       return;
+    }
+
+    try {
+      localStorage.setItem('gignite_last_email', targetEmail);
+    } catch {
+      // ignore
     }
 
     setIsLoading(true);
@@ -75,6 +88,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     if (!targetEmail) {
       setErrorMessage('Email is required for registration.');
       return;
+    }
+
+    try {
+      localStorage.setItem('gignite_last_email', targetEmail);
+    } catch {
+      // ignore
     }
 
     setIsLoading(true);
@@ -258,16 +277,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               className="flex flex-col gap-4"
             >
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-slate-300">
+                <label htmlFor="email" className="text-xs font-semibold text-slate-300">
                   {selectedTab === 'worker' ? 'Worker Email Address' : 'Underwriting Desk Email'}
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
+                    id="email"
+                    name="email"
+                    autoComplete="email"
                     value={emailInput}
                     onChange={(e) => {
                       setEmailInput(e.target.value);
+                      try {
+                        localStorage.setItem('gignite_last_email', e.target.value);
+                      } catch {
+                        // ignore
+                      }
                       if (errorMessage) setErrorMessage(null);
                       if (notFoundPrompt) setNotFoundPrompt(null);
                     }}
@@ -356,7 +383,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               
               {/* Full Name / Organization */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-slate-300">
+                <label htmlFor="fullName" className="text-xs font-semibold text-slate-300">
                   {selectedTab === 'worker' ? 'Full Legal Name' : 'Financial Institution Name'}
                 </label>
                 <div className="relative">
@@ -367,6 +394,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   )}
                   <input
                     type="text"
+                    id="fullName"
+                    name="fullName"
+                    autoComplete="name"
                     value={selectedTab === 'worker' ? fullName : institutionName}
                     onChange={(e) => selectedTab === 'worker' ? setFullName(e.target.value) : setInstitutionName(e.target.value)}
                     placeholder={selectedTab === 'worker' ? 'e.g., Ananya Roy' : 'e.g., Apex Capital NBFC'}
@@ -378,13 +408,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
               {/* Email Input */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-slate-300">Email Address</label>
+                <label htmlFor="signup-email" className="text-xs font-semibold text-slate-300">Email Address</label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
+                    id="signup-email"
+                    name="email"
+                    autoComplete="email"
                     value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
+                    onChange={(e) => {
+                      setEmailInput(e.target.value);
+                      try {
+                        localStorage.setItem('gignite_last_email', e.target.value);
+                      } catch {
+                        // ignore
+                      }
+                    }}
                     placeholder="e.g., ananya@uber.com"
                     className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#6B7280] focus:outline-none focus:border-purple-500/60 transition-colors font-mono"
                     required
@@ -428,11 +468,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Mobile Phone</label>
+                    <label htmlFor="phone" className="text-xs font-semibold text-slate-300">Mobile Phone</label>
                     <div className="relative">
                       <Phone className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
                         type="tel"
+                        id="phone"
+                        name="phone"
+                        autoComplete="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="+91 98000 11223"

@@ -25,9 +25,19 @@ export default function App() {
   // Session State (null = show LoginPage)
   const [session, setSession] = useState<StoredSession | null>(() => {
     try {
-      const saved = localStorage.getItem('gignite_active_session');
-      if (saved) {
-        return JSON.parse(saved);
+      const savedUser = localStorage.getItem('gignite_current_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.type === 'worker' && parsed.worker) {
+          return { role: 'worker', workerId: parsed.worker.worker_id, email: parsed.worker.email };
+        }
+        if (parsed.type === 'lender' && parsed.lender) {
+          return { role: 'lender', lenderId: parsed.lender.id, email: parsed.lender.email };
+        }
+      }
+      const savedSession = localStorage.getItem('gignite_active_session');
+      if (savedSession) {
+        return JSON.parse(savedSession);
       }
     } catch {
       // ignore
@@ -36,14 +46,32 @@ export default function App() {
   });
 
   // Navigation Role State ('worker' | 'lender')
-  const [activeRole, setActiveRole] = useState<'worker' | 'lender'>('worker');
+  const [activeRole, setActiveRole] = useState<'worker' | 'lender'>(() => {
+    try {
+      const savedUser = localStorage.getItem('gignite_current_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.type === 'lender') return 'lender';
+      }
+    } catch {
+      // ignore
+    }
+    return 'worker';
+  });
 
   // Active Personas Data
   const [profile, setProfile] = useState<WorkerProfile>(() => {
     try {
-      const saved = localStorage.getItem('gignite_active_session');
-      if (saved) {
-        const parsed: StoredSession = JSON.parse(saved);
+      const savedUser = localStorage.getItem('gignite_current_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.type === 'worker' && parsed.worker) {
+          return parsed.worker;
+        }
+      }
+      const savedSession = localStorage.getItem('gignite_active_session');
+      if (savedSession) {
+        const parsed: StoredSession = JSON.parse(savedSession);
         if (parsed.workerId && WORKER_PERSONAS[parsed.workerId]) {
           return WORKER_PERSONAS[parsed.workerId];
         }
@@ -56,9 +84,16 @@ export default function App() {
 
   const [activeLender, setActiveLender] = useState<LenderProfile>(() => {
     try {
-      const saved = localStorage.getItem('gignite_active_session');
-      if (saved) {
-        const parsed: StoredSession = JSON.parse(saved);
+      const savedUser = localStorage.getItem('gignite_current_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.type === 'lender' && parsed.lender) {
+          return parsed.lender;
+        }
+      }
+      const savedSession = localStorage.getItem('gignite_active_session');
+      if (savedSession) {
+        const parsed: StoredSession = JSON.parse(savedSession);
         if (parsed.lenderId && LENDER_PERSONAS[parsed.lenderId]) {
           return LENDER_PERSONAS[parsed.lenderId];
         }
@@ -70,6 +105,17 @@ export default function App() {
   });
 
   const [rawCredential, setRawCredential] = useState<W3CCredential | null>(() => {
+    try {
+      const savedUser = localStorage.getItem('gignite_current_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.type === 'worker' && parsed.worker) {
+          return generateWorkerCredential(parsed.worker);
+        }
+      }
+    } catch {
+      // ignore
+    }
     return generateWorkerCredential(WORKER_PERSONAS['ramesh-kumar-9872']);
   });
 
@@ -84,20 +130,25 @@ export default function App() {
 
   // Sync session on mount
   useEffect(() => {
-    if (session) {
-      if (session.role === 'worker') {
-        setActiveRole('worker');
-        if (session.workerId && WORKER_PERSONAS[session.workerId]) {
-          const w = WORKER_PERSONAS[session.workerId];
-          setProfile(w);
-          setRawCredential(generateWorkerCredential(w));
-        }
-      } else if (session.role === 'lender') {
-        setActiveRole('lender');
-        if (session.lenderId && LENDER_PERSONAS[session.lenderId]) {
-          setActiveLender(LENDER_PERSONAS[session.lenderId]);
+    try {
+      const savedUser = localStorage.getItem('gignite_current_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.type === 'worker' && parsed.worker) {
+          setProfile(parsed.worker);
+          setRawCredential(generateWorkerCredential(parsed.worker));
+          setActiveRole('worker');
+          const defaultLoan = Math.round(parsed.worker.telemetry_summary.monthly_inflow_inr * 0.65 / 1000) * 1000;
+          setRequestedLoan(Math.max(10000, defaultLoan));
+          return;
+        } else if (parsed.type === 'lender' && parsed.lender) {
+          setActiveLender(parsed.lender);
+          setActiveRole('lender');
+          return;
         }
       }
+    } catch {
+      // ignore
     }
   }, []);
 
@@ -105,6 +156,17 @@ export default function App() {
   // AUTHENTICATION HANDLERS
   // ----------------------------------------------------------------------------
   const handleLoginSuccess = (account: { type: 'worker'; worker: ExtendedWorkerProfile } | { type: 'lender'; lender: ExtendedLenderProfile }) => {
+    try {
+      localStorage.setItem('gignite_current_user', JSON.stringify(account));
+      if (account.type === 'worker') {
+        localStorage.setItem('gignite_last_email', account.worker.email);
+      } else {
+        localStorage.setItem('gignite_last_email', account.lender.email);
+      }
+    } catch {
+      // ignore
+    }
+
     if (account.type === 'worker') {
       const newSession: StoredSession = {
         role: 'worker',
@@ -133,7 +195,13 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('gignite_active_session');
+    try {
+      localStorage.removeItem('gignite_current_user');
+      localStorage.removeItem('gignite_active_session');
+      // Retain gignite_last_email so the login input is prefilled
+    } catch {
+      // ignore
+    }
     setSession(null);
     setUnderwritingResult(null);
   };
@@ -145,15 +213,21 @@ export default function App() {
     const newProfile = WORKER_PERSONAS[workerId] || WORKER_PERSONAS['ramesh-kumar-9872'];
     setProfile(newProfile);
     
-    // Update active stored session
-    if (session?.role === 'worker') {
-      const updatedSession: StoredSession = {
-        ...session,
-        workerId: newProfile.worker_id,
-        email: newProfile.email
-      };
-      localStorage.setItem('gignite_active_session', JSON.stringify(updatedSession));
-      setSession(updatedSession);
+    // Update active stored session and current user
+    try {
+      localStorage.setItem('gignite_current_user', JSON.stringify({ type: 'worker', worker: newProfile }));
+      localStorage.setItem('gignite_last_email', newProfile.email);
+      if (session?.role === 'worker') {
+        const updatedSession: StoredSession = {
+          ...session,
+          workerId: newProfile.worker_id,
+          email: newProfile.email
+        };
+        localStorage.setItem('gignite_active_session', JSON.stringify(updatedSession));
+        setSession(updatedSession);
+      }
+    } catch {
+      // ignore
     }
 
     // Auto-adjust default loan target to worker's scale
@@ -173,15 +247,21 @@ export default function App() {
     const newLender = LENDER_PERSONAS[lenderId] || LENDER_PERSONAS['finprime-nbfc'];
     setActiveLender(newLender);
 
-    // Update active stored session
-    if (session?.role === 'lender') {
-      const updatedSession: StoredSession = {
-        ...session,
-        lenderId: newLender.id,
-        email: newLender.email
-      };
-      localStorage.setItem('gignite_active_session', JSON.stringify(updatedSession));
-      setSession(updatedSession);
+    // Update active stored session and current user
+    try {
+      localStorage.setItem('gignite_current_user', JSON.stringify({ type: 'lender', lender: newLender }));
+      localStorage.setItem('gignite_last_email', newLender.email);
+      if (session?.role === 'lender') {
+        const updatedSession: StoredSession = {
+          ...session,
+          lenderId: newLender.id,
+          email: newLender.email
+        };
+        localStorage.setItem('gignite_active_session', JSON.stringify(updatedSession));
+        setSession(updatedSession);
+      }
+    } catch {
+      // ignore
     }
     
     // Clamp loan request to lender maximum
