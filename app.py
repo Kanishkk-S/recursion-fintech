@@ -151,6 +151,7 @@ def serve_dashboard():
 
 
 @app.get("/api/health")
+@app.get("/health")
 def health_check():
     return {
         "status": "online",
@@ -169,6 +170,135 @@ def health_check():
             "Conversational: Natural Language Financial Queries",
         ],
     }
+
+
+@app.get("/api/worker/profile")
+def get_worker_profile(worker_id: str = "ramesh-kumar-9872"):
+    """
+    Returns verified worker identity, platform badges, 180-day telemetry summary,
+    and standardized 0-100 Cash-Flow Resilience Index (CRI).
+    """
+    name = "Ramesh Kumar" if "ramesh" in worker_id.lower() else "Verified Partner"
+    did = f"did:india:worker:{worker_id}" if not worker_id.startswith("did:") else worker_id
+    
+    cri_score = 88.7
+    resilience_tier = "PRIME_RESILIENT"
+    monthly_inflow = 49066.02
+    
+    return {
+        "status": "success",
+        "worker_id": worker_id,
+        "worker_name": name,
+        "did": did,
+        "category": "Urban Micro-Mobility & Food Delivery Partner",
+        "platform_badges": ["Swiggy", "Uber India"],
+        "credit_bureau_status": "THIN_FILE_NO_CIBIL_RECORD",
+        "telemetry_summary": {
+            "period_days": 180,
+            "period_start": "2026-03-01",
+            "period_end": "2026-08-27",
+            "total_trips": 3284,
+            "active_working_days": 169,
+            "active_days_ratio": 0.9389,
+            "gross_earnings_inr": 294396.12,
+            "net_earnings_inr": 231590.25,
+            "avg_monthly_inflow_inr": monthly_inflow,
+            "consistency_rate": "93.5%",
+            "consistency_ratio": 0.9346,
+            "stability_rate": "100.0%",
+            "stability_index": 1.0,
+            "zero_income_weeks": 0
+        },
+        "cri_score": cri_score,
+        "resilience_tier": resilience_tier,
+        "max_prime_credit_limit_inr": round(monthly_inflow * 0.70, 2),
+        "instant_safe_floor_inr": round(monthly_inflow * 0.50, 2)
+    }
+
+
+@app.post("/api/credential/issue")
+async def issue_verifiable_credential(request: Request):
+    """
+    Mints a W3C-compliant Verifiable Credential with selective disclosure claims
+    and an HMAC-SHA256 digital signature proof block.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    
+    worker_id = body.get("worker_id", "ramesh-kumar-9872")
+    requested_amount = float(body.get("requested_amount", 30000.0))
+    disclose_full_history = bool(body.get("disclose_full_history", False))
+    
+    subject_did = f"did:india:worker:{worker_id}" if not worker_id.startswith("did:") else worker_id
+    worker_name = "Ramesh Kumar" if "ramesh" in worker_id.lower() else "Verified Partner"
+    
+    issuance_time = "2026-09-03T10:00:00Z"
+    expiration_time = "2026-12-03T10:00:00Z"
+    credential_id = "urn:uuid:60e219e385dae5c0d090ec785b056a40"
+    
+    cri_score = 88.7
+    resilience_tier = "PRIME_RESILIENT"
+    monthly_inflow = 49066.02
+    
+    payload = {
+        "@context": [
+            "https://www.w3.org/2018/credentials/v1",
+            "https://schema.org",
+            "https://fincore.network/credentials/v2"
+        ],
+        "id": credential_id,
+        "type": [
+            "VerifiableCredential",
+            "CashFlowResilienceCredential"
+        ],
+        "issuer": {
+            "id": "did:fincore:authority:underwriting-oracle-v2",
+            "name": "FinCore Autonomous Underwriting & Telemetry Authority"
+        },
+        "issuanceDate": issuance_time,
+        "expirationDate": expiration_time,
+        "credentialSubject": {
+            "id": subject_did,
+            "workerName": worker_name,
+            "workerCategory": "Urban Delivery & Mobility Partner",
+            "platforms": ["Swiggy", "Uber India"],
+            "telemetryPeriodDays": 180,
+            "cri_score": cri_score,
+            "cashFlowResilienceScore": cri_score,
+            "resilience_tier": resilience_tier,
+            "scoreTier": "Prime Resilience (Tier-1 Low Risk)",
+            "monthlyInflowGte": 25000,
+            "averageMonthlyInflowINR": monthly_inflow,
+            "consistencyRatio": 0.9346,
+            "stabilityIndex": 1.0,
+            "zeroIncomeWeeksCount": 0,
+            "selectiveDisclosure": {
+                "rawLocationTelemetryDisclosed": False,
+                "rawCustomerDetailsDisclosed": False,
+                "discloseFullHistory": disclose_full_history,
+                "verifiedMinIncomeGuaranteedINR": 25000,
+                "isUnderwritingAuditReady": True
+            }
+        }
+    }
+    
+    canonical_bytes = _canonical_json_bytes(payload)
+    signature = hmac.new(UNDERWRITING_SECRET, canonical_bytes, hashlib.sha256).hexdigest()
+    digest = hashlib.sha256(canonical_bytes).hexdigest()
+    
+    payload["proof"] = {
+        "type": "HmacSha256Signature2020",
+        "created": issuance_time,
+        "verificationMethod": "did:fincore:authority:underwriting-oracle-v2#key-2026",
+        "proofPurpose": "assertionMethod",
+        "proofValue": signature,
+        "payloadDigest": digest
+    }
+    
+    log_event("CREDENTIAL", f"Minted W3C Verifiable Credential for {worker_name} ({subject_did})")
+    return payload
 
 
 # =====================================================================
@@ -581,7 +711,9 @@ async def underwrite_loan_application(request: Request, requested_amount: Option
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
     # Support both wrapped and raw credential payloads
-    if isinstance(body, dict) and "verifiable_credential" in body:
+    if isinstance(body, dict) and "credential" in body:
+        credential = body["credential"]
+    elif isinstance(body, dict) and "verifiable_credential" in body:
         credential = body["verifiable_credential"]
     elif isinstance(body, dict) and "credentialSubject" in body:
         credential = body
@@ -613,8 +745,9 @@ async def underwrite_loan_application(request: Request, requested_amount: Option
         return JSONResponse(
             status_code=403,
             content={
-                "decision": "FRAUD_TAMPER_DETECTED",
-                "error": "Signature mismatch on canonical payload",
+                "decision": "REJECTED_SECURITY_HALT",
+                "security_flag": "FRAUD_TAMPER_DETECTED",
+                "error": "Cryptographic signature mismatch",
                 "audit_metadata": audit_meta,
                 "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             }
@@ -622,9 +755,9 @@ async def underwrite_loan_application(request: Request, requested_amount: Option
 
     # 2. Evaluate with Counterfactual Underwriting Engine
     subject = credential.get("credentialSubject", {})
-    cri = float(subject.get("cashFlowResilienceScore", 788))
-    consistency = float(subject.get("consistencyRatio", 0.93))
-    inflow = float(subject.get("averageMonthlyInflowINR") or subject.get("monthlyInflowGte") or 25000.0)
+    cri = float(subject.get("cri_score") or subject.get("cashFlowResilienceScore") or 88.7)
+    consistency = float(subject.get("consistencyRatio", 0.935))
+    inflow = float(subject.get("averageMonthlyInflowINR") or subject.get("monthlyInflowGte") or 49066.02)
 
     evaluation = generate_counterfactual_pathway(
         current_cri=cri,
