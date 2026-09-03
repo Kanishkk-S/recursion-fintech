@@ -37,6 +37,8 @@ export interface WorkerTelemetry {
   zero_income_weeks: number;
   daily_wages_30d?: number[];
   earning_bracket?: 'entry' | 'standard' | 'high' | string;
+  primary_domain?: string;
+  primary_domain_category?: string;
 }
 
 export interface WorkerProfile {
@@ -54,6 +56,8 @@ export interface WorkerProfile {
   instant_safe_floor_inr: number;
   daily_wages_30d?: number[];
   earning_bracket?: 'entry' | 'standard' | 'high' | string;
+  primary_domain?: string;
+  primary_domain_category?: string;
 }
 
 export interface W3CCredential {

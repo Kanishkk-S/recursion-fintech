@@ -17,6 +17,8 @@ import {
   Coffee
 } from 'lucide-react';
 import { GIgniteLogo } from './GIgniteLogo';
+import { DomainSelector } from './DomainSelector';
+import { WORK_DOMAINS, type WorkDomain } from '../data/domains';
 import { 
   findAccountByEmail, 
   generate30DayWageStream, 
@@ -51,7 +53,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // Sign Up / Onboarding Form States
   const [fullName, setFullName] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
-  const [selectedPlatform, setSelectedPlatform] = useState<string>('Uber');
+  
+  // 150+ Domains State
+  const [selectedDomain, setSelectedDomain] = useState<WorkDomain | null>(() => WORK_DOMAINS[0]);
+  const [selectedPlatform, setSelectedPlatform] = useState<string>(() => WORK_DOMAINS[0].name);
   
   // 30-Day Daily Wage Stream Simulator State
   const [selectedBracket, setSelectedBracket] = useState<EarningBracketKey>('standard');
@@ -65,6 +70,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   useEffect(() => {
     setSimulatedStream(generate30DayWageStream(selectedBracket));
   }, [selectedBracket]);
+
+  const handleDomainSelect = (domain: WorkDomain) => {
+    setSelectedDomain(domain);
+    setSelectedPlatform(domain.name);
+    if (domain.suggestedBracket) {
+      setSelectedBracket(domain.suggestedBracket);
+    }
+  };
 
   // --------------------------------------------------------------------------
   // HANDLE SIGN IN (Checks SQLite API first, with fallback to local registry)
@@ -152,6 +165,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       const nameToUse = fullName.trim() || targetEmail.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
       const totalInflow = simulatedStream.totalMonthlyInflow;
       const consistencyRatio = simulatedStream.consistencyRatio;
+      const domainName = selectedDomain?.name || selectedPlatform || "Urban Fleet Partner";
+      const domainCategory = selectedDomain?.category || "Food Delivery & Quick Commerce";
 
       // Attempt backend SQLite registration
       try {
@@ -161,23 +176,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           body: JSON.stringify({
             email: targetEmail,
             name: nameToUse,
-            platform: selectedPlatform,
+            platform: domainName,
             monthly_inflow: totalInflow
           })
         });
 
         if (response.ok) {
           const registeredWorker = await response.json();
-          // Attach 30-day daily payout stream and telemetry
+          // Attach 30-day daily payout stream and domain telemetry
           registeredWorker.monthlyInflow = totalInflow;
           registeredWorker.daily_wages_30d = simulatedStream.dailyStream;
           registeredWorker.earning_bracket = selectedBracket;
+          registeredWorker.primary_domain = domainName;
+          registeredWorker.primaryDomain = domainName;
+          registeredWorker.primary_domain_category = domainCategory;
+          registeredWorker.category = domainCategory;
+          registeredWorker.platform_badges = [domainName.split(' ')[0], domainCategory.split(' ')[0]];
+
           registeredWorker.telemetry_summary.monthly_inflow_inr = totalInflow;
           registeredWorker.telemetry_summary.consistency_ratio = consistencyRatio;
           registeredWorker.telemetry_summary.consistency_rate = simulatedStream.shiftConsistency;
           registeredWorker.telemetry_summary.active_working_days = simulatedStream.activeWorkingDays;
           registeredWorker.telemetry_summary.daily_wages_30d = simulatedStream.dailyStream;
           registeredWorker.telemetry_summary.earning_bracket = selectedBracket;
+          registeredWorker.telemetry_summary.primary_domain = domainName;
+          registeredWorker.telemetry_summary.primary_domain_category = domainCategory;
           
           try {
             localStorage.setItem('gignite_active_user', JSON.stringify(registeredWorker));
@@ -208,20 +231,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         email: targetEmail,
         phone: phone.trim() || "+91 98000 11223",
         did: `did:gignite:worker:${targetEmail.split('@')[0]}`,
-        category: `${selectedPlatform} Fleet Partner`,
+        category: domainCategory,
+        primary_domain: domainName,
+        primary_domain_category: domainCategory,
         credit_bureau_status: "THIN_FILE_VERIFIED_BY_GIGNITE",
-        platform_badges: [selectedPlatform],
+        platform_badges: [domainName.split(' ')[0]],
         daily_wages_30d: simulatedStream.dailyStream,
         earning_bracket: selectedBracket,
         platform_details: [
           {
-            platform: selectedPlatform,
-            role: `${selectedPlatform} Driver Partner`,
+            platform: domainName,
+            role: domainName,
             rating: 4.88,
             trips_completed: Math.max(120, Math.round(totalInflow / 85)),
             verified_active: true,
-            payout_frequency: "Weekly",
-            badge: `${selectedPlatform} Verified Partner`,
+            payout_frequency: selectedDomain?.payoutType || "Weekly",
+            badge: `${domainName} Verified Earner`,
             payout_amount_inr: totalInflow
           }
         ],
@@ -238,7 +263,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           net_earnings_180d_inr: Math.round(totalInflow * 4.8),
           zero_income_weeks: 0,
           daily_wages_30d: simulatedStream.dailyStream,
-          earning_bracket: selectedBracket
+          earning_bracket: selectedBracket,
+          primary_domain: domainName,
+          primary_domain_category: domainCategory
         },
         cri_score: calculatedCri,
         resilience_tier: resilienceTier,
@@ -336,12 +363,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                {authMode === 'signin' ? 'Financial Identity Airlock' : 'Worker Daily Wage Stream Setup'}
+                {authMode === 'signin' ? 'Financial Identity Airlock' : 'Worker Onboarding & Domain Linking'}
               </h1>
               <p className="text-xs sm:text-sm text-[#9CA3AF] mt-1">
                 {authMode === 'signin'
                   ? 'Enter your registered email to load your cryptographic telemetry or underwriting desk'
-                  : 'Configure your daily earning bracket to generate automated 30-day payout telemetry'}
+                  : 'Link your informal trade or gig platform from 150+ supported work domains'}
               </p>
             </div>
           </div>
@@ -440,7 +467,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     <div>
                       <p className="font-bold text-white">No account found for "{notFoundPrompt}"</p>
                       <p className="text-[#9CA3AF] mt-0.5">
-                        Would you like to select your daily earning bracket and generate your 30-day payout stream?
+                        Would you like to select your profession from 150+ domains and generate your 30-day payout stream?
                       </p>
                     </div>
                   </div>
@@ -492,7 +519,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </form>
           ) : (
             /* ---------------------------------------------------------------- */
-            /* MODE 2: SIGN UP WITH 30-DAY DAILY WAGE STREAM SIMULATOR          */
+            /* MODE 2: SIGN UP WITH 150+ WORK DOMAINS SELECTOR                  */
             /* ---------------------------------------------------------------- */
             <form onSubmit={handleSignUp} className="flex flex-col gap-4 animate-in fade-in">
               
@@ -547,24 +574,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 </div>
               </div>
 
-              {/* Worker Specific 30-Day Daily Wage Bracket Selector */}
+              {/* Worker Specific 150+ Work Domains Selector */}
               {selectedTab === 'worker' ? (
                 <>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Primary Platform</label>
-                    <div className="relative">
-                      <select
-                        value={selectedPlatform}
-                        onChange={(e) => setSelectedPlatform(e.target.value)}
-                        className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/60 transition-colors cursor-pointer"
-                      >
-                        <option value="Uber">Uber India (Mobility)</option>
-                        <option value="Swiggy">Swiggy Delivery (Food/Instamart)</option>
-                        <option value="Zomato">Zomato Fleet (Food)</option>
-                        <option value="Blinkit">Blinkit Express (Quick Commerce)</option>
-                        <option value="Zepto">Zepto Dispatch (Dark Store)</option>
-                      </select>
-                    </div>
+                    <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                      <span>Earning Profession / Platform (150+ Domains)</span>
+                      <span className="text-[10px] text-purple-300 font-mono">Searchable Categorized</span>
+                    </label>
+                    <DomainSelector
+                      selectedDomain={selectedDomain}
+                      onSelectDomain={handleDomainSelect}
+                    />
                   </div>
 
                   {/* DAILY EARNING BRACKET SELECTOR */}
@@ -714,7 +735,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 disabled={isLoading}
                 className="w-full py-3.5 px-4 rounded-2xl purple-magenta-gradient hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg glow-purple transition-all cursor-pointer disabled:opacity-50 mt-1"
               >
-                <span>{isLoading ? 'Generating Telemetry & Minting W3C Proof...' : 'Complete Registration & Enter'}</span>
+                <span>{isLoading ? 'Linking Domain & Minting W3C Proof...' : 'Complete Registration & Enter'}</span>
                 <CheckCircle2 className="w-4 h-4" />
               </button>
 
@@ -739,7 +760,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
       {/* Footer */}
       <footer className="w-full text-center py-4 text-xs text-[#6B7280] font-mono relative z-10">
-        GIgnite Verifiable Identity Airlock • SQLite Account Registry • RFC 8785 Canonical Serialization
+        GIgnite Verifiable Identity Airlock • 150+ Informal Work Domains • RFC 8785 Canonical Serialization
       </footer>
 
     </div>

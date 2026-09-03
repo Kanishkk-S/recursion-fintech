@@ -19,7 +19,8 @@ import {
   ExternalLink,
   ChevronDown,
   UserCheck,
-  ShoppingBag
+  ShoppingBag,
+  Briefcase
 } from 'lucide-react';
 import type { WorkerProfile, W3CCredential } from '../types';
 import { WORKER_PERSONAS } from '../data/personas';
@@ -107,7 +108,15 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
                 {profile.resilience_tier.replace('_', ' ')}
               </span>
             </div>
-            <p className="text-xs text-[#9CA3AF] mt-0.5">{profile.category}</p>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+              <span className="text-xs text-[#9CA3AF]">{profile.category}</span>
+              {profile.primary_domain && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/15 text-[#D8B4FE] border border-purple-500/25 flex items-center gap-1">
+                  <Briefcase className="w-2.5 h-2.5 text-[#C084FC]" />
+                  {profile.primary_domain}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
