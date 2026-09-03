@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShieldCheck, Copy, QrCode, Lock } from 'lucide-react';
+import { ShieldCheck, Copy, QrCode, Lock, X } from 'lucide-react';
 import { useWorkerProfile } from '../../hooks/useWorkerProfile';
 import QRCode from 'react-qr-code';
 
@@ -139,25 +139,43 @@ export function EarnerPortal() {
         ) : (
           <div className="space-y-3">
             <div className="bg-slate-950 border border-slate-700 rounded-xl p-3 relative group">
-              <div className="absolute right-2 top-2 flex gap-1">
-                <button onClick={handleCopy} className="p-1.5 bg-slate-800 text-slate-300 hover:text-white rounded-md transition-colors" title="Copy Payload">
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
-                <button onClick={() => setShowQr(!showQr)} className="p-1.5 bg-slate-800 text-slate-300 hover:text-white rounded-md transition-colors" title="View QR">
-                  <QrCode className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <p className="text-[10px] font-mono text-emerald-400 mb-2">Issue Success</p>
+              <p className="text-[10px] font-mono text-emerald-400 mb-2">Issue Success: VC Generated</p>
               <textarea 
                 readOnly
                 value={issuedVc}
-                className="w-full h-24 bg-transparent text-[10px] font-mono text-slate-400 resize-none outline-none no-scrollbar"
+                className="w-full h-24 bg-transparent text-[10px] font-mono text-slate-400 resize-none outline-none no-scrollbar mb-3"
               />
+              <div className="flex gap-2">
+                <button 
+                  onClick={handleCopy}
+                  className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition-colors flex justify-center items-center gap-1.5"
+                >
+                  <Copy className="w-3.5 h-3.5" /> Copy Payload
+                </button>
+                <button 
+                  onClick={() => setShowQr(true)}
+                  className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition-colors flex justify-center items-center gap-1.5"
+                >
+                  <QrCode className="w-3.5 h-3.5" /> View Credential QR
+                </button>
+              </div>
             </div>
             
             {showQr && (
-              <div className="p-4 bg-white rounded-xl flex justify-center items-center">
-                 <QRCode value={issuedVc} size={120} />
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative flex flex-col items-center">
+                  <button 
+                    onClick={() => setShowQr(false)}
+                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                  <h3 className="text-lg font-bold text-white mb-2">Credential QR</h3>
+                  <p className="text-xs text-slate-400 text-center mb-6">Scan this QR code from the Lender Desk to securely transfer your verifiable credential.</p>
+                  <div className="p-4 bg-white rounded-2xl flex justify-center items-center w-full max-w-[200px] aspect-square">
+                     <QRCode value={issuedVc} size={160} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />
+                  </div>
+                </div>
               </div>
             )}
           </div>
