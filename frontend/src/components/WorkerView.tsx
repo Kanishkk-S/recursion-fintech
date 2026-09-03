@@ -32,6 +32,7 @@ interface WorkerViewProps {
   onSelectWorker: (workerId: string) => void;
   onSendToLender: () => void;
   onRefreshCredential: () => Promise<void>;
+  onVerifyZkTls?: () => Promise<void> | void;
 }
 
 export const WorkerView: React.FC<WorkerViewProps> = ({
@@ -39,7 +40,8 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
   rawCredential,
   onSelectWorker,
   onSendToLender,
-  onRefreshCredential
+  onRefreshCredential,
+  onVerifyZkTls
 }) => {
   const [copiedDid, setCopiedDid] = useState<boolean>(false);
   const [copiedJson, setCopiedJson] = useState<boolean>(false);
@@ -229,21 +231,32 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative z-10 my-4">
               <div>
                 <span className="text-xs font-medium text-[#9CA3AF] tracking-wider uppercase">Cash-Flow Resilience Index</span>
-                <div className="flex items-baseline gap-3 mt-1">
-                  <span className="text-5xl sm:text-6xl font-extrabold font-mono tracking-tight text-white drop-shadow">
-                    {profile.cri_score.toFixed(1)}
-                  </span>
-                  <span className="text-[#9CA3AF] font-mono text-sm font-semibold">/ 100</span>
-                  <span className={`px-2.5 py-1 rounded-lg border text-xs font-bold font-mono tracking-wide ${
-                    profile.cri_score >= 75
-                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                      : profile.cri_score >= 60
-                      ? 'bg-purple-500/15 text-[#E9D5FF] border-purple-500/30'
-                      : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                  }`}>
-                    {profile.resilience_tier.replace('_', ' ')}
-                  </span>
-                </div>
+                {profile.is_zktls_verified === false || profile.resilience_tier === 'UNVERIFIED' ? (
+                  <div className="flex items-baseline gap-3 mt-1">
+                    <span className="text-3xl sm:text-4xl font-extrabold font-mono tracking-tight text-amber-400 drop-shadow">
+                      UNVERIFIED
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg border text-xs font-bold font-mono tracking-wide bg-amber-500/15 text-amber-300 border-amber-500/30">
+                      SELF-REPORTED CLAIM
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline gap-3 mt-1">
+                    <span className="text-5xl sm:text-6xl font-extrabold font-mono tracking-tight text-white drop-shadow">
+                      {profile.cri_score.toFixed(1)}
+                    </span>
+                    <span className="text-[#9CA3AF] font-mono text-sm font-semibold">/ 100</span>
+                    <span className={`px-2.5 py-1 rounded-lg border text-xs font-bold font-mono tracking-wide ${
+                      profile.cri_score >= 75
+                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                        : profile.cri_score >= 60
+                        ? 'bg-purple-500/15 text-[#E9D5FF] border-purple-500/30'
+                        : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                    }`}>
+                      {profile.resilience_tier.replace('_', ' ')}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Platform Badges */}
@@ -439,6 +452,8 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
         consistencyRate={profile.telemetry_summary.consistency_rate}
         activeDays={profile.telemetry_summary.active_working_days}
         workerName={profile.worker_name}
+        isVerified={profile.is_zktls_verified !== false && profile.resilience_tier !== 'UNVERIFIED'}
+        onTriggerZkTlsIngest={onVerifyZkTls}
         className="w-full"
       />
 

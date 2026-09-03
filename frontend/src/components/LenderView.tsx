@@ -232,6 +232,7 @@ export const LenderView: React.FC<LenderViewProps> = ({
                 consistencyRate={profile.telemetry_summary.consistency_rate}
                 activeDays={profile.telemetry_summary.active_working_days}
                 workerName={profile.worker_name}
+                isVerified={profile.is_zktls_verified !== false && profile.resilience_tier !== 'UNVERIFIED'}
                 className="!p-3.5 !rounded-2xl !bg-[#07030F]"
               />
             </div>

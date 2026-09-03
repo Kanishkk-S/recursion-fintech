@@ -10,6 +10,8 @@ import {
   WORKER_PERSONAS, 
   LENDER_PERSONAS, 
   generateWorkerCredential,
+  generate30DayWageStream,
+  type EarningBracketKey,
   type ExtendedWorkerProfile,
   type ExtendedLenderProfile
 } from './data/personas';
@@ -535,6 +537,46 @@ export default function App() {
     setIsEvaluating(false);
   };
 
+  // zkTLS Stream Verification Handler
+  const handleVerifyZkTls = async () => {
+    const bracket = (profile.earning_bracket || 'standard') as EarningBracketKey;
+    const stream = generate30DayWageStream(bracket);
+    const totalInflow = stream.totalMonthlyInflow;
+    const calculatedCri = bracket === 'high' ? 88.5 : bracket === 'standard' ? 82.4 : 64.0;
+    const resilienceTier = calculatedCri >= 75 ? 'PRIME_RESILIENT' : 'NEAR_PRIME';
+
+    const updatedProfile: WorkerProfile = {
+      ...profile,
+      is_zktls_verified: true,
+      verification_status: 'ZKTLS_VERIFIED',
+      cri_score: calculatedCri,
+      resilience_tier: resilienceTier,
+      max_prime_credit_limit_inr: Math.round(totalInflow * 0.70),
+      instant_safe_floor_inr: Math.round(totalInflow * 0.50),
+      daily_wages_30d: stream.dailyStream,
+      telemetry_summary: {
+        ...profile.telemetry_summary,
+        monthly_inflow_inr: totalInflow,
+        consistency_rate: stream.shiftConsistency,
+        consistency_ratio: stream.consistencyRatio,
+        active_working_days: stream.activeWorkingDays,
+        daily_wages_30d: stream.dailyStream,
+        is_zktls_verified: true,
+        verification_status: 'ZKTLS_VERIFIED'
+      }
+    };
+
+    setProfile(updatedProfile);
+    setRawCredential(generateWorkerCredential(updatedProfile));
+
+    try {
+      localStorage.setItem('gignite_active_user', JSON.stringify(updatedProfile));
+      localStorage.setItem('gignite_current_user', JSON.stringify({ type: 'worker', worker: updatedProfile }));
+    } catch {
+      // ignore
+    }
+  };
+
   // If no active session, render the Login Page
   if (!session) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
@@ -633,6 +675,7 @@ export default function App() {
             onSelectWorker={handleSelectWorker}
             onSendToLender={() => setActiveRole('lender')}
             onRefreshCredential={() => fetchCredential(profile, requestedLoan)}
+            onVerifyZkTls={handleVerifyZkTls}
           />
         ) : (
           <LenderView

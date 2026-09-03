@@ -84,14 +84,18 @@ export const WORKER_PERSONAS: Record<string, ExtendedWorkerProfile> = {
       net_earnings_180d_inr: 231590.25,
       zero_income_weeks: 0,
       daily_wages_30d: RAMESH_30D_WAGES,
-      earning_bracket: 'high'
+      earning_bracket: 'high',
+      is_zktls_verified: true,
+      verification_status: 'ZKTLS_VERIFIED'
     },
     cri_score: 88.7,
     resilience_tier: "PRIME_RESILIENT",
     max_prime_credit_limit_inr: 34346.20,
     instant_safe_floor_inr: 24500.00,
     daily_wages_30d: RAMESH_30D_WAGES,
-    earning_bracket: 'high'
+    earning_bracket: 'high',
+    is_zktls_verified: true,
+    verification_status: 'ZKTLS_VERIFIED'
   },
 
   "priya-sharma-3411": {
@@ -138,14 +142,18 @@ export const WORKER_PERSONAS: Record<string, ExtendedWorkerProfile> = {
       net_earnings_180d_inr: 114576.00,
       zero_income_weeks: 1,
       daily_wages_30d: PRIYA_30D_WAGES,
-      earning_bracket: 'standard'
+      earning_bracket: 'standard',
+      is_zktls_verified: true,
+      verification_status: 'ZKTLS_VERIFIED'
     },
     cri_score: 64.2,
     resilience_tier: "NEAR_PRIME",
     max_prime_credit_limit_inr: 17360.00,
     instant_safe_floor_inr: 12400.00,
     daily_wages_30d: PRIYA_30D_WAGES,
-    earning_bracket: 'standard'
+    earning_bracket: 'standard',
+    is_zktls_verified: true,
+    verification_status: 'ZKTLS_VERIFIED'
   },
 
   "vikram-singh-1029": {
@@ -182,14 +190,18 @@ export const WORKER_PERSONAS: Record<string, ExtendedWorkerProfile> = {
       net_earnings_180d_inr: 49728.00,
       zero_income_weeks: 3,
       daily_wages_30d: VIKRAM_30D_WAGES,
-      earning_bracket: 'entry'
+      earning_bracket: 'entry',
+      is_zktls_verified: true,
+      verification_status: 'ZKTLS_VERIFIED'
     },
     cri_score: 41.0,
     resilience_tier: "VULNERABLE",
     max_prime_credit_limit_inr: 7840.00,
     instant_safe_floor_inr: 5600.00,
     daily_wages_30d: VIKRAM_30D_WAGES,
-    earning_bracket: 'entry'
+    earning_bracket: 'entry',
+    is_zktls_verified: true,
+    verification_status: 'ZKTLS_VERIFIED'
   }
 };
 

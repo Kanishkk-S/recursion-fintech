@@ -39,6 +39,8 @@ export interface WorkerTelemetry {
   earning_bracket?: 'entry' | 'standard' | 'high' | string;
   primary_domain?: string;
   primary_domain_category?: string;
+  is_zktls_verified?: boolean;
+  verification_status?: 'UNVERIFIED_MANUAL_CLAIM' | 'ZKTLS_VERIFIED' | string;
 }
 
 export interface WorkerProfile {
@@ -58,6 +60,8 @@ export interface WorkerProfile {
   earning_bracket?: 'entry' | 'standard' | 'high' | string;
   primary_domain?: string;
   primary_domain_category?: string;
+  is_zktls_verified?: boolean;
+  verification_status?: 'UNVERIFIED_MANUAL_CLAIM' | 'ZKTLS_VERIFIED' | string;
 }
 
 export interface W3CCredential {

@@ -183,24 +183,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
         if (response.ok) {
           const registeredWorker = await response.json();
-          // Attach 30-day daily payout stream and domain telemetry
+          // Initial self-reported claim is UNVERIFIED until zkTLS ingestion is performed
           registeredWorker.monthlyInflow = totalInflow;
-          registeredWorker.daily_wages_30d = simulatedStream.dailyStream;
+          registeredWorker.daily_wages_30d = [];
           registeredWorker.earning_bracket = selectedBracket;
           registeredWorker.primary_domain = domainName;
           registeredWorker.primaryDomain = domainName;
           registeredWorker.primary_domain_category = domainCategory;
           registeredWorker.category = domainCategory;
+          registeredWorker.is_zktls_verified = false;
+          registeredWorker.verification_status = 'UNVERIFIED_MANUAL_CLAIM';
+          registeredWorker.cri_score = 0.0;
+          registeredWorker.resilience_tier = 'UNVERIFIED';
           registeredWorker.platform_badges = [domainName.split(' ')[0], domainCategory.split(' ')[0]];
 
           registeredWorker.telemetry_summary.monthly_inflow_inr = totalInflow;
           registeredWorker.telemetry_summary.consistency_ratio = consistencyRatio;
           registeredWorker.telemetry_summary.consistency_rate = simulatedStream.shiftConsistency;
           registeredWorker.telemetry_summary.active_working_days = simulatedStream.activeWorkingDays;
-          registeredWorker.telemetry_summary.daily_wages_30d = simulatedStream.dailyStream;
+          registeredWorker.telemetry_summary.daily_wages_30d = [];
           registeredWorker.telemetry_summary.earning_bracket = selectedBracket;
           registeredWorker.telemetry_summary.primary_domain = domainName;
           registeredWorker.telemetry_summary.primary_domain_category = domainCategory;
+          registeredWorker.telemetry_summary.is_zktls_verified = false;
+          registeredWorker.telemetry_summary.verification_status = 'UNVERIFIED_MANUAL_CLAIM';
           
           try {
             localStorage.setItem('gignite_active_user', JSON.stringify(registeredWorker));
@@ -216,14 +222,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         console.warn('Backend SQLite register failed, using client-side generator:', err);
       }
 
-      // Client-side fallback registration with 30-day wage stream
+      // Client-side fallback registration in unverified state until zkTLS is executed
       const workerId = `${nameToUse.toLowerCase().replace(/\s+/g, '-')}-${Math.floor(1000 + Math.random() * 9000)}`;
-      const calculatedCri = selectedBracket === 'high' 
-        ? 88.5 
-        : selectedBracket === 'standard' 
-        ? 81.2 
-        : 64.0;
-      const resilienceTier = calculatedCri >= 75 ? 'PRIME_RESILIENT' : 'NEAR_PRIME';
 
       const fallbackWorker: ExtendedWorkerProfile = {
         worker_id: workerId,
@@ -236,8 +236,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         primary_domain_category: domainCategory,
         credit_bureau_status: "THIN_FILE_VERIFIED_BY_GIGNITE",
         platform_badges: [domainName.split(' ')[0]],
-        daily_wages_30d: simulatedStream.dailyStream,
+        daily_wages_30d: [],
         earning_bracket: selectedBracket,
+        is_zktls_verified: false,
+        verification_status: 'UNVERIFIED_MANUAL_CLAIM',
+        cri_score: 0.0,
+        resilience_tier: 'UNVERIFIED',
+        max_prime_credit_limit_inr: Math.round(totalInflow * 0.70),
+        instant_safe_floor_inr: Math.round(totalInflow * 0.50),
         platform_details: [
           {
             platform: domainName,
@@ -246,7 +252,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             trips_completed: Math.max(120, Math.round(totalInflow / 85)),
             verified_active: true,
             payout_frequency: selectedDomain?.payoutType || "Weekly",
-            badge: `${domainName} Verified Earner`,
+            badge: `${domainName} Self-Reported`,
             payout_amount_inr: totalInflow
           }
         ],
@@ -262,15 +268,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           gross_earnings_180d_inr: totalInflow * 6,
           net_earnings_180d_inr: Math.round(totalInflow * 4.8),
           zero_income_weeks: 0,
-          daily_wages_30d: simulatedStream.dailyStream,
+          daily_wages_30d: [],
           earning_bracket: selectedBracket,
           primary_domain: domainName,
-          primary_domain_category: domainCategory
-        },
-        cri_score: calculatedCri,
-        resilience_tier: resilienceTier,
-        max_prime_credit_limit_inr: Math.round(totalInflow * 0.70),
-        instant_safe_floor_inr: Math.round(totalInflow * 0.50)
+          primary_domain_category: domainCategory,
+          is_zktls_verified: false,
+          verification_status: 'UNVERIFIED_MANUAL_CLAIM'
+        }
       };
 
       try {
