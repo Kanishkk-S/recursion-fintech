@@ -1,0 +1,49 @@
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://schema.org",
+    "https://fincore.network/credentials/v2"
+  ],
+  "id": "urn:uuid:60e219e385dae5c0d090ec785b056a40",
+  "type": [
+    "VerifiableCredential",
+    "CashFlowResilienceCredential"
+  ],
+  "issuer": {
+    "id": "did:fincore:authority:underwriting-oracle-v2",
+    "name": "FinCore Autonomous Underwriting & Telemetry Authority"
+  },
+  "issuanceDate": "2026-09-03T10:00:00Z",
+  "expirationDate": "2026-12-03T10:00:00Z",
+  "credentialSubject": {
+    "id": "did:india:worker:ramesh-kumar-9872",
+    "workerName": "Ramesh Kumar",
+    "workerCategory": "Urban Delivery & Mobility Partner",
+    "platforms": [
+      "Swiggy",
+      "Uber India"
+    ],
+    "telemetryPeriodDays": 180,
+    "cashFlowResilienceScore": 887,
+    "scoreTier": "Prime Resilience (Tier-1 Low Risk)",
+    "monthlyInflowGte": 85000,
+    "averageMonthlyInflowINR": 49066.02,
+    "consistencyRatio": 0.9346,
+    "stabilityIndex": 1.0,
+    "zeroIncomeWeeksCount": 0,
+    "selectiveDisclosure": {
+      "rawLocationTelemetryDisclosed": false,
+      "rawCustomerDetailsDisclosed": false,
+      "verifiedMinIncomeGuaranteedINR": 25000,
+      "isUnderwritingAuditReady": true
+    }
+  },
+  "proof": {
+    "type": "HmacSha256Signature2020",
+    "created": "2026-09-03T10:00:00Z",
+    "verificationMethod": "did:fincore:authority:underwriting-oracle-v2#key-2026",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "9fb01fb022616541d63118dfa7bacdd6e7652d0cdaf243792bf60a353e670a02",
+    "payloadDigest": "661ca5dbfe3d7c56ef086c85ccd5c30e286cbb17d3eb2551ec864ecbf74b30d4"
+  }
+}
