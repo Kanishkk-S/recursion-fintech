@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Landmark,
   ShieldCheck,
@@ -10,13 +10,19 @@ import {
   Sliders,
   Cpu,
   FileCode2,
-  Check
+  Check,
+  ChevronDown,
+  Building2,
+  AlertTriangle
 } from 'lucide-react';
-import type { WorkerProfile, W3CCredential, UnderwritingResult } from '../types';
+import type { WorkerProfile, W3CCredential, UnderwritingResult, LenderProfile } from '../types';
+import { LENDER_PERSONAS } from '../data/personas';
 
 interface LenderViewProps {
   profile: WorkerProfile;
   rawCredential: W3CCredential | null;
+  activeLender: LenderProfile;
+  onSelectLender: (lenderId: string) => void;
   requestedLoan: number;
   setRequestedLoan: (amount: number) => void;
   isTamperMode: boolean;
@@ -29,6 +35,8 @@ interface LenderViewProps {
 export const LenderView: React.FC<LenderViewProps> = ({
   profile,
   rawCredential,
+  activeLender,
+  onSelectLender,
   requestedLoan,
   setRequestedLoan,
   isTamperMode,
@@ -37,11 +45,13 @@ export const LenderView: React.FC<LenderViewProps> = ({
   underwritingResult,
   onExecuteUnderwrite
 }) => {
-  // Real-time calculation preview
+  const [isLenderDropdownOpen, setIsLenderDropdownOpen] = useState<boolean>(false);
+
+  // Real-time calculation preview based on the active lender's risk policy
   const estimatedPreview = useMemo(() => {
-    const isPrime = requestedLoan <= 35000;
-    const rate = isPrime ? 11.5 : 13.5;
-    const tenure = isPrime ? 12 : 6;
+    const qualifiesPrime = profile.cri_score >= activeLender.min_cri;
+    const rate = activeLender.base_apr_numeric;
+    const tenure = activeLender.max_tenure_months;
     const r = (rate / 100) / 12;
     const n = tenure;
     const emi = (requestedLoan * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
@@ -49,17 +59,19 @@ export const LenderView: React.FC<LenderViewProps> = ({
       rate: `${rate}%`,
       tenure: `${tenure} Mo`,
       emi: isNaN(emi) ? 0 : Math.round(emi),
-      isPrime
+      qualifiesPrime
     };
-  }, [requestedLoan]);
+  }, [requestedLoan, activeLender, profile.cri_score]);
 
   return (
     <div className="w-full max-w-6xl mx-auto flex flex-col gap-6 py-2">
       
-      {/* Terminal Title & Institutional Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-[#0D061C] border border-[#1C0B3B]">
+      {/* Terminal Title & Active Lender Node Selector */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-3xl bg-[#0D061C] border border-[#1C0B3B]">
+        
+        {/* Left: Terminal Header */}
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#6D28D9] to-[#3B0764] p-[1.5px] shadow-md shadow-purple-950/40">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#6D28D9] to-[#3B0764] p-[1.5px] shadow-md shadow-purple-950/40 shrink-0">
             <div className="w-full h-full bg-[#0D061C] rounded-[14px] flex items-center justify-center">
               <Landmark className="w-6 h-6 text-[#C084FC]" />
             </div>
@@ -68,25 +80,93 @@ export const LenderView: React.FC<LenderViewProps> = ({
             <div className="flex items-center gap-2">
               <h1 className="text-lg sm:text-xl font-bold text-white">NBFC Underwriting Terminal</h1>
               <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-purple-500/15 text-[#D8B4FE] border border-purple-500/25">
-                INSTITUTIONAL AIRLOCK v2
+                INSTITUTIONAL DESK
               </span>
             </div>
-            <p className="text-xs text-[#9CA3AF] mt-0.5">Automated Zero-Trust Verifiable Credential Underwriter</p>
+            <p className="text-xs text-[#9CA3AF] mt-0.5">Automated Multi-Lender Zero-Trust Decision Engine</p>
           </div>
         </div>
 
-        {/* Security Indicator Pill */}
-        <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-[#07030F] border border-[#1C0B3B] text-xs font-mono self-start sm:self-auto">
-          <Cpu className="w-4 h-4 text-[#C084FC]" />
-          <span className="text-[#9CA3AF]">Verifier Protocol:</span>
-          <span className="text-[#10B981] font-semibold">RFC 8785 • Ed25519</span>
+        {/* Right: Active Lender Selector & Verifier Protocol */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          
+          {/* Active Lender Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsLenderDropdownOpen(!isLenderDropdownOpen)}
+              className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#140929] border border-purple-500/30 text-xs font-semibold text-white hover:border-purple-400/50 transition-all cursor-pointer shadow-sm"
+            >
+              <Building2 className="w-3.5 h-3.5 text-[#C084FC]" />
+              <span>Lender: <strong>{activeLender.name}</strong></span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-[#D8B4FE]">
+                Min CRI {activeLender.min_cri}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#9CA3AF]" />
+            </button>
+
+            {isLenderDropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-80 rounded-2xl bg-[#0D061C] border border-purple-500/30 shadow-2xl z-50 p-2 flex flex-col gap-1.5 animate-in fade-in">
+                <span className="text-[10px] font-mono text-[#6B7280] px-2 py-1 uppercase tracking-wider block">
+                  Select Institutional Lender:
+                </span>
+                {Object.values(LENDER_PERSONAS).map((l) => (
+                  <button
+                    key={l.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectLender(l.id);
+                      setIsLenderDropdownOpen(false);
+                    }}
+                    className={`flex flex-col gap-1 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                      activeLender.id === l.id
+                        ? 'bg-[#1E0E3E] border border-purple-500/40 text-white'
+                        : 'hover:bg-[#140929] text-[#9CA3AF] hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-white">{l.name}</span>
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-purple-500/20 text-[#C084FC]">
+                        {l.base_apr_p_a} APR
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-[#6B7280]">
+                      <span>{l.focus}</span>
+                      <span>Min CRI: <strong>{l.min_cri}</strong> • Cap: ₹{l.max_limit_inr.toLocaleString('en-IN')}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Protocol Pill */}
+          <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-[#07030F] border border-[#1C0B3B] text-xs font-mono">
+            <Cpu className="w-3.5 h-3.5 text-[#C084FC]" />
+            <span className="text-[#10B981] font-semibold">RFC 8785 • Ed25519</span>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Active Lender Policy Banner */}
+      <div className="bg-[#120826] p-3.5 px-5 rounded-2xl border border-purple-500/20 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+        <div className="flex items-center gap-2">
+          <span className="text-[#9CA3AF]">Active Risk Policy:</span>
+          <span className="font-bold text-white">{activeLender.name} ({activeLender.badge})</span>
+        </div>
+        <div className="flex items-center gap-4 text-[#D8B4FE]">
+          <span>Min Qualifying CRI: <strong>{activeLender.min_cri}</strong></span>
+          <span>Max Credit Line: <strong>₹{activeLender.max_limit_inr.toLocaleString('en-IN')}</strong></span>
+          <span>Base APR: <strong>{activeLender.base_apr_p_a}</strong></span>
         </div>
       </div>
 
       {/* Main 2-Column Audit Workspace */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* LEFT COLUMN: Ingestion Panel & Underwriting Controls (5.5-6 Cols) */}
+        {/* LEFT COLUMN: Ingestion Panel & Underwriting Controls (6 Cols) */}
         <div className="lg:col-span-6 flex flex-col gap-6">
           
           {/* 1. Credential Ingestion Panel */}
@@ -115,7 +195,9 @@ export const LenderView: React.FC<LenderViewProps> = ({
                 <span className="font-bold text-[#10B981] text-sm block font-mono">
                   ₹{profile.telemetry_summary.monthly_inflow_inr.toLocaleString('en-IN')} / mo
                 </span>
-                <span className="text-[10px] text-[#A855F7] block font-mono">
+                <span className={`text-[10px] block font-mono ${
+                  profile.cri_score >= activeLender.min_cri ? 'text-emerald-400' : 'text-amber-400'
+                }`}>
                   CRI Score: {profile.cri_score.toFixed(1)} ({profile.resilience_tier})
                 </span>
               </div>
@@ -132,11 +214,11 @@ export const LenderView: React.FC<LenderViewProps> = ({
               <div className="flex justify-between">
                 <span>Min Inflow Claim (Guaranteed):</span>
                 <span className={`font-semibold ${isTamperMode ? 'text-rose-400' : 'text-[#10B981]'}`}>
-                  {isTamperMode ? "₹85,000 / mo [TAMPERED]" : "₹25,000 / mo [AUTHENTIC]"}
+                  {isTamperMode ? "₹85,000 / mo [TAMPERED]" : `₹${Math.round(profile.telemetry_summary.monthly_inflow_inr * 0.5).toLocaleString('en-IN')} / mo [AUTHENTIC]`}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>Telemetry Shift Consistency:</span>
+                <span>Shift Consistency:</span>
                 <span className="text-white font-semibold">{profile.telemetry_summary.consistency_rate}</span>
               </div>
             </div>
@@ -158,17 +240,17 @@ export const LenderView: React.FC<LenderViewProps> = ({
             <input
               type="range"
               min={10000}
-              max={60000}
+              max={activeLender.max_limit_inr}
               step={2500}
-              value={requestedLoan}
+              value={Math.min(requestedLoan, activeLender.max_limit_inr)}
               onChange={(e) => setRequestedLoan(Number(e.target.value))}
               className="w-full h-2 bg-[#160A2E] rounded-lg appearance-none cursor-pointer accent-[#C084FC]"
             />
 
             <div className="flex items-center justify-between text-[11px] font-mono text-[#6B7280]">
               <span>Min: ₹10,000</span>
-              <span className="text-amber-400 font-semibold">Prime Tier Cap: ₹35,000</span>
-              <span>Max: ₹60,000</span>
+              <span className="text-amber-400 font-semibold">{activeLender.name} Cap: ₹{activeLender.max_limit_inr.toLocaleString('en-IN')}</span>
+              <span>Max: ₹{activeLender.max_limit_inr.toLocaleString('en-IN')}</span>
             </div>
 
             {/* Rate & EMI Preview Cards */}
@@ -178,7 +260,7 @@ export const LenderView: React.FC<LenderViewProps> = ({
                 <span className="text-xs font-bold font-mono text-[#C084FC]">{estimatedPreview.rate}</span>
               </div>
               <div className="bg-[#07030F] p-2.5 rounded-2xl border border-[#1C0B3B]">
-                <span className="text-[10px] text-[#6B7280] block">Tenure</span>
+                <span className="text-[10px] text-[#6B7280] block">Max Tenure</span>
                 <span className="text-xs font-bold font-mono text-white">{estimatedPreview.tenure}</span>
               </div>
               <div className="bg-[#07030F] p-2.5 rounded-2xl border border-[#1C0B3B]">
@@ -256,7 +338,7 @@ export const LenderView: React.FC<LenderViewProps> = ({
             ) : (
               <>
                 <ShieldCheck className="w-4 h-4" />
-                <span>Execute Cryptographic Underwrite</span>
+                <span>Execute Cryptographic Underwrite ({activeLender.name})</span>
               </>
             )}
           </button>
@@ -273,14 +355,14 @@ export const LenderView: React.FC<LenderViewProps> = ({
                 <h3 className="text-sm font-bold text-white">Underwriting Decision Console</h3>
               </div>
               <span className="text-[10px] font-mono text-[#6B7280]">
-                {underwritingResult ? "Audit Completed" : "Awaiting Execution"}
+                {underwritingResult ? `Audited by ${activeLender.name}` : "Awaiting Execution"}
               </span>
             </div>
 
             {/* Dynamic Results Terminal */}
             {underwritingResult ? (
               <div className={`p-4 sm:p-5 rounded-2xl border flex flex-col gap-4 transition-all duration-300 animate-in fade-in ${
-                underwritingResult.decision === 'REJECTED_SECURITY_HALT'
+                underwritingResult.decision === 'REJECTED_SECURITY_HALT' || underwritingResult.decision === 'REJECTED_BELOW_MIN_CRI'
                   ? 'bg-[#2A0815]/60 border-rose-500/40 shadow-lg glow-rose'
                   : underwritingResult.decision === 'APPROVED'
                   ? 'bg-[#061F15]/60 border-emerald-500/40 shadow-lg glow-emerald'
@@ -292,13 +374,15 @@ export const LenderView: React.FC<LenderViewProps> = ({
                   <div className="flex items-center gap-2.5">
                     {underwritingResult.decision === 'REJECTED_SECURITY_HALT' ? (
                       <ShieldAlert className="w-5 h-5 text-rose-400" />
+                    ) : underwritingResult.decision === 'REJECTED_BELOW_MIN_CRI' ? (
+                      <AlertTriangle className="w-5 h-5 text-rose-400" />
                     ) : underwritingResult.decision === 'APPROVED' ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                     ) : (
                       <Sparkles className="w-5 h-5 text-[#C084FC]" />
                     )}
                     <span className={`text-xs sm:text-sm font-bold uppercase tracking-wider font-mono ${
-                      underwritingResult.decision === 'REJECTED_SECURITY_HALT'
+                      underwritingResult.decision === 'REJECTED_SECURITY_HALT' || underwritingResult.decision === 'REJECTED_BELOW_MIN_CRI'
                         ? 'text-rose-400'
                         : underwritingResult.decision === 'APPROVED'
                         ? 'text-emerald-400'
@@ -306,6 +390,8 @@ export const LenderView: React.FC<LenderViewProps> = ({
                     }`}>
                       {underwritingResult.decision === 'REJECTED_SECURITY_HALT'
                         ? 'HTTP 403 SECURITY HALT'
+                        : underwritingResult.decision === 'REJECTED_BELOW_MIN_CRI'
+                        ? 'HTTP 422 POLICY REJECTION'
                         : underwritingResult.decision === 'APPROVED'
                         ? 'HTTP 200 APPROVED'
                         : 'HTTP 200 CONDITIONAL APPROVAL'}
@@ -345,7 +431,36 @@ export const LenderView: React.FC<LenderViewProps> = ({
                   </div>
                 )}
 
-                {/* Scenario 2: Full Approved Loan */}
+                {/* Scenario 2: Policy Rejection (CRI below Lender Threshold) */}
+                {underwritingResult.decision === 'REJECTED_BELOW_MIN_CRI' && (
+                  <div className="flex flex-col gap-3 text-xs text-slate-300 font-mono">
+                    <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/25 text-rose-300">
+                      <span className="font-bold block mb-1">[!] CRI_THRESHOLD_POLICY_UNMET</span>
+                      <p className="leading-relaxed">
+                        {underwritingResult.error || `${profile.worker_name}'s CRI (${profile.cri_score.toFixed(1)}) is below ${activeLender.name}'s minimum mandate (${activeLender.min_cri}). Try testing with MicroFlex Capital.`}
+                      </p>
+                    </div>
+
+                    {underwritingResult.remediation_plan && (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[11px] font-bold text-[#F3F4F6] uppercase tracking-wider font-sans">
+                          Path to Prime Qualification
+                        </span>
+                        {underwritingResult.remediation_plan.actionable_milestones.map((m, idx) => (
+                          <div key={idx} className="p-2.5 rounded-xl bg-[#07030F] border border-[#1C0B3B] text-[11px] font-sans">
+                            <div className="flex items-center justify-between text-[#C084FC] font-semibold mb-1">
+                              <span>{m.day_range}: {m.title}</span>
+                              <span className="text-emerald-400 font-mono text-[10px]">{m.target_delta}</span>
+                            </div>
+                            <p className="text-[#9CA3AF] leading-snug">{m.action}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Scenario 3: Full Approved Loan */}
                 {underwritingResult.decision === 'APPROVED' && (
                   <div className="flex flex-col gap-3.5 text-xs">
                     <div className="grid grid-cols-2 gap-2 text-center">
@@ -356,7 +471,7 @@ export const LenderView: React.FC<LenderViewProps> = ({
                         </span>
                       </div>
                       <div className="bg-[#07030F] p-3 rounded-2xl border border-emerald-900/40">
-                        <span className="text-[10px] text-[#9CA3AF] block">Prime APR</span>
+                        <span className="text-[10px] text-[#9CA3AF] block">{activeLender.name} APR</span>
                         <span className="text-lg font-bold font-mono text-[#C084FC]">
                           {underwritingResult.annual_interest_rate_p_a}
                         </span>
@@ -374,13 +489,13 @@ export const LenderView: React.FC<LenderViewProps> = ({
                       </div>
                       <div className="flex justify-between">
                         <span>Underwriting Audit:</span>
-                        <span className="font-bold text-emerald-400">RFC 8785 VERIFIED • DISBURSAL READY</span>
+                        <span className="font-bold text-emerald-400">RFC 8785 VERIFIED • {activeLender.code} CLEARED</span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Scenario 3: Conditional Approval & 21-Day Counterfactual Roadmap */}
+                {/* Scenario 4: Conditional Approval & 21-Day Counterfactual Roadmap */}
                 {underwritingResult.decision === 'CONDITIONAL_APPROVAL' && (
                   <div className="flex flex-col gap-3.5 text-xs">
                     <div className="p-3.5 rounded-2xl bg-[#120826] border border-purple-500/30 flex items-center justify-between font-mono">
@@ -400,11 +515,11 @@ export const LenderView: React.FC<LenderViewProps> = ({
 
                     {underwritingResult.remediation_plan && (
                       <div className="flex flex-col gap-2">
-                        <span className="text-[11px] font-bold text-[#F3F4F6] uppercase tracking-wider">
+                        <span className="text-[11px] font-bold text-[#F3F4F6] uppercase tracking-wider font-sans">
                           21-Day Actionable Remediation Pathway
                         </span>
                         {underwritingResult.remediation_plan.actionable_milestones.map((m, idx) => (
-                          <div key={idx} className="p-2.5 rounded-xl bg-[#07030F] border border-[#1C0B3B] text-[11px]">
+                          <div key={idx} className="p-2.5 rounded-xl bg-[#07030F] border border-[#1C0B3B] text-[11px] font-sans">
                             <div className="flex items-center justify-between text-[#C084FC] font-semibold mb-1">
                               <span>{m.day_range}: {m.title}</span>
                               <span className="text-emerald-400 font-mono text-[10px]">{m.target_delta}</span>
@@ -426,7 +541,7 @@ export const LenderView: React.FC<LenderViewProps> = ({
                 </div>
                 <h4 className="text-sm font-semibold text-slate-300">Awaiting Cryptographic Underwriting</h4>
                 <p className="text-xs max-w-sm mt-1 text-[#9CA3AF]">
-                  Adjust the loan slider or toggle the 1-bit tamper simulation, then click <strong>"Execute Cryptographic Underwrite"</strong> to run the automated zero-trust decisioning engine.
+                  Select <strong>{activeLender.name}</strong> or <strong>MicroFlex Capital</strong>, adjust requested capital, and click <strong>"Execute Cryptographic Underwrite"</strong> to evaluate <strong>{profile.worker_name}'s</strong> risk tier against institutional mandates.
                 </p>
               </div>
             )}

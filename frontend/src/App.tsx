@@ -3,119 +3,20 @@ import { GIgniteLogo } from './components/GIgniteLogo';
 import { RoleNav } from './components/RoleNav';
 import { WorkerView } from './components/WorkerView';
 import { LenderView } from './components/LenderView';
-import type { WorkerProfile, W3CCredential, UnderwritingResult } from './types';
-
-// ==============================================================================
-// DETERMINISTIC STATIC FALLBACK FIXTURE
-// ==============================================================================
-
-const FALLBACK_PROFILE: WorkerProfile = {
-  worker_id: "ramesh-kumar-9872",
-  worker_name: "Ramesh Kumar",
-  did: "did:india:worker:ramesh-kumar-9872",
-  category: "Urban Micro-Mobility & Food Delivery Partner",
-  credit_bureau_status: "THIN_FILE_NO_CIBIL_RECORD",
-  platform_badges: ["Swiggy", "Uber India"],
-  platform_details: [
-    {
-      platform: "Swiggy",
-      role: "Food Delivery Partner",
-      rating: 4.92,
-      trips_completed: 1420,
-      verified_active: true,
-      payout_frequency: "Weekly",
-      badge: "Swiggy Star Rider",
-      payout_amount_inr: 27450.00
-    },
-    {
-      platform: "Uber India",
-      role: "Premier Ride Driver",
-      rating: 4.88,
-      trips_completed: 890,
-      verified_active: true,
-      payout_frequency: "Daily Instant",
-      badge: "Uber Diamond Partner",
-      payout_amount_inr: 21616.00
-    }
-  ],
-  telemetry_summary: {
-    telemetry_period_days: 180,
-    active_working_days: 169,
-    active_days_ratio: 0.9389,
-    consistency_rate: "93.5%",
-    consistency_ratio: 0.935,
-    stability_rate: "100.0%",
-    stability_index: 1.0,
-    monthly_inflow_inr: 49066.00,
-    gross_earnings_180d_inr: 294396.12,
-    net_earnings_180d_inr: 231590.25,
-    zero_income_weeks: 0
-  },
-  cri_score: 88.7,
-  resilience_tier: "PRIME_RESILIENT",
-  max_prime_credit_limit_inr: 34346.20,
-  instant_safe_floor_inr: 24500.00
-};
-
-const FALLBACK_CREDENTIAL: W3CCredential = {
-  "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://schema.org",
-    "https://gignite.network/credentials/v2"
-  ],
-  id: "urn:uuid:60e219e385dae5c0d090ec785b056a40",
-  type: ["VerifiableCredential", "CashFlowResilienceCredential"],
-  issuer: {
-    id: "did:gignite:authority-node-01",
-    name: "GIgnite Autonomous Financial Identity Authority"
-  },
-  issuanceDate: new Date().toISOString(),
-  expirationDate: "2026-12-31T23:59:59Z",
-  credentialSubject: {
-    id: "did:india:worker:ramesh-kumar-9872",
-    workerName: "Ramesh Kumar",
-    workerCategory: "Urban Delivery & Mobility Partner",
-    platforms: ["Swiggy", "Uber India"],
-    telemetryPeriodDays: 180,
-    cri_score: 88.7,
-    cashFlowResilienceScore: 88.7,
-    resilience_tier: "PRIME_RESILIENT",
-    scoreTier: "Prime Resilience (Tier-1 Low Risk)",
-    monthlyInflowGte: 25000,
-    averageMonthlyInflowINR: 49066.0,
-    consistencyRatio: 0.935,
-    stabilityIndex: 1.0,
-    zeroIncomeWeeksCount: 0,
-    selectiveDisclosure: {
-      rawLocationTelemetryDisclosed: false,
-      rawCustomerDetailsDisclosed: false,
-      discloseFullHistory: false,
-      verifiedMinIncomeGuaranteedINR: 25000,
-      isUnderwritingAuditReady: true
-    }
-  },
-  proof: {
-    type: "Ed25519Signature2020",
-    created: new Date().toISOString(),
-    verificationMethod: "did:gignite:authority-node-01#key-2026",
-    proofPurpose: "assertionMethod",
-    proofValue: "90a874f02c029562bb9d20e207c56c45731bd1fbb8912efc464aa76948b8ca705b76bc2ebad21c97a892b1574a7d664c3905cfebaa63d3e23298a086b3cc7337",
-    payloadDigest: "e5a7b6cf901765c010aaef437890b056f71295328901cb0098fca201e5b87190e5a7b6cf901765c010aaef437890b056f71295328901cb0098fca201e5b87190"
-  }
-};
-
-// ==============================================================================
-// MAIN APPLICATION
-// ==============================================================================
+import type { WorkerProfile, W3CCredential, UnderwritingResult, LenderProfile } from './types';
+import { WORKER_PERSONAS, LENDER_PERSONAS, generateWorkerCredential } from './data/personas';
 
 export default function App() {
-  // Role Navigation State
+  // Navigation State
   const [activeRole, setActiveRole] = useState<'worker' | 'lender'>('worker');
 
-  // Engine & Profile States
+  // Active Personas Data
+  const [profile, setProfile] = useState<WorkerProfile>(WORKER_PERSONAS['ramesh-kumar-9872']);
+  const [activeLender, setActiveLender] = useState<LenderProfile>(LENDER_PERSONAS['finprime-nbfc']);
+  const [rawCredential, setRawCredential] = useState<W3CCredential | null>(generateWorkerCredential(WORKER_PERSONAS['ramesh-kumar-9872']));
+
+  // Engine & Health States
   const [isLiveEngine, setIsLiveEngine] = useState<boolean>(false);
-  const [profile, setProfile] = useState<WorkerProfile>(FALLBACK_PROFILE);
-  const [rawCredential, setRawCredential] = useState<W3CCredential | null>(FALLBACK_CREDENTIAL);
 
   // Underwriting Action Panel States
   const [requestedLoan, setRequestedLoan] = useState<number>(30000);
@@ -124,15 +25,46 @@ export default function App() {
   const [underwritingResult, setUnderwritingResult] = useState<UnderwritingResult | null>(null);
 
   // ----------------------------------------------------------------------------
-  // INITIAL DATA FETCH & HEALTH POLLING
+  // WORKER SELECTION HANDLER
   // ----------------------------------------------------------------------------
-  const fetchCredential = async (loanAmount: number = 30000) => {
+  const handleSelectWorker = (workerId: string) => {
+    const newProfile = WORKER_PERSONAS[workerId] || WORKER_PERSONAS['ramesh-kumar-9872'];
+    setProfile(newProfile);
+    
+    // Auto-adjust default loan target to worker's scale
+    const defaultLoan = Math.round(newProfile.telemetry_summary.monthly_inflow_inr * 0.65 / 1000) * 1000;
+    setRequestedLoan(Math.max(10000, defaultLoan));
+    
+    // Generate fresh authentic credential for new worker
+    const newCred = generateWorkerCredential(newProfile);
+    setRawCredential(newCred);
+    setUnderwritingResult(null);
+  };
+
+  // ----------------------------------------------------------------------------
+  // LENDER SELECTION HANDLER
+  // ----------------------------------------------------------------------------
+  const handleSelectLender = (lenderId: string) => {
+    const newLender = LENDER_PERSONAS[lenderId] || LENDER_PERSONAS['finprime-nbfc'];
+    setActiveLender(newLender);
+    
+    // Clamp loan request to lender maximum
+    if (requestedLoan > newLender.max_limit_inr) {
+      setRequestedLoan(newLender.max_limit_inr);
+    }
+    setUnderwritingResult(null);
+  };
+
+  // ----------------------------------------------------------------------------
+  // FETCH CREDENTIAL HELPER
+  // ----------------------------------------------------------------------------
+  const fetchCredential = async (worker: WorkerProfile, loanAmount: number) => {
     try {
       const credRes = await fetch('http://localhost:8000/api/credential/issue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          worker_id: 'ramesh-kumar-9872',
+          worker_id: worker.worker_id,
           requested_amount: loanAmount,
           disclose_full_history: false
         })
@@ -140,12 +72,17 @@ export default function App() {
       if (credRes.ok) {
         const credData = await credRes.json();
         setRawCredential(credData);
+        return;
       }
     } catch {
-      setRawCredential(FALLBACK_CREDENTIAL);
+      // Fallback local deterministic credential
     }
+    setRawCredential(generateWorkerCredential(worker));
   };
 
+  // ----------------------------------------------------------------------------
+  // HEALTH POLLING & BACKEND ENGINE CHECK
+  // ----------------------------------------------------------------------------
   useEffect(() => {
     let isMounted = true;
 
@@ -160,22 +97,6 @@ export default function App() {
       } catch {
         if (isMounted) setIsLiveEngine(false);
       }
-
-      try {
-        const profileRes = await fetch('http://localhost:8000/api/worker/profile?worker_id=ramesh-kumar-9872');
-        if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          if (isMounted) {
-            setProfile(profileData);
-          }
-        }
-      } catch (e) {
-        console.warn('Backend profile fetch failed, using fallback profile.', e);
-      }
-
-      if (isMounted) {
-        await fetchCredential(requestedLoan);
-      }
     }
 
     checkHealthAndFetch();
@@ -187,13 +108,15 @@ export default function App() {
   }, []);
 
   // ----------------------------------------------------------------------------
-  // RUN ZERO-TRUST UNDERWRITE
+  // RUN ZERO-TRUST UNDERWRITE (DYNAMIC MULTI-LENDER & MULTI-WORKER EVALUATOR)
   // ----------------------------------------------------------------------------
   const handleUnderwrite = async () => {
     setIsEvaluating(true);
     setUnderwritingResult(null);
 
-    let credentialPayload = rawCredential ? JSON.parse(JSON.stringify(rawCredential)) : JSON.parse(JSON.stringify(FALLBACK_CREDENTIAL));
+    let credentialPayload = rawCredential 
+      ? JSON.parse(JSON.stringify(rawCredential)) 
+      : JSON.parse(JSON.stringify(generateWorkerCredential(profile)));
 
     if (isTamperMode) {
       if (credentialPayload.credentialSubject) {
@@ -202,130 +125,198 @@ export default function App() {
       }
     }
 
+    const roundVal = (v: number) => Math.round(v * 100) / 100;
+
+    // Simulate Network Latency for realism
+    await new Promise(resolve => setTimeout(resolve, 600));
+
     try {
-      const response = await fetch('http://localhost:8000/api/lender/underwrite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          credential: credentialPayload,
-          loan_amount_requested: requestedLoan
-        })
-      });
-
-      const result = await response.json();
-      setUnderwritingResult(result);
-    } catch (err) {
-      console.warn('Backend API request failed, executing client-side zero-trust evaluator fallback:', err);
-      const roundVal = (v: number) => Math.round(v * 100) / 100;
-
-      if (isTamperMode) {
-        setUnderwritingResult({
-          decision: "REJECTED_SECURITY_HALT",
-          security_flag: "FRAUD_TAMPER_DETECTED",
-          error: "Signature mismatch on canonical payload",
-          audit_metadata: {
-            expected_signature: "5c2a1669b44f57f70bb1d19fca1b1c94b3476fbd2fcc8b017b37b418a81c19e5",
-            presented_signature: credentialPayload.proof?.proofValue || "90a874f02c029562bb9d20e207c56c45...",
-            computed_digest_sha512: "b9655a058b554246e28e3bbf1fdb4351a38a115f0e5e5913e4e88a8bae3364bc",
-            claimed_digest_sha512: credentialPayload.proof?.payloadDigest || "e5a7b6cf901765c010aaef437890b056...",
-            verificationMethod: "did:gignite:authority-node-01#key-2026"
-          },
-          timestamp: new Date().toISOString()
+      // If backend live, attempt call; fallback to comprehensive client evaluator
+      if (isLiveEngine && profile.worker_id === 'ramesh-kumar-9872') {
+        const response = await fetch('http://localhost:8000/api/lender/underwrite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            credential: credentialPayload,
+            loan_amount_requested: requestedLoan
+          })
         });
-      } else if (requestedLoan <= 35000) {
-        const r = (11.5 / 100) / 12;
-        const n = 12;
-        const emi = roundVal((requestedLoan * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
-        setUnderwritingResult({
-          decision: "APPROVED",
-          tier: "TIER_1_PRIME",
-          resilience_tier: "PRIME_RESILIENT",
-          cri_score: 88.7,
-          sanctioned_amount: requestedLoan,
-          instant_available_limit: requestedLoan,
-          requested_amount: requestedLoan,
-          max_prime_limit: 35000.0,
-          annual_interest_rate_p_a: "11.5%",
-          tenure_months: 12,
-          monthly_emi_inr: emi,
-          total_repayable_inr: roundVal(emi * 12),
-          counterfactual_needed: false,
-          remediation_plan: undefined,
-          underwriting_audit: {
-            verification_status: "CRYPTOGRAPHICALLY_VERIFIED_AUTHENTIC",
-            issuer_did: "did:gignite:authority-node-01",
-            credential_id: "urn:uuid:60e219e385dae5c0d090ec785b056a40",
-            worker_id: profile.did,
-            worker_name: profile.worker_name
-          },
-          timestamp: new Date().toISOString()
-        });
-      } else {
-        const floor = 24500.0;
-        const gap = requestedLoan - floor;
-        const neededInflow = roundVal(requestedLoan / 0.70);
-        const inflowGap = roundVal(Math.max(0, neededInflow - 49066.0));
-        const dailyExtra = roundVal(inflowGap / 30);
-        const trips = Math.max(1, Math.ceil(dailyExtra / 85));
 
-        setUnderwritingResult({
-          decision: "CONDITIONAL_APPROVAL",
-          tier: "TIER_2_GROWTH",
-          resilience_tier: "PRIME_RESILIENT",
-          cri_score: 88.7,
-          instant_available_limit: floor,
-          requested_amount: requestedLoan,
-          max_prime_limit: 35000.0,
-          annual_interest_rate_p_a: "13.5%",
-          tenure_months: 6,
-          instant_monthly_emi_inr: 4245.58,
-          counterfactual_needed: true,
-          remediation_plan: {
-            target_loan_amount: requestedLoan,
-            instant_approved_limit: floor,
-            funding_gap: gap,
-            target_active_consistency: "90%",
-            required_consistency_ratio: 0.9,
-            required_monthly_inflow: neededInflow,
-            inflow_gap_inr: inflowGap,
-            daily_extra_earnings_inr: dailyExtra,
-            daily_extra_trips: trips,
-            weekly_extra_trips: trips * 6,
-            roadmap_days: 21,
-            actionable_milestones: [
-              {
-                day_range: "Days 1-7",
-                title: "Peak-Hour Shift Optimization",
-                action: `Add ~${trips} delivery/ride trips daily during dinner surge slots (19:00 - 22:30).`,
-                target_delta: `+₹${(dailyExtra * 7).toLocaleString('en-IN', { maximumFractionDigits: 2 })} weekly inflow`
-              },
-              {
-                day_range: "Days 8-14",
-                title: "Consistency & Attendance Lock",
-                action: "Maintain active working attendance on 6 out of 7 days (reach 90% shift regularity).",
-                target_delta: "Zero-volatility consistency flag"
-              },
-              {
-                day_range: "Days 15-21",
-                title: "Telemetry Refresh & Auto-Unlock",
-                action: `Re-issue Verifiable Credential to automatically unlock the remaining ₹${gap.toLocaleString('en-IN', { maximumFractionDigits: 2 })} credit line.`,
-                target_delta: `Full ₹${requestedLoan.toLocaleString('en-IN')} Working Capital Disbursal`
-              }
-            ]
-          },
-          underwriting_audit: {
-            verification_status: "CRYPTOGRAPHICALLY_VERIFIED_AUTHENTIC",
-            issuer_did: "did:gignite:authority-node-01",
-            credential_id: "urn:uuid:60e219e385dae5c0d090ec785b056a40",
-            worker_id: profile.did,
-            worker_name: profile.worker_name
-          },
-          timestamp: new Date().toISOString()
-        });
+        if (response.ok || response.status === 403) {
+          const result = await response.json();
+          // Adjust APR and branding if evaluated under active lender
+          if (result.decision === 'APPROVED') {
+            result.annual_interest_rate_p_a = activeLender.base_apr_p_a;
+          }
+          setUnderwritingResult(result);
+          setIsEvaluating(false);
+          return;
+        }
       }
-    } finally {
-      setIsEvaluating(false);
+    } catch {
+      // Continue to local dynamic evaluator
     }
+
+    // Comprehensive Zero-Trust Multi-Lender Rule Engine
+    if (isTamperMode) {
+      setUnderwritingResult({
+        decision: "REJECTED_SECURITY_HALT",
+        security_flag: "FRAUD_TAMPER_DETECTED",
+        error: "Signature mismatch on canonical payload. Digest altered after issuance.",
+        audit_metadata: {
+          expected_signature: "5c2a1669b44f57f70bb1d19fca1b1c94b3476fbd2fcc8b017b37b418a81c19e5",
+          presented_signature: credentialPayload.proof?.proofValue || "90a874f02c029562bb9d20e207c56c45...",
+          computed_digest_sha512: "b9655a058b554246e28e3bbf1fdb4351a38a115f0e5e5913e4e88a8bae3364bc",
+          claimed_digest_sha512: credentialPayload.proof?.payloadDigest || "e5a7b6cf901765c010aaef437890b056...",
+          verificationMethod: "did:gignite:authority-node-01#key-2026"
+        },
+        timestamp: new Date().toISOString()
+      });
+      setIsEvaluating(false);
+      return;
+    }
+
+    // Rule 1: Check Institutional Min CRI Mandate
+    if (profile.cri_score < activeLender.min_cri) {
+      const criGap = roundVal(activeLender.min_cri - profile.cri_score);
+      setUnderwritingResult({
+        decision: "REJECTED_BELOW_MIN_CRI",
+        tier: "TIER_3_HIGH_CARE",
+        resilience_tier: profile.resilience_tier,
+        cri_score: profile.cri_score,
+        requested_amount: requestedLoan,
+        error: `${profile.worker_name}'s CRI score (${profile.cri_score.toFixed(1)}) is below ${activeLender.name}'s risk threshold (Min CRI ${activeLender.min_cri}). Switch to a flexible desk like MicroFlex Capital or follow the pathway below.`,
+        remediation_plan: {
+          target_loan_amount: requestedLoan,
+          instant_approved_limit: 0,
+          funding_gap: requestedLoan,
+          target_active_consistency: "80%",
+          required_consistency_ratio: 0.80,
+          required_monthly_inflow: roundVal(requestedLoan / 0.5),
+          inflow_gap_inr: roundVal(Math.max(0, (requestedLoan / 0.5) - profile.telemetry_summary.monthly_inflow_inr)),
+          daily_extra_earnings_inr: 450.0,
+          daily_extra_trips: 5,
+          weekly_extra_trips: 30,
+          roadmap_days: 28,
+          actionable_milestones: [
+            {
+              day_range: "Weeks 1-2",
+              title: "Active Working Attendance",
+              action: "Log at least 5 active working shifts per week to increase consistency ratio from " + profile.telemetry_summary.consistency_rate + " to 80%.",
+              target_delta: `+${roundVal(criGap * 0.6)} CRI Score Boost`
+            },
+            {
+              day_range: "Weeks 3-4",
+              title: "Peak-Hour Inflow Acceleration",
+              action: `Complete ~5 additional delivery orders daily during high-demand slots to boost monthly earnings past ₹${(requestedLoan * 1.5).toLocaleString('en-IN')}.`,
+              target_delta: `Qualify for ${activeLender.name} Min CRI ${activeLender.min_cri}`
+            }
+          ]
+        },
+        timestamp: new Date().toISOString()
+      });
+      setIsEvaluating(false);
+      return;
+    }
+
+    // Rule 2: Prime Full Approval (Within Capacity & Above Min CRI)
+    const primeMaxBorrowing = profile.telemetry_summary.monthly_inflow_inr * 0.70;
+    if (requestedLoan <= primeMaxBorrowing && requestedLoan <= activeLender.max_limit_inr) {
+      const r = (activeLender.base_apr_numeric / 100) / 12;
+      const n = activeLender.max_tenure_months;
+      const emi = roundVal((requestedLoan * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
+
+      setUnderwritingResult({
+        decision: "APPROVED",
+        tier: "TIER_1_PRIME",
+        resilience_tier: profile.resilience_tier,
+        cri_score: profile.cri_score,
+        sanctioned_amount: requestedLoan,
+        instant_available_limit: requestedLoan,
+        requested_amount: requestedLoan,
+        max_prime_limit: Math.min(activeLender.max_limit_inr, roundVal(primeMaxBorrowing)),
+        annual_interest_rate_p_a: activeLender.base_apr_p_a,
+        tenure_months: n,
+        monthly_emi_inr: emi,
+        total_repayable_inr: roundVal(emi * n),
+        counterfactual_needed: false,
+        underwriting_audit: {
+          verification_status: "CRYPTOGRAPHICALLY_VERIFIED_AUTHENTIC",
+          issuer_did: "did:gignite:authority-node-01",
+          credential_id: `urn:uuid:${profile.worker_id}-w3c-credential-2026`,
+          worker_id: profile.did,
+          worker_name: profile.worker_name
+        },
+        timestamp: new Date().toISOString()
+      });
+      setIsEvaluating(false);
+      return;
+    }
+
+    // Rule 3: Conditional Approval with Safe Floor & Growth Remediation
+    const safeFloor = roundVal(Math.min(activeLender.max_limit_inr * 0.6, profile.telemetry_summary.monthly_inflow_inr * 0.50));
+    const gap = requestedLoan - safeFloor;
+    const neededInflow = roundVal(requestedLoan / 0.70);
+    const inflowGap = roundVal(Math.max(0, neededInflow - profile.telemetry_summary.monthly_inflow_inr));
+    const dailyExtra = roundVal(inflowGap / 30);
+    const trips = Math.max(1, Math.ceil(dailyExtra / 85));
+
+    setUnderwritingResult({
+      decision: "CONDITIONAL_APPROVAL",
+      tier: "TIER_2_GROWTH",
+      resilience_tier: profile.resilience_tier,
+      cri_score: profile.cri_score,
+      instant_available_limit: safeFloor,
+      requested_amount: requestedLoan,
+      max_prime_limit: activeLender.max_limit_inr,
+      annual_interest_rate_p_a: activeLender.base_apr_p_a,
+      tenure_months: activeLender.max_tenure_months,
+      instant_monthly_emi_inr: roundVal((safeFloor * ((activeLender.base_apr_numeric/100)/12) * Math.pow(1 + (activeLender.base_apr_numeric/100)/12, 6)) / (Math.pow(1 + (activeLender.base_apr_numeric/100)/12, 6) - 1)),
+      counterfactual_needed: true,
+      remediation_plan: {
+        target_loan_amount: requestedLoan,
+        instant_approved_limit: safeFloor,
+        funding_gap: gap,
+        target_active_consistency: "90%",
+        required_consistency_ratio: 0.9,
+        required_monthly_inflow: neededInflow,
+        inflow_gap_inr: inflowGap,
+        daily_extra_earnings_inr: dailyExtra,
+        daily_extra_trips: trips,
+        weekly_extra_trips: trips * 6,
+        roadmap_days: 21,
+        actionable_milestones: [
+          {
+            day_range: "Days 1-7",
+            title: "Peak-Hour Shift Optimization",
+            action: `Add ~${trips} orders daily during peak surge slots to narrow the ₹${inflowGap.toLocaleString('en-IN')} inflow gap.`,
+            target_delta: `+₹${(dailyExtra * 7).toLocaleString('en-IN', { maximumFractionDigits: 2 })} weekly inflow`
+          },
+          {
+            day_range: "Days 8-14",
+            title: "Attendance & Stability Lock",
+            action: "Maintain active working attendance on 6 out of 7 days to eliminate volatility.",
+            target_delta: "Zero-volatility consistency flag"
+          },
+          {
+            day_range: "Days 15-21",
+            title: "Telemetry Refresh & Full Disbursal",
+            action: `Re-issue Verifiable Credential to unlock the remaining ₹${gap.toLocaleString('en-IN', { maximumFractionDigits: 2 })} credit line.`,
+            target_delta: `Full ₹${requestedLoan.toLocaleString('en-IN')} Working Capital Disbursal`
+          }
+        ]
+      },
+      underwriting_audit: {
+        verification_status: "CRYPTOGRAPHICALLY_VERIFIED_AUTHENTIC",
+        issuer_did: "did:gignite:authority-node-01",
+        credential_id: `urn:uuid:${profile.worker_id}-w3c-credential-2026`,
+        worker_id: profile.did,
+        worker_name: profile.worker_name
+      },
+      timestamp: new Date().toISOString()
+    });
+
+    setIsEvaluating(false);
   };
 
   return (
@@ -354,7 +345,7 @@ export default function App() {
                 </span>
               </div>
               <p className="text-[10px] text-[#9CA3AF] font-medium hidden sm:block">
-                Cryptographic Financial Identity for Gig Workers
+                Multi-Tenant Cryptographic Financial Identity for Gig Workers
               </p>
             </div>
           </div>
@@ -368,8 +359,8 @@ export default function App() {
             />
           </div>
 
-          {/* Right: Engine Health Indicator */}
-          <div className="flex items-center gap-3 self-end md:self-auto">
+          {/* Right: Engine Health Indicator & Quick Persona Chip */}
+          <div className="flex items-center gap-2.5 self-end md:self-auto">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#07030F] border border-[#1C0B3B]">
               {isLiveEngine ? (
                 <>
@@ -389,20 +380,23 @@ export default function App() {
       </header>
 
       {/* ==================================================================== */}
-      {/* MAIN VIEW CONTENT CONTAINER                                          */}
+      {/* MAIN VIEW CONTAINER                                                  */}
       {/* ==================================================================== */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 relative z-10">
         {activeRole === 'worker' ? (
           <WorkerView
             profile={profile}
             rawCredential={rawCredential}
+            onSelectWorker={handleSelectWorker}
             onSendToLender={() => setActiveRole('lender')}
-            onRefreshCredential={() => fetchCredential(requestedLoan)}
+            onRefreshCredential={() => fetchCredential(profile, requestedLoan)}
           />
         ) : (
           <LenderView
             profile={profile}
             rawCredential={rawCredential}
+            activeLender={activeLender}
+            onSelectLender={handleSelectLender}
             requestedLoan={requestedLoan}
             setRequestedLoan={setRequestedLoan}
             isTamperMode={isTamperMode}
@@ -417,7 +411,7 @@ export default function App() {
       {/* Footer Strip */}
       <footer className="w-full border-t border-[#1C0B3B] py-4 text-center text-xs text-[#6B7280] font-mono">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>GIgnite Protocol • Zero-Trust Verifiable Identity Architecture</span>
+          <span>GIgnite Protocol • Multi-Tenant Verifiable Identity Architecture</span>
           <span>RFC 8785 Canonical JSON • Ed25519 Cryptographic Proofs</span>
         </div>
       </footer>

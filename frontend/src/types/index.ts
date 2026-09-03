@@ -1,6 +1,16 @@
-// ==============================================================================
-// GIGNITE IDENTITY & UNDERWRITING TYPES
-// ==============================================================================
+export interface LenderProfile {
+  id: string;
+  name: string;
+  code: string;
+  focus: string;
+  max_limit_inr: number;
+  min_cri: number;
+  base_apr_p_a: string;
+  base_apr_numeric: number;
+  max_tenure_months: number;
+  badge: string;
+  accent_color: string;
+}
 
 export interface PlatformRecord {
   platform: string;

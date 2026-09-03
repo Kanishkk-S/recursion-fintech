@@ -16,13 +16,18 @@ import {
   ArrowRight,
   X,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  ChevronDown,
+  UserCheck,
+  ShoppingBag
 } from 'lucide-react';
 import type { WorkerProfile, W3CCredential } from '../types';
+import { WORKER_PERSONAS } from '../data/personas';
 
 interface WorkerViewProps {
   profile: WorkerProfile;
   rawCredential: W3CCredential | null;
+  onSelectWorker: (workerId: string) => void;
   onSendToLender: () => void;
   onRefreshCredential: () => Promise<void>;
 }
@@ -30,6 +35,7 @@ interface WorkerViewProps {
 export const WorkerView: React.FC<WorkerViewProps> = ({
   profile,
   rawCredential,
+  onSelectWorker,
   onSendToLender,
   onRefreshCredential
 }) => {
@@ -37,6 +43,7 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
   const [copiedJson, setCopiedJson] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);
 
   const handleCopyDid = () => {
     navigator.clipboard.writeText(profile.did);
@@ -61,48 +68,125 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
     }
   };
 
+  // Helper to render platform icon
+  const getPlatformIcon = (platform: string) => {
+    const p = platform.toLowerCase();
+    if (p.includes('swiggy') || p.includes('zomato')) {
+      return <Bike className="w-3.5 h-3.5 text-orange-400" />;
+    }
+    if (p.includes('uber')) {
+      return <Car className="w-3.5 h-3.5 text-[#C084FC]" />;
+    }
+    return <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />;
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto flex flex-col gap-6 py-2">
       
-      {/* Worker Greeting & DID Quick Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-[#0D061C] border border-[#1C0B3B]">
+      {/* Worker Greeting & Persona Selector Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-3xl bg-[#0D061C] border border-[#1C0B3B]">
+        
+        {/* Left: Avatar & Worker Details */}
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7E22CE] to-[#A855F7] p-[1.5px] shadow-md shadow-purple-950/40">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7E22CE] to-[#A855F7] p-[1.5px] shadow-md shadow-purple-950/40 shrink-0">
             <div className="w-full h-full bg-[#0D061C] rounded-[14px] flex items-center justify-center font-bold text-base text-white">
-              RK
+              {profile.worker_name.split(' ').map(n => n[0]).join('')}
             </div>
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-lg sm:text-xl font-bold text-white">{profile.worker_name}</h1>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/15 text-[#D8B4FE] border border-purple-500/25">
-                Verified Partner
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                profile.resilience_tier === 'PRIME_RESILIENT'
+                  ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                  : profile.resilience_tier === 'NEAR_PRIME'
+                  ? 'bg-purple-500/15 text-[#D8B4FE] border-purple-500/25'
+                  : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+              }`}>
+                {profile.resilience_tier.replace('_', ' ')}
               </span>
             </div>
             <p className="text-xs text-[#9CA3AF] mt-0.5">{profile.category}</p>
           </div>
         </div>
 
-        {/* Action Buttons: Export Credential & Refresh */}
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+        {/* Right: Persona Dropdown & Actions */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          
+          {/* Persona Switcher Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#140929] border border-purple-500/30 text-xs font-semibold text-white hover:border-purple-400/50 transition-all cursor-pointer shadow-sm"
+            >
+              <UserCheck className="w-3.5 h-3.5 text-[#C084FC]" />
+              <span>Persona: <strong>{profile.worker_name.split(' ')[0]} (CRI {profile.cri_score.toFixed(1)})</strong></span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#9CA3AF]" />
+            </button>
+
+            {isUserDropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl bg-[#0D061C] border border-purple-500/30 shadow-2xl z-50 p-2 flex flex-col gap-1.5 animate-in fade-in">
+                <span className="text-[10px] font-mono text-[#6B7280] px-2 py-1 uppercase tracking-wider block">
+                  Select Worker Persona:
+                </span>
+                {Object.values(WORKER_PERSONAS).map((w) => (
+                  <button
+                    key={w.worker_id}
+                    type="button"
+                    onClick={() => {
+                      onSelectWorker(w.worker_id);
+                      setIsUserDropdownOpen(false);
+                    }}
+                    className={`flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                      profile.worker_id === w.worker_id
+                        ? 'bg-[#1E0E3E] border border-purple-500/40 text-white'
+                        : 'hover:bg-[#140929] text-[#9CA3AF] hover:text-white'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-1.5 font-bold text-xs text-white">
+                        <span>{w.worker_name}</span>
+                        <span className="text-[10px] font-mono text-[#C084FC]">({w.did.split(':').pop()})</span>
+                      </div>
+                      <span className="text-[10px] text-[#6B7280] block">
+                        {w.platform_badges.join(' + ')} • ₹{w.telemetry_summary.monthly_inflow_inr.toLocaleString('en-IN')}/mo
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-xs font-bold font-mono ${
+                        w.cri_score >= 75 ? 'text-emerald-400' : w.cri_score >= 60 ? 'text-[#C084FC]' : 'text-amber-400'
+                      }`}>
+                        {w.cri_score.toFixed(1)}
+                      </span>
+                      <span className="text-[9px] block text-[#6B7280]">{w.resilience_tier.replace('_', ' ')}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Sync Telemetry Button */}
           <button
             type="button"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#140929] border border-[#1C0B3B] text-xs font-semibold text-[#9CA3AF] hover:text-white hover:border-purple-500/30 transition-colors cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#140929] border border-[#1C0B3B] text-xs font-semibold text-[#9CA3AF] hover:text-white hover:border-purple-500/30 transition-colors cursor-pointer disabled:opacity-50"
             title="Re-compute and mint fresh credential"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#C084FC]' : ''}`} />
-            <span>{isRefreshing ? 'Minting...' : 'Sync Telemetry'}</span>
+            <span className="hidden sm:inline">{isRefreshing ? 'Minting...' : 'Sync'}</span>
           </button>
 
+          {/* Export Button */}
           <button
             type="button"
             onClick={() => setIsExportModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl purple-magenta-gradient text-white text-xs font-bold shadow-md glow-purple hover:opacity-95 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl purple-magenta-gradient text-white text-xs font-bold shadow-md glow-purple hover:opacity-95 transition-all cursor-pointer"
           >
             <Share2 className="w-3.5 h-3.5" />
-            <span>Export Credential</span>
+            <span>Export</span>
           </button>
         </div>
       </div>
@@ -110,7 +194,7 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
       {/* Main 2-Column Grid: Hero Credential Card + Inflow Stream */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* LEFT COLUMN: Metallic Hero Credential Card (5.5 Cols) */}
+        {/* LEFT COLUMN: Metallic Hero Credential Card (6 Cols) */}
         <div className="lg:col-span-6 flex flex-col gap-6">
           
           {/* E-Wallet Card */}
@@ -140,22 +224,26 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
                     {profile.cri_score.toFixed(1)}
                   </span>
                   <span className="text-[#9CA3AF] font-mono text-sm font-semibold">/ 100</span>
-                  <span className="px-2.5 py-1 rounded-lg bg-purple-500/15 text-[#E9D5FF] border border-purple-500/30 text-xs font-bold font-mono tracking-wide">
+                  <span className={`px-2.5 py-1 rounded-lg border text-xs font-bold font-mono tracking-wide ${
+                    profile.cri_score >= 75
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                      : profile.cri_score >= 60
+                      ? 'bg-purple-500/15 text-[#E9D5FF] border-purple-500/30'
+                      : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                  }`}>
                     {profile.resilience_tier.replace('_', ' ')}
                   </span>
                 </div>
               </div>
 
-              {/* Platform Chips */}
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-orange-500/10 border border-orange-500/25 text-orange-400 text-xs font-semibold">
-                  <Bike className="w-3.5 h-3.5" />
-                  <span>Swiggy</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#160A2E] border border-[#1C0B3B] text-slate-200 text-xs font-semibold">
-                  <Car className="w-3.5 h-3.5 text-[#C084FC]" />
-                  <span>Uber India</span>
-                </div>
+              {/* Platform Badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {profile.platform_badges.map((badge, idx) => (
+                  <div key={idx} className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#160A2E] border border-[#1C0B3B] text-slate-200 text-xs font-semibold">
+                    {getPlatformIcon(badge)}
+                    <span>{badge}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -163,7 +251,7 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
             <div className="pt-5 mt-5 border-t border-[#1C0B3B] flex items-center justify-between text-xs relative z-10">
               <div className="flex items-center gap-2 font-mono">
                 <Fingerprint className="w-4 h-4 text-[#C084FC]" />
-                <span className="text-[#9CA3AF] font-medium">RFC 8785 • Ed25519 Signed</span>
+                <span className="text-[#9CA3AF] font-medium">RFC 8785 • Ed25519 Sealed</span>
               </div>
               <div className="text-right">
                 <span className="text-[#9CA3AF] block text-[10px] uppercase tracking-wider">Attested Inflow</span>
@@ -200,10 +288,10 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
             <div>
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#C084FC]" />
-                Ready to Apply for Working Capital?
+                Transfer Credential to Underwriter
               </h3>
               <p className="text-xs text-[#9CA3AF] mt-1">
-                Your verified W3C credential will be instantly transferred to the NBFC Underwriting Terminal.
+                Test how different NBFC lenders assess <strong>{profile.worker_name}'s</strong> risk tier.
               </p>
             </div>
             <button
@@ -218,7 +306,7 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
 
         </div>
 
-        {/* RIGHT COLUMN: Telemetry Stream & Attested Inflow Ledger (6.5 Cols) */}
+        {/* RIGHT COLUMN: Telemetry Stream & Attested Inflow Ledger (6 Cols) */}
         <div className="lg:col-span-6 flex flex-col gap-6">
           
           {/* 3x Metrics Summary */}
@@ -232,9 +320,14 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
                 {profile.telemetry_summary.consistency_rate}
               </div>
               <div className="w-full bg-[#160A2E] h-1.5 rounded-full overflow-hidden">
-                <div className="bg-[#10B981] h-full rounded-full" style={{ width: '93.5%' }}></div>
+                <div 
+                  className="bg-[#10B981] h-full rounded-full transition-all duration-500" 
+                  style={{ width: `${Math.min(100, profile.telemetry_summary.consistency_ratio * 100)}%` }}
+                ></div>
               </div>
-              <span className="text-[10px] text-[#6B7280] mt-1.5 font-mono">169 / 180 Days</span>
+              <span className="text-[10px] text-[#6B7280] mt-1.5 font-mono">
+                {profile.telemetry_summary.active_working_days} / {profile.telemetry_summary.telemetry_period_days} Days
+              </span>
             </div>
 
             <div className="bg-[#0D061C] p-4 rounded-2xl border border-[#1C0B3B] flex flex-col justify-between">
@@ -246,9 +339,14 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
                 {profile.telemetry_summary.stability_rate}
               </div>
               <div className="w-full bg-[#160A2E] h-1.5 rounded-full overflow-hidden">
-                <div className="bg-gradient-to-r from-[#7E22CE] to-[#A855F7] h-full rounded-full" style={{ width: '100%' }}></div>
+                <div 
+                  className="bg-gradient-to-r from-[#7E22CE] to-[#A855F7] h-full rounded-full transition-all duration-500" 
+                  style={{ width: `${Math.min(100, profile.telemetry_summary.stability_index * 100)}%` }}
+                ></div>
               </div>
-              <span className="text-[10px] text-[#6B7280] mt-1.5 font-mono">0 Zero-Income Weeks</span>
+              <span className="text-[10px] text-[#6B7280] mt-1.5 font-mono">
+                {profile.telemetry_summary.zero_income_weeks} Zero-Income Weeks
+              </span>
             </div>
 
             <div className="bg-[#0D061C] p-4 rounded-2xl border border-[#1C0B3B] flex flex-col justify-between">
@@ -257,12 +355,14 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
                 <Calendar className="w-3.5 h-3.5 text-[#A855F7]" />
               </div>
               <div className="text-xl font-bold font-mono text-white mb-2">
-                180 <span className="text-xs font-normal text-[#9CA3AF]">Days</span>
+                {profile.telemetry_summary.telemetry_period_days} <span className="text-xs font-normal text-[#9CA3AF]">Days</span>
               </div>
               <div className="w-full bg-[#160A2E] h-1.5 rounded-full overflow-hidden">
                 <div className="bg-[#7E22CE] h-full rounded-full" style={{ width: '100%' }}></div>
               </div>
-              <span className="text-[10px] text-[#6B7280] mt-1.5 font-mono">Continuous Telemetry</span>
+              <span className="text-[10px] text-[#6B7280] mt-1.5 font-mono">
+                {profile.platform_badges.join(' + ')}
+              </span>
             </div>
           </div>
 
@@ -274,58 +374,37 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
                 <h3 className="text-sm font-bold text-white tracking-wide">Attested Inflow Ledger</h3>
               </div>
               <span className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-purple-500/10 text-[#D8B4FE] border border-purple-500/20 font-semibold">
-                zkTLS Dual-Oracle
+                zkTLS Verified Multi-Tenant
               </span>
             </div>
 
             <div className="flex flex-col gap-3">
-              {/* Swiggy Payout Item */}
-              <div className="bg-[#120826] p-4 rounded-2xl border border-[#1C0B3B] flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-purple-500/30 transition-colors">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
-                    <Bike className="w-5 h-5 text-orange-400" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm text-[#F3F4F6]">Swiggy Partner Payout</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30">
-                        zkTLS Verified
-                      </span>
+              {profile.platform_details && profile.platform_details.map((plat, idx) => (
+                <div key={idx} className="bg-[#120826] p-4 rounded-2xl border border-[#1C0B3B] flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-purple-500/30 transition-colors">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-[#160A2E] border border-[#1C0B3B] flex items-center justify-center shrink-0">
+                      {getPlatformIcon(plat.platform)}
                     </div>
-                    <p className="text-xs text-[#9CA3AF] mt-0.5">
-                      1,420 delivery trips • Customer Rating: <span className="text-amber-400 font-semibold font-mono">★ 4.92</span>
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right sm:shrink-0">
-                  <span className="text-base font-bold font-mono text-[#10B981]">+₹27,450.00</span>
-                  <span className="text-[11px] text-[#6B7280] block font-mono">Weekly Direct Settlement</span>
-                </div>
-              </div>
-
-              {/* Uber Driver Settlement Item */}
-              <div className="bg-[#120826] p-4 rounded-2xl border border-[#1C0B3B] flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-purple-500/30 transition-colors">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-11 h-11 rounded-xl bg-[#160A2E] border border-[#1C0B3B] flex items-center justify-center shrink-0">
-                    <Car className="w-5 h-5 text-[#C084FC]" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm text-[#F3F4F6]">Uber Driver Settlement</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30">
-                        zkTLS Verified
-                      </span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-[#F3F4F6]">{plat.platform} Partner Payout</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30">
+                          zkTLS Verified
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#9CA3AF] mt-0.5">
+                        {plat.trips_completed} orders • Rating: <span className="text-amber-400 font-semibold font-mono">★ {plat.rating.toFixed(2)}</span>
+                      </p>
                     </div>
-                    <p className="text-xs text-[#9CA3AF] mt-0.5">
-                      890 ride journeys • Customer Rating: <span className="text-amber-400 font-semibold font-mono">★ 4.88</span>
-                    </p>
+                  </div>
+                  <div className="text-right sm:shrink-0">
+                    <span className="text-base font-bold font-mono text-[#10B981]">
+                      +₹{plat.payout_amount_inr.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-[11px] text-[#6B7280] block font-mono">{plat.payout_frequency} Settlement</span>
                   </div>
                 </div>
-                <div className="text-right sm:shrink-0">
-                  <span className="text-base font-bold font-mono text-[#10B981]">+₹21,616.00</span>
-                  <span className="text-[11px] text-[#6B7280] block font-mono">Daily Instant Payout</span>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Zero Knowledge Privacy Guarantee Note */}
@@ -344,7 +423,7 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
       </div>
 
       {/* ==================================================================== */}
-      {/* EXPORT CREDENTIAL MODAL / DRAWER                                     */}
+      {/* EXPORT CREDENTIAL MODAL                                              */}
       {/* ==================================================================== */}
       {isExportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
@@ -357,7 +436,7 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
                   <FileCode2 className="w-4 h-4 text-[#C084FC]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-white">Export Verifiable Credential (W3C)</h3>
+                  <h3 className="font-bold text-base text-white">Export W3C Credential ({profile.worker_name})</h3>
                   <p className="text-xs text-[#9CA3AF]">Canonical JSON-LD with Ed25519 Cryptographic Proof</p>
                 </div>
               </div>
@@ -373,8 +452,8 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
             {/* Signature & Issuer Metadata */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
               <div className="p-3 rounded-xl bg-[#07030F] border border-[#1C0B3B]">
-                <span className="text-[10px] text-[#6B7280] block">Issuer DID</span>
-                <span className="text-[#C084FC] truncate block">{rawCredential?.issuer?.id || "did:gignite:authority-node-01"}</span>
+                <span className="text-[10px] text-[#6B7280] block">Subject DID</span>
+                <span className="text-[#C084FC] truncate block">{profile.did}</span>
               </div>
               <div className="p-3 rounded-xl bg-[#07030F] border border-[#1C0B3B]">
                 <span className="text-[10px] text-[#6B7280] block">Proof Type</span>
