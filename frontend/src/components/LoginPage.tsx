@@ -3,11 +3,14 @@ import {
   Wallet,
   Landmark,
   ArrowRight,
-  Sparkles,
   ShieldCheck,
   Cpu,
   Mail,
-  AlertCircle
+  User,
+  Building2,
+  Sparkles,
+  CheckCircle2,
+  Phone
 } from 'lucide-react';
 import { GIgniteLogo } from './GIgniteLogo';
 import { findAccountByEmail } from '../data/personas';
@@ -18,15 +21,59 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+  // Mode: 'signin' | 'signup'
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [selectedTab, setSelectedTab] = useState<'worker' | 'lender'>('worker');
+
+  // Input States
   const [emailInput, setEmailInput] = useState<string>('');
+  const [notFoundPrompt, setNotFoundPrompt] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleLogin = (emailToUse?: string) => {
-    const targetEmail = (emailToUse || emailInput).trim();
+  // Sign Up Form States
+  const [fullName, setFullName] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('Swiggy');
+  const [monthlyInflow, setMonthlyInflow] = useState<number>(35000);
+  const [institutionName, setInstitutionName] = useState<string>('');
+  const [lenderFocus, setLenderFocus] = useState<string>('Prime / Growth Mandate');
+  const [minCri, setMinCri] = useState<number>(65);
+
+  // --------------------------------------------------------------------------
+  // HANDLE SIGN IN
+  // --------------------------------------------------------------------------
+  const handleSignIn = () => {
+    const targetEmail = emailInput.trim();
     if (!targetEmail) {
-      setErrorMessage('Please enter a registered email address.');
+      setErrorMessage('Please enter your email address.');
+      setNotFoundPrompt(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+    setNotFoundPrompt(null);
+
+    setTimeout(() => {
+      const resolved = findAccountByEmail(targetEmail);
+      if (resolved) {
+        onLoginSuccess(resolved);
+      } else {
+        setIsLoading(false);
+        setNotFoundPrompt(targetEmail);
+      }
+    }, 400);
+  };
+
+  // --------------------------------------------------------------------------
+  // HANDLE SIGN UP (NEW REGISTRATION)
+  // --------------------------------------------------------------------------
+  const handleSignUp = (e: React.FormEvent) => {
+    e.preventDefault();
+    const targetEmail = emailInput.trim();
+    if (!targetEmail) {
+      setErrorMessage('Email is required for registration.');
       return;
     }
 
@@ -34,19 +81,78 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setErrorMessage(null);
 
     setTimeout(() => {
-      const resolved = findAccountByEmail(targetEmail);
-      if (resolved) {
-        onLoginSuccess(resolved);
-      } else {
-        setErrorMessage(`No verified identity found for "${targetEmail}". Please try one of the registered demo accounts below.`);
-        setIsLoading(false);
-      }
-    }, 350);
-  };
+      if (selectedTab === 'worker') {
+        const nameToUse = fullName.trim() || targetEmail.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const workerId = `${nameToUse.toLowerCase().replace(/\s+/g, '-')}-${Math.floor(1000 + Math.random() * 9000)}`;
+        
+        // Calculate initial synthetic CRI
+        const calculatedCri = Math.min(95, Math.max(50, Math.round(55 + (monthlyInflow / 50000) * 35)));
+        const resilienceTier = calculatedCri >= 75 ? 'PRIME_RESILIENT' : calculatedCri >= 60 ? 'NEAR_PRIME' : 'VULNERABLE';
 
-  const handleQuickLogin = (email: string) => {
-    setEmailInput(email);
-    handleLogin(email);
+        const newWorker: ExtendedWorkerProfile = {
+          worker_id: workerId,
+          worker_name: nameToUse,
+          email: targetEmail,
+          phone: phone.trim() || "+91 98000 11223",
+          did: `did:india:worker:${workerId.split('-').pop()}`,
+          category: `${selectedPlatform} Fleet Partner`,
+          credit_bureau_status: "THIN_FILE_VERIFIED_BY_GIGNITE",
+          platform_badges: [selectedPlatform],
+          platform_details: [
+            {
+              platform: selectedPlatform,
+              role: `${selectedPlatform} Delivery Partner`,
+              rating: 4.85,
+              trips_completed: 340,
+              verified_active: true,
+              payout_frequency: "Weekly",
+              badge: `${selectedPlatform} Verified Partner`,
+              payout_amount_inr: monthlyInflow
+            }
+          ],
+          telemetry_summary: {
+            telemetry_period_days: 90,
+            active_working_days: 78,
+            active_days_ratio: 0.866,
+            consistency_rate: "86.6%",
+            consistency_ratio: 0.866,
+            stability_rate: "92.0%",
+            stability_index: 0.92,
+            monthly_inflow_inr: monthlyInflow,
+            gross_earnings_180d_inr: monthlyInflow * 3,
+            net_earnings_180d_inr: monthlyInflow * 2.4,
+            zero_income_weeks: 0
+          },
+          cri_score: calculatedCri,
+          resilience_tier: resilienceTier,
+          max_prime_credit_limit_inr: Math.round(monthlyInflow * 0.7),
+          instant_safe_floor_inr: Math.round(monthlyInflow * 0.5)
+        };
+
+        onLoginSuccess({ type: 'worker', worker: newWorker });
+      } else {
+        const instName = institutionName.trim() || targetEmail.split('@')[0].toUpperCase() + ' Capital';
+        const lenderId = `${instName.toLowerCase().replace(/\s+/g, '-')}-${Math.floor(100 + Math.random() * 900)}`;
+
+        const newLender: ExtendedLenderProfile = {
+          id: lenderId,
+          name: instName,
+          email: targetEmail,
+          portal_name: `${instName} Underwriting Portal`,
+          code: `${instName.toUpperCase().replace(/\s+/g, '_')}_DESK`,
+          focus: lenderFocus,
+          max_limit_inr: 40000,
+          min_cri: minCri,
+          base_apr_p_a: "13.5%",
+          base_apr_numeric: 13.5,
+          max_tenure_months: 12,
+          badge: `${instName} Institutional Desk`,
+          accent_color: "purple"
+        };
+
+        onLoginSuccess({ type: 'lender', lender: newLender });
+      }
+    }, 450);
   };
 
   return (
@@ -56,7 +162,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[650px] h-[450px] bg-[#240552]/12 rounded-full blur-[170px] pointer-events-none"></div>
       <div className="fixed bottom-0 right-1/4 w-[450px] h-[450px] bg-[#7E22CE]/06 rounded-full blur-[190px] pointer-events-none"></div>
 
-      {/* Top Simple Header */}
+      {/* Top Header */}
       <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between relative z-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-[#140929] border border-purple-500/30 flex items-center justify-center shadow-md shadow-purple-950/40 p-1">
@@ -76,34 +182,41 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         </div>
       </header>
 
-      {/* Main Center Login Container */}
+      {/* Main Center Container */}
       <main className="flex-1 flex items-center justify-center px-4 py-8 relative z-10">
         <div className="w-full max-w-lg bg-[#0D061C] border border-[#1C0B3B] rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6">
           
-          {/* Card Title & Icon */}
+          {/* Header Title & Shield Icon */}
           <div className="text-center flex flex-col items-center gap-3">
             <div className="w-14 h-14 rounded-3xl bg-gradient-to-tr from-[#7E22CE] to-[#A855F7] p-[1.5px] shadow-lg shadow-purple-950/50">
               <div className="w-full h-full bg-[#0D061C] rounded-[22px] flex items-center justify-center">
-                <ShieldCheck className="w-7 h-7 text-[#C084FC]" />
+                {authMode === 'signin' ? (
+                  <ShieldCheck className="w-7 h-7 text-[#C084FC]" />
+                ) : (
+                  <Sparkles className="w-7 h-7 text-[#C084FC]" />
+                )}
               </div>
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                Financial Identity Airlock
+                {authMode === 'signin' ? 'Financial Identity Airlock' : 'Create New Financial Identity'}
               </h1>
               <p className="text-xs sm:text-sm text-[#9CA3AF] mt-1">
-                Enter your email to load your cryptographic telemetry or underwriting terminal
+                {authMode === 'signin'
+                  ? 'Enter your registered email to load your cryptographic telemetry or underwriting desk'
+                  : 'Register your decentralized identity with verified zkTLS telemetry integration'}
               </p>
             </div>
           </div>
 
-          {/* Role Filter Tabs */}
+          {/* Role Filter Tabs (Worker vs Lender) */}
           <div className="grid grid-cols-2 gap-2 bg-[#07030F] p-1.5 rounded-2xl border border-[#1C0B3B]">
             <button
               type="button"
               onClick={() => {
                 setSelectedTab('worker');
                 setErrorMessage(null);
+                setNotFoundPrompt(null);
               }}
               className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedTab === 'worker'
@@ -120,6 +233,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               onClick={() => {
                 setSelectedTab('lender');
                 setErrorMessage(null);
+                setNotFoundPrompt(null);
               }}
               className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedTab === 'lender'
@@ -132,128 +246,256 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </button>
           </div>
 
-          {/* Email Input Form */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleLogin();
-            }}
-            className="flex flex-col gap-4"
-          >
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-300">
-                {selectedTab === 'worker' ? 'Registered Worker Email' : 'Institutional Underwriter Email'}
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  value={emailInput}
-                  onChange={(e) => {
-                    setEmailInput(e.target.value);
-                    if (errorMessage) setErrorMessage(null);
-                  }}
-                  placeholder={selectedTab === 'worker' ? 'e.g., ramesh@swiggy.in' : 'e.g., underwriter@finprime.com'}
-                  className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder-[#6B7280] focus:outline-none focus:border-purple-500/60 transition-colors font-mono"
-                />
-              </div>
-            </div>
-
-            {/* Error Message */}
-            {errorMessage && (
-              <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2 animate-in fade-in">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3.5 px-4 rounded-2xl purple-magenta-gradient hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg glow-purple transition-all cursor-pointer disabled:opacity-50"
+          {/* ---------------------------------------------------------------- */}
+          {/* MODE 1: SIGN IN VIEW                                             */}
+          {/* ---------------------------------------------------------------- */}
+          {authMode === 'signin' ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSignIn();
+              }}
+              className="flex flex-col gap-4"
             >
-              <span>{isLoading ? 'Verifying Identity...' : 'Access Financial Identity'}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">
+                  {selectedTab === 'worker' ? 'Worker Email Address' : 'Underwriting Desk Email'}
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    value={emailInput}
+                    onChange={(e) => {
+                      setEmailInput(e.target.value);
+                      if (errorMessage) setErrorMessage(null);
+                      if (notFoundPrompt) setNotFoundPrompt(null);
+                    }}
+                    placeholder={selectedTab === 'worker' ? 'e.g., ramesh@swiggy.in' : 'e.g., underwriter@finprime.com'}
+                    className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder-[#6B7280] focus:outline-none focus:border-purple-500/60 transition-colors font-mono"
+                    autoFocus
+                  />
+                </div>
+              </div>
 
-          {/* Demo Quick-Access Accounts for Hackathon Judges */}
-          <div className="pt-4 border-t border-[#1C0B3B] flex flex-col gap-3">
-            <div className="flex items-center justify-between text-xs text-[#9CA3AF]">
-              <span className="flex items-center gap-1.5 font-semibold text-slate-300">
-                <Sparkles className="w-3.5 h-3.5 text-[#C084FC]" />
-                Demo Persona One-Click Access
-              </span>
-              <span className="text-[10px] font-mono text-[#6B7280]">Instant Login</span>
-            </div>
+              {/* Standard Error Message */}
+              {errorMessage && (
+                <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2 animate-in fade-in">
+                  <span>{errorMessage}</span>
+                </div>
+              )}
 
-            {selectedTab === 'worker' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {/* PROMPT: NO ACCOUNT FOUND -> WANNA SIGN UP? */}
+              {notFoundPrompt && (
+                <div className="p-4 rounded-2xl bg-[#1F0A20] border border-purple-500/40 text-xs flex flex-col gap-3 animate-in fade-in shadow-lg">
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-6 h-6 rounded-lg bg-[#7E22CE]/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#C084FC]" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-white">No account found for "{notFoundPrompt}"</p>
+                      <p className="text-[#9CA3AF] mt-0.5">
+                        Would you like to register this email and create a new GIgnite Financial Identity?
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1 border-t border-purple-500/20">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode('signup');
+                        setNotFoundPrompt(null);
+                      }}
+                      className="flex-1 py-2 px-3 rounded-xl purple-magenta-gradient text-white font-bold text-xs shadow-md hover:opacity-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <span>Yes, Sign Up Now</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNotFoundPrompt(null)}
+                      className="py-2 px-3 rounded-xl bg-[#07030F] border border-[#1C0B3B] text-[#9CA3AF] hover:text-white text-xs font-semibold cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3.5 px-4 rounded-2xl purple-magenta-gradient hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg glow-purple transition-all cursor-pointer disabled:opacity-50"
+              >
+                <span>{isLoading ? 'Verifying Identity...' : 'Access Financial Identity'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              {/* Direct Toggle to Sign Up */}
+              <div className="text-center pt-2">
                 <button
                   type="button"
-                  onClick={() => handleQuickLogin('ramesh@swiggy.in')}
-                  className="p-2.5 rounded-xl bg-[#120826] border border-[#1C0B3B] hover:border-purple-500/40 text-left transition-all cursor-pointer group"
+                  onClick={() => {
+                    setAuthMode('signup');
+                    setErrorMessage(null);
+                    setNotFoundPrompt(null);
+                  }}
+                  className="text-xs text-[#9CA3AF] hover:text-[#C084FC] transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white group-hover:text-[#C084FC]">Ramesh</span>
-                    <span className="text-[9px] font-mono font-bold text-emerald-400">CRI 88.7</span>
-                  </div>
-                  <span className="text-[10px] text-[#6B7280] block truncate">Swiggy + Uber</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('priya@blinkit.com')}
-                  className="p-2.5 rounded-xl bg-[#120826] border border-[#1C0B3B] hover:border-purple-500/40 text-left transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white group-hover:text-[#C084FC]">Priya</span>
-                    <span className="text-[9px] font-mono font-bold text-[#C084FC]">CRI 64.2</span>
-                  </div>
-                  <span className="text-[10px] text-[#6B7280] block truncate">Blinkit + Zepto</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('vikram@zomato.com')}
-                  className="p-2.5 rounded-xl bg-[#120826] border border-[#1C0B3B] hover:border-purple-500/40 text-left transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white group-hover:text-[#C084FC]">Vikram</span>
-                    <span className="text-[9px] font-mono font-bold text-amber-400">CRI 41.0</span>
-                  </div>
-                  <span className="text-[10px] text-[#6B7280] block truncate">Zomato Fleet</span>
+                  Don't have an identity registered? <strong className="text-white underline">Sign Up</strong>
                 </button>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('underwriter@finprime.com')}
-                  className="p-3 rounded-xl bg-[#120826] border border-[#1C0B3B] hover:border-purple-500/40 text-left transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white group-hover:text-[#C084FC]">FinPrime NBFC</span>
-                    <span className="text-[10px] font-mono text-emerald-400">Min CRI 75</span>
-                  </div>
-                  <span className="text-[10px] text-[#6B7280] block">Prime Low-Risk Desk</span>
-                </button>
+            </form>
+          ) : (
+            /* ---------------------------------------------------------------- */
+            /* MODE 2: SIGN UP VIEW                                             */
+            /* ---------------------------------------------------------------- */
+            <form onSubmit={handleSignUp} className="flex flex-col gap-4 animate-in fade-in">
+              
+              {/* Full Name / Organization */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">
+                  {selectedTab === 'worker' ? 'Full Legal Name' : 'Financial Institution Name'}
+                </label>
+                <div className="relative">
+                  {selectedTab === 'worker' ? (
+                    <User className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  ) : (
+                    <Building2 className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  )}
+                  <input
+                    type="text"
+                    value={selectedTab === 'worker' ? fullName : institutionName}
+                    onChange={(e) => selectedTab === 'worker' ? setFullName(e.target.value) : setInstitutionName(e.target.value)}
+                    placeholder={selectedTab === 'worker' ? 'e.g., Ananya Roy' : 'e.g., Apex Capital NBFC'}
+                    className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#6B7280] focus:outline-none focus:border-purple-500/60 transition-colors"
+                    required
+                  />
+                </div>
+              </div>
 
+              {/* Email Input */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Email Address</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    placeholder="e.g., ananya@uber.com"
+                    className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#6B7280] focus:outline-none focus:border-purple-500/60 transition-colors font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Worker Specific Fields */}
+              {selectedTab === 'worker' ? (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-300">Primary Platform</label>
+                      <div className="relative">
+                        <select
+                          value={selectedPlatform}
+                          onChange={(e) => setSelectedPlatform(e.target.value)}
+                          className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/60 transition-colors cursor-pointer"
+                        >
+                          <option value="Swiggy">Swiggy Delivery</option>
+                          <option value="Uber India">Uber Rides</option>
+                          <option value="Zomato">Zomato Fleet</option>
+                          <option value="Blinkit">Blinkit Express</option>
+                          <option value="Zepto">Zepto Dispatch</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-300">Monthly Inflow (INR)</label>
+                      <input
+                        type="number"
+                        min={5000}
+                        max={150000}
+                        step={1000}
+                        value={monthlyInflow}
+                        onChange={(e) => setMonthlyInflow(Number(e.target.value))}
+                        className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-purple-500/60 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-300">Mobile Phone</label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+91 98000 11223"
+                        className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#6B7280] focus:outline-none focus:border-purple-500/60 transition-colors font-mono"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* Lender Specific Fields */
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-300">Minimum CRI Mandate</label>
+                    <input
+                      type="number"
+                      min={40}
+                      max={90}
+                      value={minCri}
+                      onChange={(e) => setMinCri(Number(e.target.value))}
+                      className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-purple-500/60 transition-colors"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-300">Risk Focus</label>
+                    <select
+                      value={lenderFocus}
+                      onChange={(e) => setLenderFocus(e.target.value)}
+                      className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/60 transition-colors cursor-pointer"
+                    >
+                      <option value="Prime / Low-Risk Mandate">Prime / Low-Risk</option>
+                      <option value="Growth / Flexible Mandate">Growth / Flexible</option>
+                      <option value="Micro-Capital Mandate">Micro-Capital</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit Sign Up Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3.5 px-4 rounded-2xl purple-magenta-gradient hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg glow-purple transition-all cursor-pointer disabled:opacity-50 mt-2"
+              >
+                <span>{isLoading ? 'Minting Identity & Issuing W3C Proof...' : 'Complete Registration & Enter'}</span>
+                <CheckCircle2 className="w-4 h-4" />
+              </button>
+
+              {/* Back to Sign In Toggle */}
+              <div className="text-center pt-1">
                 <button
                   type="button"
-                  onClick={() => handleQuickLogin('desk@microflex.capital')}
-                  className="p-3 rounded-xl bg-[#120826] border border-[#1C0B3B] hover:border-purple-500/40 text-left transition-all cursor-pointer group"
+                  onClick={() => {
+                    setAuthMode('signin');
+                    setErrorMessage(null);
+                  }}
+                  className="text-xs text-[#9CA3AF] hover:text-[#C084FC] transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white group-hover:text-[#C084FC]">MicroFlex Capital</span>
-                    <span className="text-[10px] font-mono text-[#C084FC]">Min CRI 50</span>
-                  </div>
-                  <span className="text-[10px] text-[#6B7280] block">Growth Micro-Lender Desk</span>
+                  Already have an account? <strong className="text-white underline">Sign In</strong>
                 </button>
               </div>
-            )}
-          </div>
+            </form>
+          )}
 
         </div>
       </main>
