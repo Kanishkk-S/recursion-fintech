@@ -240,7 +240,7 @@ export default function App() {
           if (isMounted) setRawCredential(credData);
         }
       } catch {
-        // Build fallback local credential
+        // Fallback local credential
         const fallbackCred = {
           "@context": [
             "https://www.w3.org/2018/credentials/v1",
@@ -315,7 +315,6 @@ export default function App() {
     setIsEvaluating(true);
     setUnderwritingResult(null);
 
-    // Prepare credential payload (inject tamper if switch is toggled)
     let credentialPayload = rawCredential ? JSON.parse(JSON.stringify(rawCredential)) : null;
 
     if (!credentialPayload) {
@@ -339,7 +338,6 @@ export default function App() {
     }
 
     if (isTamperMode) {
-      // 1-Bit Payload Tamper: modify claim while preserving original cryptographic signature
       if (credentialPayload.credentialSubject) {
         credentialPayload.credentialSubject.monthlyInflowGte = 85000;
         credentialPayload.credentialSubject.averageMonthlyInflowINR = 85000.0;
@@ -360,7 +358,6 @@ export default function App() {
       setUnderwritingResult(result);
     } catch (err) {
       console.warn('Backend API request failed, executing client-side zero-trust evaluator fallback:', err);
-      // Simulated local evaluation fallback
       if (isTamperMode) {
         setUnderwritingResult({
           decision: "REJECTED_SECURITY_HALT",
@@ -473,7 +470,7 @@ export default function App() {
 
   const roundVal = (v: number) => Math.round(v * 100) / 100;
 
-  // Estimated preview values for slider
+  // Real-time slider calculation preview
   const estimatedPreview = useMemo(() => {
     const isPrime = requestedLoan <= 35000;
     const rate = isPrime ? 11.5 : 13.5;
@@ -490,33 +487,37 @@ export default function App() {
   }, [requestedLoan]);
 
   return (
-    <div className="min-h-screen bg-[#0A0D14] text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-[#05020C] text-[#F5F5F6] flex flex-col font-sans selection:bg-[#A231C4] selection:text-white relative overflow-x-hidden">
       
+      {/* Ambient background cosmic violet orb glows */}
+      <div className="fixed top-0 left-1/4 w-[600px] h-[500px] bg-[#240552]/25 rounded-full blur-[140px] pointer-events-none -translate-y-1/2"></div>
+      <div className="fixed bottom-0 right-1/4 w-[500px] h-[500px] bg-[#A231C4]/15 rounded-full blur-[160px] pointer-events-none translate-y-1/2"></div>
+
       {/* ==================================================================== */}
-      {/* 3-COLUMN BANKKHONG FINTECH WALLET LAYOUT                             */}
+      {/* 3-COLUMN LAYOUT WITH AI MANIFESTATION COACH COSMIC PURPLE TEMPLATE  */}
       {/* ==================================================================== */}
-      <div className="flex-1 w-full max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-screen border-x border-[#1E293B]">
+      <div className="flex-1 w-full max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-screen border-x border-[#240552]/40 relative z-10 backdrop-blur-[1px]">
         
         {/* ------------------------------------------------------------------ */}
         {/* COLUMN 1: LEFT NAVIGATION SIDEBAR (2.5 Cols on Desktop)             */}
         {/* ------------------------------------------------------------------ */}
-        <aside className="lg:col-span-3 xl:col-span-2 bg-[#0F1420] border-b lg:border-b-0 lg:border-r border-[#1E293B] flex flex-col justify-between p-5">
+        <aside className="lg:col-span-3 xl:col-span-2 bg-[#0B0518]/90 backdrop-blur-xl border-b lg:border-b-0 lg:border-r border-[#240552]/40 flex flex-col justify-between p-5">
           <div className="flex flex-col gap-6">
             
             {/* Brand Logo & Airlock Badge */}
-            <div className="flex items-center justify-between pb-4 border-b border-[#1E293B]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#240552]/50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-800 flex items-center justify-center shadow-lg shadow-indigo-500/20 border border-indigo-400/30">
+                <div className="w-10 h-10 rounded-2xl purple-magenta-gradient flex items-center justify-center shadow-lg shadow-purple-900/40 border border-purple-400/40">
                   <Zap className="w-5 h-5 text-white fill-white" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-lg tracking-tight text-white">GIgnite</span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 tracking-wider">
+                    <span className="font-extrabold text-lg tracking-tight text-[#F5F5F6]">GIgnite</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[#A231C4]/20 text-[#A231C4] border border-[#A231C4]/40 tracking-wider">
                       AIRLOCK
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 font-medium">Fintech Zero-Trust Protocol</p>
+                  <p className="text-[11px] text-[#9F9EA2] font-medium">Fintech Zero-Trust Protocol</p>
                 </div>
               </div>
             </div>
@@ -525,85 +526,85 @@ export default function App() {
             <nav className="flex flex-col gap-1.5">
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 cursor-pointer ${
                   activeTab === 'dashboard'
-                    ? 'bg-indigo-600/15 text-indigo-400 border border-indigo-500/30 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#131926]'
+                    ? 'bg-[#240552]/60 text-[#F5F5F6] border border-[#A231C4]/40 shadow-sm glow-purple'
+                    : 'text-[#9F9EA2] hover:text-[#F5F5F6] hover:bg-[#140929]'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <LayoutDashboard className="w-4 h-4" />
+                  <LayoutDashboard className="w-4 h-4 text-[#A231C4]" />
                   <span>Dashboard</span>
                 </div>
-                {activeTab === 'dashboard' && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>}
+                {activeTab === 'dashboard' && <span className="w-1.5 h-1.5 rounded-full bg-[#A231C4] shadow-sm shadow-[#A231C4]"></span>}
               </button>
 
               <button
                 onClick={() => setActiveTab('credentials')}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 cursor-pointer ${
                   activeTab === 'credentials'
-                    ? 'bg-indigo-600/15 text-indigo-400 border border-indigo-500/30 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#131926]'
+                    ? 'bg-[#240552]/60 text-[#F5F5F6] border border-[#A231C4]/40 shadow-sm glow-purple'
+                    : 'text-[#9F9EA2] hover:text-[#F5F5F6] hover:bg-[#140929]'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <ShieldCheck className="w-4 h-4" />
+                  <ShieldCheck className="w-4 h-4 text-[#4D22E6]" />
                   <span>W3C Credentials</span>
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">v2.0</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1B0B38] text-[#9F9EA2] font-mono border border-[#240552]">v2.0</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('telemetry')}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 cursor-pointer ${
                   activeTab === 'telemetry'
-                    ? 'bg-indigo-600/15 text-indigo-400 border border-indigo-500/30 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#131926]'
+                    ? 'bg-[#240552]/60 text-[#F5F5F6] border border-[#A231C4]/40 shadow-sm glow-purple'
+                    : 'text-[#9F9EA2] hover:text-[#F5F5F6] hover:bg-[#140929]'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Activity className="w-4 h-4" />
+                  <Activity className="w-4 h-4 text-[#10B981]" />
                   <span>Live Telemetry</span>
                 </div>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse shadow-sm shadow-emerald-500"></span>
               </button>
 
               <button
                 onClick={() => setActiveTab('underwriter')}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 cursor-pointer ${
                   activeTab === 'underwriter'
-                    ? 'bg-indigo-600/15 text-indigo-400 border border-indigo-500/30 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#131926]'
+                    ? 'bg-[#240552]/60 text-[#F5F5F6] border border-[#A231C4]/40 shadow-sm glow-purple'
+                    : 'text-[#9F9EA2] hover:text-[#F5F5F6] hover:bg-[#140929]'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Landmark className="w-4 h-4" />
+                  <Landmark className="w-4 h-4 text-[#A231C4]" />
                   <span>Underwriter Sandbox</span>
                 </div>
               </button>
             </nav>
 
-            {/* Quick Engine Telemetry Specs Card */}
-            <div className="bg-[#131926] p-3.5 rounded-2xl border border-[#1E293B] flex flex-col gap-2.5 text-xs">
-              <div className="flex items-center justify-between text-slate-400 font-medium">
-                <span className="flex items-center gap-1.5 text-slate-300">
-                  <Cpu className="w-3.5 h-3.5 text-indigo-400" />
+            {/* Quick Oracle Spec Card */}
+            <div className="bg-[#140929]/80 p-3.5 rounded-2xl border border-[#240552]/50 flex flex-col gap-2.5 text-xs">
+              <div className="flex items-center justify-between text-[#9F9EA2] font-medium">
+                <span className="flex items-center gap-1.5 text-[#F5F5F6]">
+                  <Cpu className="w-3.5 h-3.5 text-[#A231C4]" />
                   Oracle Spec
                 </span>
-                <span className="text-[11px] text-emerald-400 font-mono">RFC 8785</span>
+                <span className="text-[11px] text-[#10B981] font-mono">RFC 8785</span>
               </div>
-              <div className="flex flex-col gap-1 text-[11px] text-slate-400 font-mono">
+              <div className="flex flex-col gap-1 text-[11px] text-[#9F9EA2] font-mono">
                 <div className="flex justify-between">
                   <span>Signer:</span>
-                  <span className="text-slate-200 truncate max-w-[100px]">Ed25519-HSM</span>
+                  <span className="text-[#F5F5F6] truncate max-w-[100px]">Ed25519-HSM</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Digest:</span>
-                  <span className="text-slate-200">SHA-512</span>
+                  <span className="text-[#A231C4] font-semibold">SHA-512</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Proof:</span>
-                  <span className="text-emerald-400">Zero-Trust</span>
+                  <span className="text-[#10B981]">Zero-Trust</span>
                 </div>
               </div>
             </div>
@@ -611,23 +612,23 @@ export default function App() {
           </div>
 
           {/* Bottom Profile Pin: Decentralized ID */}
-          <div className="pt-4 border-t border-[#1E293B] flex flex-col gap-2">
+          <div className="pt-4 border-t border-[#240552]/50 flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center">
-                  <Fingerprint className="w-4 h-4 text-indigo-400" />
+                <div className="w-7 h-7 rounded-xl bg-[#1E0E3E] border border-[#240552] flex items-center justify-center">
+                  <Fingerprint className="w-4 h-4 text-[#A231C4]" />
                 </div>
-                <span className="text-xs font-semibold text-slate-300">Worker DID</span>
+                <span className="text-xs font-semibold text-[#F5F5F6]">Worker DID</span>
               </div>
               <button
                 onClick={handleCopyDid}
                 title="Copy DID"
-                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+                className="p-1 rounded-lg hover:bg-[#1E0E3E] text-[#9F9EA2] hover:text-[#F5F5F6] transition-colors cursor-pointer"
               >
-                {copiedDid ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedDid ? <Check className="w-3.5 h-3.5 text-[#10B981]" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
-            <div className="px-2.5 py-1.5 rounded-lg bg-[#0A0D14] border border-[#1E293B] text-[10px] font-mono text-slate-400 truncate">
+            <div className="px-2.5 py-1.5 rounded-lg bg-[#05020C] border border-[#240552]/60 text-[10px] font-mono text-[#9F9EA2] truncate">
               {profile.did}
             </div>
           </div>
@@ -636,84 +637,84 @@ export default function App() {
         {/* ------------------------------------------------------------------ */}
         {/* COLUMN 2: MAIN WORKSPACE / TELEMETRY FEED (5.5-6 Cols)              */}
         {/* ------------------------------------------------------------------ */}
-        <section className="lg:col-span-5 xl:col-span-6 bg-[#0A0D14] p-5 lg:p-7 flex flex-col gap-6 overflow-y-auto max-h-screen">
+        <section className="lg:col-span-5 xl:col-span-6 bg-[#05020C]/90 p-5 lg:p-7 flex flex-col gap-6 overflow-y-auto max-h-screen">
           
           {/* Header Bar */}
           <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-            {/* Search Input for Proofs/Streams */}
+            {/* Search Input */}
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#65636A] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search verifiable streams, DID hashes, zk-proofs..."
-                className="w-full bg-[#0F1420] border border-[#1E293B] rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-[#0E071D] border border-[#240552]/60 rounded-xl pl-9 pr-4 py-2 text-xs text-[#F5F5F6] placeholder-[#65636A] focus:outline-none focus:border-[#A231C4] transition-colors"
               />
             </div>
 
             {/* Engine Status & Worker Badge */}
             <div className="flex items-center gap-3 shrink-0">
               {/* Dynamic Status Badge */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0F1420] border border-[#1E293B]">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0E071D] border border-[#240552]/60">
                 {isLiveEngine ? (
                   <>
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span className="text-[11px] font-bold text-emerald-400 tracking-wider">LIVE ENGINE</span>
+                    <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse shadow-sm shadow-emerald-500"></span>
+                    <span className="text-[11px] font-bold text-[#10B981] tracking-wider font-mono">LIVE ENGINE</span>
                   </>
                 ) : (
                   <>
                     <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                    <span className="text-[11px] font-bold text-amber-400 tracking-wider">MOCK FIXTURE MODE</span>
+                    <span className="text-[11px] font-bold text-amber-400 tracking-wider font-mono">MOCK FIXTURE MODE</span>
                   </>
                 )}
               </div>
 
               {/* User Avatar Badge */}
-              <div className="flex items-center gap-2 pl-2 border-l border-[#1E293B]">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-emerald-400 p-[1.5px]">
-                  <div className="w-full h-full bg-[#0F1420] rounded-full flex items-center justify-center font-bold text-xs text-white">
+              <div className="flex items-center gap-2 pl-2 border-l border-[#240552]/50">
+                <div className="w-8 h-8 rounded-full p-[1.5px] purple-magenta-gradient shadow-md shadow-purple-900/30">
+                  <div className="w-full h-full bg-[#0E071D] rounded-full flex items-center justify-center font-bold text-xs text-[#F5F5F6]">
                     RK
                   </div>
                 </div>
                 <div className="hidden sm:flex flex-col">
-                  <span className="text-xs font-semibold text-white leading-none">{profile.worker_name}</span>
-                  <span className="text-[10px] text-emerald-400 font-medium leading-tight">Tier 1 Gig Partner</span>
+                  <span className="text-xs font-semibold text-[#F5F5F6] leading-none">{profile.worker_name}</span>
+                  <span className="text-[10px] text-[#A231C4] font-medium leading-tight">Tier 1 Gig Partner</span>
                 </div>
               </div>
             </div>
           </header>
 
           {/* ================================================================ */}
-          {/* HERO CREDENTIAL CARD (Elite Dark Metallic E-Wallet Debit Card)   */}
+          {/* HERO CREDENTIAL CARD (Cosmic Purple/Magenta Metallic Finish)     */}
           {/* ================================================================ */}
-          <div className="hero-card-gradient rounded-3xl p-6 border border-slate-700/60 relative overflow-hidden shadow-2xl glow-indigo group transition-all duration-300">
-            {/* Ambient metallic sheen orb */}
-            <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
-            <div className="absolute bottom-0 left-0 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20"></div>
+          <div className="cosmic-hero-gradient rounded-3xl p-6 border border-[#A231C4]/40 relative overflow-hidden shadow-2xl glow-purple group transition-all duration-300">
+            {/* Ambient radial lighting flares */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[#A231C4]/20 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+            <div className="absolute bottom-0 left-0 w-60 h-60 bg-[#4D22E6]/25 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20"></div>
 
-            {/* Card Top Row: W3C Badge & EMV Chip Styling */}
+            {/* Card Top Row: W3C Badge & Chip Styling */}
             <div className="flex items-center justify-between relative z-10 mb-6">
-              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-900/80 border border-slate-700/80 backdrop-blur-md">
-                <Lock className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="text-xs font-semibold text-slate-200 tracking-wide">W3C Verifiable Credential</span>
+              <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#0E071D]/90 border border-[#A231C4]/40 backdrop-blur-md">
+                <Lock className="w-3.5 h-3.5 text-[#A231C4]" />
+                <span className="text-xs font-semibold text-[#F5F5F6] tracking-wide">W3C Verifiable Credential</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">FinCore Oracle</span>
-                <div className="w-9 h-6 rounded-md bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 border border-amber-300/40 opacity-85 shadow-inner"></div>
+                <span className="text-[10px] font-mono text-[#9F9EA2] uppercase tracking-widest">GIgnite Oracle</span>
+                <div className="w-9 h-6 rounded-md bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 border border-amber-300/40 opacity-90 shadow-inner"></div>
               </div>
             </div>
 
             {/* Card Middle Row: Prominent CRI Score Display */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative z-10 my-4">
               <div>
-                <span className="text-xs font-medium text-slate-400 tracking-wider uppercase">Cash-Flow Resilience Index</span>
+                <span className="text-xs font-medium text-[#9F9EA2] tracking-wider uppercase">Cash-Flow Resilience Index</span>
                 <div className="flex items-baseline gap-3 mt-1">
                   <span className="text-5xl lg:text-6xl font-black font-mono tracking-tight text-white drop-shadow-md">
                     {profile.cri_score.toFixed(1)}
                   </span>
-                  <span className="text-slate-400 font-mono text-sm font-semibold">/ 100</span>
-                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold font-mono tracking-wide">
+                  <span className="text-[#9F9EA2] font-mono text-sm font-semibold">/ 100</span>
+                  <span className="px-2.5 py-1 rounded-lg bg-[#A231C4]/25 text-white border border-[#A231C4]/50 text-xs font-bold font-mono tracking-wide shadow-sm shadow-purple-900/40">
                     {profile.resilience_tier.replace('_', ' ')}
                   </span>
                 </div>
@@ -725,23 +726,23 @@ export default function App() {
                   <Bike className="w-3.5 h-3.5" />
                   <span>Swiggy</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold">
-                  <Car className="w-3.5 h-3.5 text-white" />
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#1E0E3E] border border-[#240552] text-[#F5F5F6] text-xs font-semibold">
+                  <Car className="w-3.5 h-3.5 text-[#4D22E6]" />
                   <span>Uber India</span>
                 </div>
               </div>
             </div>
 
             {/* Card Lower Strip */}
-            <div className="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-xs relative z-10">
-              <div className="flex items-center gap-2 text-slate-400 font-mono">
-                <Fingerprint className="w-4 h-4 text-indigo-400" />
-                <span className="text-slate-300 font-medium">Ed25519 • RFC 8785 Canonical</span>
+            <div className="pt-4 mt-4 border-t border-[#240552]/80 flex items-center justify-between text-xs relative z-10">
+              <div className="flex items-center gap-2 font-mono">
+                <Fingerprint className="w-4 h-4 text-[#A231C4]" />
+                <span className="text-[#9F9EA2] font-medium">Ed25519 • RFC 8785 Canonical</span>
               </div>
               <div className="text-right">
-                <span className="text-slate-400 block text-[10px] uppercase tracking-wider">Attested Inflow</span>
-                <span className="text-base font-bold font-mono text-emerald-400">
-                  ₹{profile.telemetry_summary.monthly_inflow_inr.toLocaleString('en-IN')} <span className="text-xs text-slate-400 font-normal">/ mo</span>
+                <span className="text-[#9F9EA2] block text-[10px] uppercase tracking-wider">Attested Inflow</span>
+                <span className="text-base font-bold font-mono text-[#10B981]">
+                  ₹{profile.telemetry_summary.monthly_inflow_inr.toLocaleString('en-IN')} <span className="text-xs text-[#9F9EA2] font-normal">/ mo</span>
                 </span>
               </div>
             </div>
@@ -753,50 +754,50 @@ export default function App() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
             
             {/* Shift Consistency Card */}
-            <div className="bg-[#0F1420] p-4 rounded-2xl border border-[#1E293B] flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs text-slate-400 font-medium mb-2">
+            <div className="bg-[#0E071D] p-4 rounded-2xl border border-[#240552]/60 flex flex-col justify-between hover:border-[#A231C4]/40 transition-colors">
+              <div className="flex items-center justify-between text-xs text-[#9F9EA2] font-medium mb-2">
                 <span>Shift Consistency</span>
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <TrendingUp className="w-4 h-4 text-[#10B981]" />
               </div>
               <div className="text-2xl font-bold font-mono text-white mb-2">
                 {profile.telemetry_summary.consistency_rate}
               </div>
               {/* Progress bar */}
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: '93.5%' }}></div>
+              <div className="w-full bg-[#180C33] h-2 rounded-full overflow-hidden">
+                <div className="bg-[#10B981] h-full rounded-full transition-all duration-500" style={{ width: '93.5%' }}></div>
               </div>
-              <span className="text-[10px] text-slate-500 mt-2 font-mono">169 / 180 Active Shift Days</span>
+              <span className="text-[10px] text-[#65636A] mt-2 font-mono">169 / 180 Active Shift Days</span>
             </div>
 
             {/* Cash Flow Stability Card */}
-            <div className="bg-[#0F1420] p-4 rounded-2xl border border-[#1E293B] flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs text-slate-400 font-medium mb-2">
+            <div className="bg-[#0E071D] p-4 rounded-2xl border border-[#240552]/60 flex flex-col justify-between hover:border-[#A231C4]/40 transition-colors">
+              <div className="flex items-center justify-between text-xs text-[#9F9EA2] font-medium mb-2">
                 <span>Income Stability</span>
-                <Activity className="w-4 h-4 text-indigo-400" />
+                <Activity className="w-4 h-4 text-[#A231C4]" />
               </div>
               <div className="text-2xl font-bold font-mono text-white mb-2">
                 {profile.telemetry_summary.stability_rate}
               </div>
               {/* Progress bar */}
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-indigo-500 h-full rounded-full transition-all duration-500" style={{ width: '100%' }}></div>
+              <div className="w-full bg-[#180C33] h-2 rounded-full overflow-hidden">
+                <div className="bg-gradient-to-r from-[#A231C4] to-[#4D22E6] h-full rounded-full transition-all duration-500" style={{ width: '100%' }}></div>
               </div>
-              <span className="text-[10px] text-slate-500 mt-2 font-mono">0 Zero-Income Week Breaches</span>
+              <span className="text-[10px] text-[#65636A] mt-2 font-mono">0 Zero-Income Week Breaches</span>
             </div>
 
             {/* Active Platform Period Card */}
-            <div className="bg-[#0F1420] p-4 rounded-2xl border border-[#1E293B] flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs text-slate-400 font-medium mb-2">
+            <div className="bg-[#0E071D] p-4 rounded-2xl border border-[#240552]/60 flex flex-col justify-between hover:border-[#A231C4]/40 transition-colors">
+              <div className="flex items-center justify-between text-xs text-[#9F9EA2] font-medium mb-2">
                 <span>Telemetry Period</span>
-                <Calendar className="w-4 h-4 text-amber-400" />
+                <Calendar className="w-4 h-4 text-[#4D22E6]" />
               </div>
               <div className="text-2xl font-bold font-mono text-white mb-2">
-                {profile.telemetry_summary.telemetry_period_days} <span className="text-sm font-normal text-slate-400">Days</span>
+                {profile.telemetry_summary.telemetry_period_days} <span className="text-sm font-normal text-[#9F9EA2]">Days</span>
               </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-amber-500 h-full rounded-full transition-all duration-500" style={{ width: '100%' }}></div>
+              <div className="w-full bg-[#180C33] h-2 rounded-full overflow-hidden">
+                <div className="bg-[#4D22E6] h-full rounded-full transition-all duration-500" style={{ width: '100%' }}></div>
               </div>
-              <span className="text-[10px] text-slate-500 mt-2 font-mono">Dual Swiggy + Uber Telemetry</span>
+              <span className="text-[10px] text-[#65636A] mt-2 font-mono">Dual Swiggy + Uber Telemetry</span>
             </div>
 
           </div>
@@ -804,63 +805,63 @@ export default function App() {
           {/* ================================================================ */}
           {/* INFLOW LEDGER (zkTLS Verified Platform Payouts)                  */}
           {/* ================================================================ */}
-          <div className="bg-[#0F1420] rounded-3xl p-5 border border-[#1E293B] flex flex-col gap-4">
+          <div className="bg-[#0E071D] rounded-3xl p-5 border border-[#240552]/60 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Wallet className="w-4 h-4 text-indigo-400" />
+                <Wallet className="w-4 h-4 text-[#A231C4]" />
                 <h3 className="text-sm font-bold text-white tracking-wide">Attested Inflow Ledger</h3>
               </div>
-              <span className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+              <span className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-[#A231C4]/15 text-[#A231C4] border border-[#A231C4]/30 font-semibold">
                 zkTLS Dual-Oracle
               </span>
             </div>
 
             <div className="flex flex-col gap-3">
               {/* Swiggy Payout Item */}
-              <div className="bg-[#131926] p-4 rounded-2xl border border-[#1E293B] flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-700 transition-colors">
+              <div className="bg-[#140929] p-4 rounded-2xl border border-[#240552]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-[#A231C4]/40 transition-colors">
                 <div className="flex items-center gap-3.5">
                   <div className="w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center shrink-0">
                     <Bike className="w-5 h-5 text-orange-400" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm text-white">Swiggy Partner Payout</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      <span className="font-semibold text-sm text-[#F5F5F6]">Swiggy Partner Payout</span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30">
                         zkTLS Verified
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-[#9F9EA2] mt-0.5">
                       1,420 delivery trips • Customer Rating: <span className="text-amber-400 font-semibold font-mono">★ 4.92</span>
                     </p>
                   </div>
                 </div>
                 <div className="text-right sm:shrink-0">
-                  <span className="text-base font-bold font-mono text-emerald-400">+₹27,450.00</span>
-                  <span className="text-[11px] text-slate-500 block font-mono">Weekly Direct Settlement</span>
+                  <span className="text-base font-bold font-mono text-[#10B981]">+₹27,450.00</span>
+                  <span className="text-[11px] text-[#65636A] block font-mono">Weekly Direct Settlement</span>
                 </div>
               </div>
 
               {/* Uber Driver Settlement Item */}
-              <div className="bg-[#131926] p-4 rounded-2xl border border-[#1E293B] flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-700 transition-colors">
+              <div className="bg-[#140929] p-4 rounded-2xl border border-[#240552]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-[#A231C4]/40 transition-colors">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
-                    <Car className="w-5 h-5 text-indigo-400" />
+                  <div className="w-10 h-10 rounded-xl bg-[#1E0E3E] border border-[#240552] flex items-center justify-center shrink-0">
+                    <Car className="w-5 h-5 text-[#4D22E6]" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm text-white">Uber Driver Settlement</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      <span className="font-semibold text-sm text-[#F5F5F6]">Uber Driver Settlement</span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30">
                         zkTLS Verified
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-[#9F9EA2] mt-0.5">
                       890 ride journeys • Customer Rating: <span className="text-amber-400 font-semibold font-mono">★ 4.88</span>
                     </p>
                   </div>
                 </div>
                 <div className="text-right sm:shrink-0">
-                  <span className="text-base font-bold font-mono text-emerald-400">+₹21,616.00</span>
-                  <span className="text-[11px] text-slate-500 block font-mono">Daily Instant Payout</span>
+                  <span className="text-base font-bold font-mono text-[#10B981]">+₹21,616.00</span>
+                  <span className="text-[11px] text-[#65636A] block font-mono">Daily Instant Payout</span>
                 </div>
               </div>
             </div>
@@ -871,15 +872,15 @@ export default function App() {
         {/* ------------------------------------------------------------------ */}
         {/* COLUMN 3: RIGHT ACTION PANEL (Lender Underwriting & Sandbox) (4-4.5) */}
         {/* ------------------------------------------------------------------ */}
-        <section className="lg:col-span-4 xl:col-span-4 bg-[#0F1420] border-t lg:border-t-0 lg:border-l border-[#1E293B] p-5 lg:p-6 flex flex-col gap-5 overflow-y-auto max-h-screen">
+        <section className="lg:col-span-4 xl:col-span-4 bg-[#0B0518]/95 border-t lg:border-t-0 lg:border-l border-[#240552]/40 p-5 lg:p-6 flex flex-col gap-5 overflow-y-auto max-h-screen">
           
           {/* Panel Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-[#1E293B]">
+          <div className="flex items-center justify-between pb-3 border-b border-[#240552]/50">
             <div className="flex items-center gap-2">
-              <Landmark className="w-5 h-5 text-indigo-400" />
+              <Landmark className="w-5 h-5 text-[#A231C4]" />
               <h2 className="font-bold text-base text-white">Lender Underwriting</h2>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#A231C4]/20 text-[#A231C4] border border-[#A231C4]/40 font-semibold">
               SANDBOX v2
             </span>
           </div>
@@ -887,9 +888,9 @@ export default function App() {
           {/* ================================================================ */}
           {/* LOAN AMOUNT SLIDER & PREVIEW                                     */}
           {/* ================================================================ */}
-          <div className="bg-[#131926] p-5 rounded-2xl border border-[#1E293B] flex flex-col gap-4">
+          <div className="bg-[#140929] p-5 rounded-2xl border border-[#240552]/60 flex flex-col gap-4 shadow-lg">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-400">Target Working Capital Loan</span>
+              <span className="text-xs font-medium text-[#9F9EA2]">Target Working Capital Loan</span>
               <span className="text-xl font-bold font-mono text-white">
                 ₹{requestedLoan.toLocaleString('en-IN')}
               </span>
@@ -903,28 +904,28 @@ export default function App() {
               step={2500}
               value={requestedLoan}
               onChange={(e) => setRequestedLoan(Number(e.target.value))}
-              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+              className="w-full h-2 bg-[#1E0E3E] rounded-lg appearance-none cursor-pointer accent-[#A231C4]"
             />
 
-            <div className="flex items-center justify-between text-[11px] font-mono text-slate-500">
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#65636A]">
               <span>Min: ₹10,000</span>
               <span className="text-amber-400 font-semibold">Prime Limit: ₹35,000</span>
               <span>Max: ₹60,000</span>
             </div>
 
             {/* Real-time Calculation Preview */}
-            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-800 text-center">
-              <div className="bg-[#0A0D14] p-2 rounded-xl border border-[#1E293B]">
-                <span className="text-[10px] text-slate-500 block">Est. Rate</span>
-                <span className="text-xs font-bold font-mono text-indigo-400">{estimatedPreview.rate}</span>
+            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-[#240552]/50 text-center">
+              <div className="bg-[#0E071D] p-2 rounded-xl border border-[#240552]/50">
+                <span className="text-[10px] text-[#65636A] block">Est. Rate</span>
+                <span className="text-xs font-bold font-mono text-[#A231C4]">{estimatedPreview.rate}</span>
               </div>
-              <div className="bg-[#0A0D14] p-2 rounded-xl border border-[#1E293B]">
-                <span className="text-[10px] text-slate-500 block">Tenure</span>
-                <span className="text-xs font-bold font-mono text-slate-200">{estimatedPreview.tenure}</span>
+              <div className="bg-[#0E071D] p-2 rounded-xl border border-[#240552]/50">
+                <span className="text-[10px] text-[#65636A] block">Tenure</span>
+                <span className="text-xs font-bold font-mono text-[#F5F5F6]">{estimatedPreview.tenure}</span>
               </div>
-              <div className="bg-[#0A0D14] p-2 rounded-xl border border-[#1E293B]">
-                <span className="text-[10px] text-slate-500 block">Est. Monthly EMI</span>
-                <span className="text-xs font-bold font-mono text-emerald-400">₹{estimatedPreview.emi.toLocaleString('en-IN')}</span>
+              <div className="bg-[#0E071D] p-2 rounded-xl border border-[#240552]/50">
+                <span className="text-[10px] text-[#65636A] block">Est. Monthly EMI</span>
+                <span className="text-xs font-bold font-mono text-[#10B981]">₹{estimatedPreview.emi.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
@@ -934,19 +935,19 @@ export default function App() {
           {/* ================================================================ */}
           <div className={`p-4 rounded-2xl border transition-all duration-300 ${
             isTamperMode 
-              ? 'bg-rose-950/30 border-rose-500/50 shadow-lg glow-rose' 
-              : 'bg-[#131926] border-[#1E293B]'
+              ? 'bg-[#3A0A1C]/50 border-rose-500/60 shadow-lg glow-rose' 
+              : 'bg-[#140929] border-[#240552]/60'
           }`}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                  isTamperMode ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-400'
+                  isTamperMode ? 'bg-rose-500/20 text-rose-400' : 'bg-[#1E0E3E] text-[#9F9EA2]'
                 }`}>
                   <ShieldAlert className="w-4 h-4" />
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-white">Simulate 1-Bit Payload Tamper</h4>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Alters monthlyInflowGte: ₹25k ➔ ₹85k</p>
+                  <p className="text-[10px] text-[#9F9EA2] mt-0.5">Alters monthlyInflowGte: ₹25k ➔ ₹85k</p>
                 </div>
               </div>
 
@@ -958,11 +959,11 @@ export default function App() {
                   onChange={(e) => setIsTamperMode(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+                <div className="w-11 h-6 bg-[#1E0E3E] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
               </label>
             </div>
 
-            <p className="text-[11px] text-slate-400 mt-2.5 pt-2.5 border-t border-slate-800/80 leading-relaxed font-mono">
+            <p className="text-[11px] text-[#9F9EA2] mt-2.5 pt-2.5 border-t border-[#240552]/60 leading-relaxed font-mono">
               {isTamperMode ? (
                 <span className="text-rose-400 font-semibold">
                   ⚠️ Tampering active! Payload will be submitted with mismatched RFC 8785 Ed25519 signature to test zero-trust rejection.
@@ -982,7 +983,7 @@ export default function App() {
             className={`w-full py-3.5 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl disabled:opacity-50 cursor-pointer ${
               isTamperMode
                 ? 'bg-rose-600 hover:bg-rose-500 text-white glow-rose animate-pulse'
-                : 'bg-indigo-600 hover:bg-indigo-500 text-white glow-indigo'
+                : 'purple-magenta-gradient hover:opacity-95 text-white glow-purple'
             }`}
           >
             {isEvaluating ? (
@@ -1009,10 +1010,10 @@ export default function App() {
           {underwritingResult && (
             <div className={`p-4 rounded-2xl border flex flex-col gap-3 transition-all duration-300 animate-in fade-in ${
               underwritingResult.decision === 'REJECTED_SECURITY_HALT'
-                ? 'bg-rose-950/40 border-rose-500/60 shadow-xl glow-rose'
+                ? 'bg-[#3A0A1C]/60 border-rose-500/60 shadow-xl glow-rose'
                 : underwritingResult.decision === 'APPROVED'
-                ? 'bg-emerald-950/30 border-emerald-500/60 shadow-xl glow-emerald'
-                : 'bg-indigo-950/30 border-indigo-500/60 shadow-xl glow-indigo'
+                ? 'bg-[#0B261A]/60 border-emerald-500/60 shadow-xl glow-emerald'
+                : 'bg-[#1E0E3E]/60 border-[#A231C4]/60 shadow-xl glow-purple'
             }`}>
               
               {/* Result Header */}
@@ -1023,14 +1024,14 @@ export default function App() {
                   ) : underwritingResult.decision === 'APPROVED' ? (
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   ) : (
-                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                    <Sparkles className="w-4 h-4 text-[#A231C4]" />
                   )}
                   <span className={`text-xs font-bold uppercase tracking-wider font-mono ${
                     underwritingResult.decision === 'REJECTED_SECURITY_HALT'
                       ? 'text-rose-400'
                       : underwritingResult.decision === 'APPROVED'
                       ? 'text-emerald-400'
-                      : 'text-indigo-300'
+                      : 'text-[#F5F5F6]'
                   }`}>
                     {underwritingResult.decision === 'REJECTED_SECURITY_HALT'
                       ? 'HTTP 403 SECURITY HALT'
@@ -1039,7 +1040,7 @@ export default function App() {
                       : 'HTTP 200 CONDITIONAL APPROVAL'}
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-slate-400">
+                <span className="text-[10px] font-mono text-[#9F9EA2]">
                   {new Date().toLocaleTimeString()}
                 </span>
               </div>
@@ -1048,24 +1049,24 @@ export default function App() {
               {underwritingResult.decision === 'REJECTED_SECURITY_HALT' ? (
                 /* FRAUD SECURITY HALT VIEW */
                 <div className="flex flex-col gap-2.5 text-xs text-slate-300 font-mono">
-                  <div className="p-2.5 rounded-xl bg-rose-900/30 border border-rose-500/30 text-rose-300">
+                  <div className="p-2.5 rounded-xl bg-rose-950/50 border border-rose-500/30 text-rose-300">
                     <span className="font-bold block mb-1">[!] FRAUD_TAMPER_DETECTED</span>
                     <span>{underwritingResult.error || "Cryptographic signature mismatch on canonical payload."}</span>
                   </div>
 
                   {underwritingResult.audit_metadata && (
-                    <div className="flex flex-col gap-1.5 text-[10px] text-slate-400 bg-[#0A0D14] p-3 rounded-xl border border-rose-900/40">
+                    <div className="flex flex-col gap-1.5 text-[10px] text-[#9F9EA2] bg-[#05020C] p-3 rounded-xl border border-rose-900/40">
                       <div>
-                        <span className="text-slate-500 block">Presented Signature:</span>
+                        <span className="text-[#65636A] block">Presented Signature:</span>
                         <span className="text-rose-400 truncate block">{underwritingResult.audit_metadata.presented_signature}</span>
                       </div>
                       <div>
-                        <span className="text-slate-500 block">Expected Signature:</span>
+                        <span className="text-[#65636A] block">Expected Signature:</span>
                         <span className="text-emerald-400 truncate block">{underwritingResult.audit_metadata.expected_signature}</span>
                       </div>
                       <div>
-                        <span className="text-slate-500 block">Verification Method:</span>
-                        <span className="text-slate-300">{underwritingResult.audit_metadata.verificationMethod || "did:gignite:authority-node-01#key-2026"}</span>
+                        <span className="text-[#65636A] block">Verification Method:</span>
+                        <span className="text-[#F5F5F6]">{underwritingResult.audit_metadata.verificationMethod || "did:gignite:authority-node-01#key-2026"}</span>
                       </div>
                     </div>
                   )}
@@ -1074,21 +1075,21 @@ export default function App() {
                 /* FULL APPROVAL VIEW */
                 <div className="flex flex-col gap-3 text-xs">
                   <div className="grid grid-cols-2 gap-2 text-center">
-                    <div className="bg-[#0A0D14] p-2.5 rounded-xl border border-emerald-900/50">
-                      <span className="text-[10px] text-slate-400 block">Sanctioned Limit</span>
+                    <div className="bg-[#05020C] p-2.5 rounded-xl border border-emerald-900/50">
+                      <span className="text-[10px] text-[#9F9EA2] block">Sanctioned Limit</span>
                       <span className="text-base font-bold font-mono text-emerald-400">
                         ₹{underwritingResult.sanctioned_amount?.toLocaleString('en-IN')}
                       </span>
                     </div>
-                    <div className="bg-[#0A0D14] p-2.5 rounded-xl border border-emerald-900/50">
-                      <span className="text-[10px] text-slate-400 block">Annual Rate</span>
-                      <span className="text-base font-bold font-mono text-indigo-400">
+                    <div className="bg-[#05020C] p-2.5 rounded-xl border border-emerald-900/50">
+                      <span className="text-[10px] text-[#9F9EA2] block">Annual Rate</span>
+                      <span className="text-base font-bold font-mono text-[#A231C4]">
                         {underwritingResult.annual_interest_rate_p_a}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-emerald-900/20 border border-emerald-500/30 text-[11px] text-emerald-300 font-mono">
+                  <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-[11px] text-emerald-300 font-mono">
                     <div className="flex justify-between mb-1">
                       <span>Monthly EMI:</span>
                       <span className="font-bold text-white">₹{underwritingResult.monthly_emi_inr?.toLocaleString('en-IN')} / mo</span>
@@ -1106,15 +1107,15 @@ export default function App() {
               ) : (
                 /* CONDITIONAL APPROVAL & REMEDIATION ROADMAP */
                 <div className="flex flex-col gap-3 text-xs">
-                  <div className="p-3 rounded-xl bg-indigo-900/20 border border-indigo-500/30 flex items-center justify-between font-mono">
+                  <div className="p-3 rounded-xl bg-[#140929] border border-[#A231C4]/40 flex items-center justify-between font-mono">
                     <div>
-                      <span className="text-[10px] text-slate-400 block">Instant Available Limit</span>
+                      <span className="text-[10px] text-[#9F9EA2] block">Instant Available Limit</span>
                       <span className="text-base font-bold text-emerald-400">
                         ₹{underwritingResult.instant_available_limit?.toLocaleString('en-IN')}
                       </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] text-slate-400 block">Stretch Gap</span>
+                      <span className="text-[10px] text-[#9F9EA2] block">Stretch Gap</span>
                       <span className="text-sm font-bold text-amber-400 font-mono">
                         ₹{underwritingResult.remediation_plan?.funding_gap?.toLocaleString('en-IN')}
                       </span>
@@ -1123,16 +1124,16 @@ export default function App() {
 
                   {underwritingResult.remediation_plan && (
                     <div className="flex flex-col gap-2">
-                      <span className="text-[11px] font-bold text-slate-200 uppercase tracking-wider">
+                      <span className="text-[11px] font-bold text-[#F5F5F6] uppercase tracking-wider">
                         21-Day Actionable Remediation Pathway
                       </span>
                       {underwritingResult.remediation_plan.actionable_milestones.map((m, idx) => (
-                        <div key={idx} className="p-2.5 rounded-xl bg-[#0A0D14] border border-slate-800 text-[11px]">
-                          <div className="flex items-center justify-between text-indigo-400 font-semibold mb-1">
+                        <div key={idx} className="p-2.5 rounded-xl bg-[#05020C] border border-[#240552]/60 text-[11px]">
+                          <div className="flex items-center justify-between text-[#A231C4] font-semibold mb-1">
                             <span>{m.day_range}: {m.title}</span>
                             <span className="text-emerald-400 font-mono text-[10px]">{m.target_delta}</span>
                           </div>
-                          <p className="text-slate-400 leading-snug">{m.action}</p>
+                          <p className="text-[#9F9EA2] leading-snug">{m.action}</p>
                         </div>
                       ))}
                     </div>
