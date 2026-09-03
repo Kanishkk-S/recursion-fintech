@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { EarnerPortal } from './components/earner/EarnerPortal';
 import { useWorkerProfile } from './hooks/useWorkerProfile';
+import { LenderDesk } from './components/lender/LenderDesk';
 import { Zap, Monitor, Smartphone, Columns, Loader2 } from 'lucide-react';
 
 type ViewMode = 'MOBILE' | 'DESKTOP' | 'SPLIT';
@@ -93,21 +94,10 @@ function App() {
           </div>
           
           {/* Desktop View (Lender Desk Placeholder) */}
-          <div className={`h-full bg-slate-900/50 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-in-out ${
-            viewMode === 'DESKTOP' ? 'w-full' : viewMode === 'SPLIT' ? 'hidden md:flex w-1/2' : 'w-0 overflow-hidden hidden'
+          <div className={`h-full bg-[#0B0F19] transition-all duration-500 ease-in-out border-l border-slate-800/50 relative overflow-hidden ${
+            viewMode === 'DESKTOP' ? 'w-full' : viewMode === 'SPLIT' ? 'hidden md:block w-1/2' : 'w-0 hidden'
           }`}>
-             <div className="max-w-md text-center space-y-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-500/10 mb-4 border border-blue-500/20">
-                  <Monitor className="w-8 h-8 text-blue-400" />
-                </div>
-                <h2 className="text-2xl font-bold text-white">Lender Desk</h2>
-                <p className="text-slate-400 text-sm leading-relaxed">
-                  Institutional underwriting view. This module will ingest the verifiable credential and provide a unified risk dashboard for the loan officer.
-                </p>
-                <div className="mt-8 p-4 border border-dashed border-slate-700 rounded-xl bg-slate-800/30">
-                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Awaiting Credential Sync...</p>
-                </div>
-             </div>
+            <LenderDesk />
           </div>
           
         </div>
