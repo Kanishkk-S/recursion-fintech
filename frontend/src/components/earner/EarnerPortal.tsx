@@ -34,6 +34,7 @@ export function EarnerPortal() {
   const [selectiveDisclosure, setSelectiveDisclosure] = useState(false);
   const [issuedVc, setIssuedVc] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
+  const [showTelemetryDrawer, setShowTelemetryDrawer] = useState(false);
   const fallbackPlatforms = [
     { name: "Swiggy", rating: 4.89, tenure_months: 14 },
     { name: "Uber", rating: 4.92, tenure_months: 22 }
@@ -97,19 +98,28 @@ export function EarnerPortal() {
       </div>
 
       {/* Telemetry Metrics */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="bg-slate-800/60 rounded-xl p-3 text-center border border-slate-700/50">
-          <p className="text-[10px] text-slate-400 font-semibold uppercase mb-1">Inflow</p>
-          <p className="text-sm font-bold text-white">₹{((profile?.avg_monthly_inflow || 49066)/1000).toFixed(1)}k</p>
+      <div 
+        className="relative group cursor-pointer"
+        onClick={() => setShowTelemetryDrawer(true)}
+      >
+        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+        <div className="relative grid grid-cols-3 gap-2 bg-slate-900 rounded-xl p-1 border border-slate-700/50 hover:border-emerald-500/40 transition-all group-hover:border-emerald-500/50">
+          <div className="bg-slate-800/80 rounded-lg p-2 text-center">
+            <p className="text-[10px] text-slate-400 font-semibold uppercase mb-0.5">Inflow</p>
+            <p className="text-sm font-bold text-white">₹{((profile?.avg_monthly_inflow || 49066)/1000).toFixed(1)}k</p>
+          </div>
+          <div className="bg-slate-800/80 rounded-lg p-2 text-center">
+            <p className="text-[10px] text-slate-400 font-semibold uppercase mb-0.5">Consist.</p>
+            <p className="text-sm font-bold text-white">{((profile?.consistency_rate || 0.935) * 100).toFixed(1)}%</p>
+          </div>
+          <div className="bg-slate-800/80 rounded-lg p-2 text-center">
+            <p className="text-[10px] text-slate-400 font-semibold uppercase mb-0.5">Stable</p>
+            <p className="text-sm font-bold text-white">100%</p>
+            <p className="text-[8px] text-slate-500">180d</p>
+          </div>
         </div>
-        <div className="bg-slate-800/60 rounded-xl p-3 text-center border border-slate-700/50">
-          <p className="text-[10px] text-slate-400 font-semibold uppercase mb-1">Consist.</p>
-          <p className="text-sm font-bold text-white">{((profile?.consistency_rate || 0.935) * 100).toFixed(1)}%</p>
-        </div>
-        <div className="bg-slate-800/60 rounded-xl p-3 text-center border border-slate-700/50">
-          <p className="text-[10px] text-slate-400 font-semibold uppercase mb-1">Stable</p>
-          <p className="text-sm font-bold text-white">100%</p>
-          <p className="text-[8px] text-slate-500">180d</p>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800/95 text-emerald-300 text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded-lg border border-emerald-500/30 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-xl z-10 pointer-events-none">
+          Click for 180-day telemetry breakdown
         </div>
       </div>
 
@@ -183,6 +193,84 @@ export function EarnerPortal() {
           </div>
         )}
       </div>
+
+      {/* Telemetry Modal */}
+      {showTelemetryDrawer && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative flex flex-col">
+            <button 
+              onClick={() => setShowTelemetryDrawer(false)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-bold text-white mb-1">180-Day Cash Flow Telemetry Deep-Dive</h3>
+            <p className="text-[10px] text-slate-400 font-mono uppercase tracking-widest mb-6">Verified Income History</p>
+            
+            <div className="space-y-5 flex-1 overflow-y-auto no-scrollbar pb-4">
+              {/* Platform Split */}
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Platform Contribution</h4>
+                <div className="space-y-2">
+                  <div className="bg-slate-900 rounded-xl p-3 border border-slate-800 flex justify-between items-center">
+                    <div>
+                      <p className="text-xs font-bold text-white">Swiggy <span className="text-slate-500 font-normal ml-1">(14 months active)</span></p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">58% share of inflow</p>
+                    </div>
+                    <p className="text-sm font-bold text-emerald-400">₹28,400<span className="text-[10px] text-slate-500 font-normal">/mo</span></p>
+                  </div>
+                  <div className="bg-slate-900 rounded-xl p-3 border border-slate-800 flex justify-between items-center">
+                    <div>
+                      <p className="text-xs font-bold text-white">Uber <span className="text-slate-500 font-normal ml-1">(22 months active)</span></p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">42% share of inflow</p>
+                    </div>
+                    <p className="text-sm font-bold text-emerald-400">₹20,700<span className="text-[10px] text-slate-500 font-normal">/mo</span></p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 6-Month Table */}
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">6-Month Inflow Stability</h4>
+                <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden text-xs">
+                  {[
+                    { m: "Month 1", v: "₹48,200", s: "42 shifts" },
+                    { m: "Month 2", v: "₹49,800", s: "44 shifts" },
+                    { m: "Month 3", v: "₹51,100", s: "46 shifts" },
+                    { m: "Month 4", v: "₹47,900", s: "41 shifts" },
+                    { m: "Month 5", v: "₹49,400", s: "43 shifts" },
+                    { m: "Month 6", v: "₹49,066", s: "43 shifts" }
+                  ].map((row, i) => (
+                    <div key={i} className={`flex justify-between p-2.5 ${i !== 5 ? 'border-b border-slate-800/50' : ''}`}>
+                      <span className="text-slate-400">{row.m}</span>
+                      <div className="text-right">
+                        <span className="font-bold text-white block">{row.v}</span>
+                        <span className="text-[10px] text-slate-500">{row.s}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Volatility */}
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Volatility Score</p>
+                  <p className="text-[10px] text-slate-300 mt-0.5">"Prime Resilient Stability"</p>
+                </div>
+                <div className="text-sm font-bold text-emerald-400">&lt; 4.8%</div>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowTelemetryDrawer(false)}
+              className="mt-4 w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-sm transition-all"
+            >
+              Close Telemetry Inspection
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

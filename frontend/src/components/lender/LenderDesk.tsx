@@ -9,7 +9,10 @@ import {
   FileWarning,
   Activity,
   ArrowRight,
-  Monitor
+  Monitor,
+  Download,
+  X,
+  Banknote
 } from 'lucide-react';
 
 type LoanAmount = 30000 | 75000;
@@ -69,6 +72,7 @@ export function LenderDesk() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UnderwriteResponse | null>(null);
   const [completedShifts, setCompletedShifts] = useState(0);
+  const [showDisbursalModal, setShowDisbursalModal] = useState(false);
 
   useEffect(() => {
     const handleTrigger = (e: Event) => {
@@ -213,9 +217,17 @@ export function LenderDesk() {
               <p className="text-lg font-bold text-white">{result.tenure_months} months</p>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-emerald-500/20 flex items-center gap-2">
-            <Fingerprint className="w-4 h-4 text-emerald-500/70" />
-            <p className="text-[10px] text-emerald-500/70 font-mono break-all">{result.audit_signature}</p>
+          <div className="mt-4 pt-4 border-t border-emerald-500/20 flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Fingerprint className="w-4 h-4 text-emerald-500/70" />
+              <p className="text-[10px] text-emerald-500/70 font-mono break-all">{result.audit_signature}</p>
+            </div>
+            <button 
+              onClick={() => setShowDisbursalModal(true)}
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] flex items-center justify-center gap-2"
+            >
+              <Banknote className="w-4 h-4" /> Disburse ₹{result.credit_limit?.toLocaleString()} to Earner UPI
+            </button>
           </div>
         </div>
       );
@@ -440,6 +452,61 @@ export function LenderDesk() {
                   {vcPayload.includes('sd_full_history') ? 'Full 180-day telemetry disclosed' : 'Baseline claims only'}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Disbursal Modal */}
+      {showDisbursalModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative flex flex-col items-center">
+            <button 
+              onClick={() => setShowDisbursalModal(false)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="bg-emerald-500/20 p-4 rounded-full border border-emerald-500/30 mb-4 animate-pulse">
+              <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+            </div>
+            
+            <h3 className="text-xl font-bold text-white mb-6 text-center">Disbursement Successful</h3>
+            
+            <div className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3 mb-6 text-left">
+              <div className="flex justify-between items-center border-b border-slate-800/50 pb-2">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Amount Transferred</span>
+                <span className="text-sm font-bold text-emerald-400">₹30,000 <span className="text-[10px] text-emerald-500/70">(Instant Credit)</span></span>
+              </div>
+              <div className="flex justify-between items-center border-b border-slate-800/50 pb-2">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Beneficiary VPA</span>
+                <span className="text-xs font-mono text-slate-300">ramesh.kumar@oksbi</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-slate-800/50 pb-2">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Settlement Rail</span>
+                <span className="text-xs font-medium text-slate-300">NPCI UPI 2.0 / AA Escrow</span>
+              </div>
+              <div className="flex flex-col gap-1 border-b border-slate-800/50 pb-2">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Transaction Ref</span>
+                <span className="text-xs font-mono text-slate-300">TXN-GIN-20260903-8842</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Receipt Hash</span>
+                <span className="text-[10px] font-mono text-slate-500 truncate">0x7f2c84d9a3b11e2f9d784a1...</span>
+              </div>
+            </div>
+            
+            <div className="w-full space-y-2">
+              <button className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2">
+                <Download className="w-4 h-4" /> Download Cryptographic Receipt
+              </button>
+              <button 
+                onClick={() => setShowDisbursalModal(false)}
+                className="w-full py-3 bg-transparent hover:bg-slate-900 text-slate-400 hover:text-white rounded-xl font-bold text-sm transition-all"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
