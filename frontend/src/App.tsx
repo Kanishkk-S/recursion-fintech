@@ -577,6 +577,7 @@ export default function App() {
               activeRole={activeRole}
               onSelectRole={(role) => setActiveRole(role)}
               hasIssuedCredential={!!rawCredential}
+              workerName={profile?.worker_name}
             />
           </div>
 

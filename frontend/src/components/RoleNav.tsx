@@ -5,13 +5,18 @@ interface RoleNavProps {
   activeRole: 'worker' | 'lender';
   onSelectRole: (role: 'worker' | 'lender') => void;
   hasIssuedCredential?: boolean;
+  workerName?: string;
 }
 
 export const RoleNav: React.FC<RoleNavProps> = ({
   activeRole,
   onSelectRole,
-  hasIssuedCredential = true
+  hasIssuedCredential = true,
+  workerName
 }) => {
+  const firstName = workerName?.trim() ? workerName.trim().split(' ')[0] : 'Worker';
+  const workerTabLabel = workerName?.trim() ? `👷 ${firstName}'s Wallet` : "👷 Worker Wallet";
+
   return (
     <div className="flex items-center bg-[#07030F] p-1 rounded-2xl border border-[#1C0B3B] shadow-inner">
       {/* Role 1: Worker Wallet */}
@@ -30,7 +35,7 @@ export const RoleNav: React.FC<RoleNavProps> = ({
           <Wallet className="w-3 h-3" />
         </div>
         <div className="flex items-center gap-1.5">
-          <span>👷 Ramesh's Wallet</span>
+          <span>{workerTabLabel}</span>
           <span className="hidden md:inline text-[11px] text-[#A855F7] font-normal font-mono">(Borrower)</span>
         </div>
         {activeRole === 'worker' && (
