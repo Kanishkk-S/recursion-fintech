@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   CheckCircle2,
   Clock,
@@ -68,6 +68,47 @@ export function LenderDesk() {
   const [isTampered, setIsTampered] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UnderwriteResponse | null>(null);
+  const [completedShifts, setCompletedShifts] = useState(0);
+
+  useEffect(() => {
+    const handleTrigger = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const scenario = customEvent.detail;
+      
+      if (scenario === 'A') {
+        setLoanAmount(30000);
+        setIsTampered(false);
+        setVcPayload(VALID_VC_STR);
+        // We simulate the click by directly invoking the logic
+        setTimeout(() => document.getElementById('btn-underwrite')?.click(), 100);
+      } else if (scenario === 'B') {
+        setLoanAmount(30000); // Amount doesn't matter, but reset it
+        setIsTampered(true);
+        setVcPayload(VALID_VC_STR.replace('49066', '99999'));
+        setTimeout(() => document.getElementById('btn-underwrite')?.click(), 100);
+      } else if (scenario === 'C') {
+        setLoanAmount(75000);
+        setIsTampered(false);
+        setVcPayload(VALID_VC_STR);
+        setTimeout(() => document.getElementById('btn-underwrite')?.click(), 100);
+      }
+    };
+    
+    const handleDirectSync = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setVcPayload(customEvent.detail);
+        setIsTampered(false);
+      }
+    };
+    
+    window.addEventListener('TRIGGER_SCENARIO', handleTrigger);
+    window.addEventListener('DIRECT_SYNC', handleDirectSync);
+    return () => {
+      window.removeEventListener('TRIGGER_SCENARIO', handleTrigger);
+      window.removeEventListener('DIRECT_SYNC', handleDirectSync);
+    };
+  }, []);
 
   const handleTamperToggle = () => {
     setIsTampered(!isTampered);
@@ -228,23 +269,43 @@ export function LenderDesk() {
             <div className="bg-slate-900 rounded-xl border border-amber-500/30 p-5">
               <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Activity className="w-4 h-4" />
-                {result.remediation_window_days}-Day Roadmap
+                Interactive Remediation Simulator
               </p>
+              
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-slate-400">Daily Target Inflow</span>
-                    <span className="font-medium text-white">₹{result.roadmap?.daily_target_inflow}</span>
+                    <span className="text-slate-400">Simulate Completed Shifts:</span>
+                    <span className="font-bold text-amber-400">{completedShifts} / 8</span>
                   </div>
-                  <div className="w-full bg-slate-800 rounded-full h-1.5"><div className="bg-amber-500 h-1.5 rounded-full w-1/3"></div></div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="8" 
+                    value={completedShifts}
+                    onChange={(e) => setCompletedShifts(parseInt(e.target.value))}
+                    className="w-full accent-amber-500 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer"
+                  />
                 </div>
-                <div>
+                
+                <div className="pt-2 border-t border-slate-700/50">
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-slate-400">Extra Shifts Needed</span>
-                    <span className="font-medium text-white">{result.roadmap?.additional_shifts_required}</span>
+                    <span className="text-slate-400">Unlocked Credit Line</span>
+                    <span className="font-medium text-emerald-400">₹{(24500 + ((75000 - 24500) * (completedShifts / 8))).toLocaleString()}</span>
                   </div>
-                  <div className="w-full bg-slate-800 rounded-full h-1.5"><div className="bg-amber-500 h-1.5 rounded-full w-1/4"></div></div>
+                  <div className="w-full bg-slate-800 rounded-full h-2">
+                    <div 
+                      className="bg-emerald-500 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${(24500 + ((75000 - 24500) * (completedShifts / 8))) / 75000 * 100}%` }}
+                    ></div>
+                  </div>
                 </div>
+
+                {completedShifts === 8 && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2 text-center animate-pulse">
+                    <span className="text-xs font-bold text-emerald-400">Remediation Target Met: ₹75,000 Unlocked!</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -329,6 +390,7 @@ export function LenderDesk() {
           </div>
 
           <button
+            id="btn-underwrite"
             onClick={handleUnderwrite}
             disabled={loading}
             className="w-full py-4 rounded-xl font-bold text-sm transition-all bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] flex items-center justify-center gap-2 disabled:opacity-50"
@@ -339,6 +401,49 @@ export function LenderDesk() {
       </div>
 
       {renderResult()}
+
+      {result && (
+        <div className="mt-6 border border-slate-700 bg-slate-900 rounded-xl overflow-hidden shadow-lg transition-all">
+          <div className="p-4 border-b border-slate-800 bg-slate-800/30">
+            <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+              <Fingerprint className="w-4 h-4 text-emerald-500" /> Cryptographic Audit Trail & Proof Verification
+            </h4>
+          </div>
+          <div className="p-5 space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-1">Issuer Node</p>
+                <p className="text-xs font-mono text-slate-300 bg-slate-950 p-2 rounded-md border border-slate-800 break-all">did:gignite:authority-node-01</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-1">Cryptographic Algorithm</p>
+                <p className="text-xs font-mono text-slate-300 bg-slate-950 p-2 rounded-md border border-slate-800 break-all">Ed25519VerificationKey2020</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-2">Canonical Hash Status</p>
+                {!isTampered ? (
+                  <div className="flex items-center gap-2 text-emerald-400 bg-emerald-400/10 px-3 py-2 rounded-lg border border-emerald-400/20 w-fit">
+                    <CheckCircle2 className="w-4 h-4" /> <span className="text-xs font-bold tracking-wide">MATCH / INTEGRITY VERIFIED</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-rose-400 bg-rose-400/10 px-3 py-2 rounded-lg border border-rose-400/20 w-fit">
+                    <ShieldAlert className="w-4 h-4 animate-pulse" /> <span className="text-xs font-bold tracking-wide">MISMATCH / DIGEST CORRUPTED</span>
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-2">Selective Disclosure Status</p>
+                <div className="text-xs font-bold text-blue-400 bg-blue-400/10 px-3 py-2 rounded-lg border border-blue-400/20 w-fit">
+                  {vcPayload.includes('sd_full_history') ? 'Full 180-day telemetry disclosed' : 'Baseline claims only'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -43,6 +43,34 @@ function App() {
         </div>
       </header>
 
+      {/* Floating Scenario Preset Toolbar */}
+      <div className="sticky top-[73px] z-30 w-full bg-slate-900/90 border-b border-slate-800 backdrop-blur-md px-6 py-2.5 flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-xs tracking-wider text-slate-300">⚡ EVALUATION PRESETS</span>
+          <span className="text-[10px] text-slate-500 font-mono hidden sm:inline border-l border-slate-700 pl-2 ml-1">ONE-CLICK VERIFICATION WORKFLOWS</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent('TRIGGER_SCENARIO', { detail: 'A' }))}
+            className="px-3 py-1.5 rounded-lg border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 text-[10px] font-bold uppercase tracking-wider transition-colors"
+          >
+            Scenario A: ₹30k Standard
+          </button>
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent('TRIGGER_SCENARIO', { detail: 'B' }))}
+            className="px-3 py-1.5 rounded-lg border border-rose-500/40 text-rose-300 hover:bg-rose-500/10 text-[10px] font-bold uppercase tracking-wider transition-colors"
+          >
+            Scenario B: Fraud Tamper Halt
+          </button>
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent('TRIGGER_SCENARIO', { detail: 'C' }))}
+            className="px-3 py-1.5 rounded-lg border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 text-[10px] font-bold uppercase tracking-wider transition-colors"
+          >
+            Scenario C: ₹75k Remediation
+          </button>
+        </div>
+      </div>
+
       {/* Main Canvas */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 pt-6 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
