@@ -41,16 +41,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // Sign Up Form States
   const [fullName, setFullName] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
-  const [selectedPlatform, setSelectedPlatform] = useState<string>('Swiggy');
-  const [monthlyInflow, setMonthlyInflow] = useState<number>(35000);
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('Uber');
+  const [monthlyInflow, setMonthlyInflow] = useState<number>(38500);
   const [institutionName, setInstitutionName] = useState<string>('');
   const [lenderFocus, setLenderFocus] = useState<string>('Prime / Growth Mandate');
   const [minCri, setMinCri] = useState<number>(65);
 
   // --------------------------------------------------------------------------
-  // HANDLE SIGN IN
+  // HANDLE SIGN IN (Checks SQLite API first, with fallback to local registry)
   // --------------------------------------------------------------------------
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     const targetEmail = emailInput.trim();
     if (!targetEmail) {
       setErrorMessage('Please enter your email address.');
@@ -68,21 +68,51 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setErrorMessage(null);
     setNotFoundPrompt(null);
 
-    setTimeout(() => {
-      const resolved = findAccountByEmail(targetEmail);
-      if (resolved) {
-        onLoginSuccess(resolved);
-      } else {
-        setIsLoading(false);
-        setNotFoundPrompt(targetEmail);
+    // 1. Try Backend SQLite Endpoint if worker mode or lender
+    if (selectedTab === 'worker') {
+      try {
+        const response = await fetch(`http://localhost:8000/api/worker/check?email=${encodeURIComponent(targetEmail)}`);
+        if (response.ok) {
+          const workerData = await response.json();
+          try {
+            localStorage.setItem('gignite_active_user', JSON.stringify(workerData));
+            localStorage.setItem('gignite_current_user', JSON.stringify({ type: 'worker', worker: workerData }));
+          } catch {
+            // ignore
+          }
+          onLoginSuccess({ type: 'worker', worker: workerData });
+          setIsLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('Backend SQLite check error, trying local registry:', err);
       }
-    }, 400);
+    }
+
+    // 2. Check local personas fallback for workers or lenders
+    const localResolved = findAccountByEmail(targetEmail);
+    if (localResolved) {
+      if (localResolved.type === 'worker') {
+        try {
+          localStorage.setItem('gignite_active_user', JSON.stringify(localResolved.worker));
+        } catch {
+          // ignore
+        }
+      }
+      onLoginSuccess(localResolved);
+      setIsLoading(false);
+      return;
+    }
+
+    // 3. Not found -> prompt to sign up
+    setIsLoading(false);
+    setNotFoundPrompt(targetEmail);
   };
 
   // --------------------------------------------------------------------------
-  // HANDLE SIGN UP (NEW REGISTRATION)
+  // HANDLE SIGN UP / REGISTRATION (Posts to SQLite Backend)
   // --------------------------------------------------------------------------
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     const targetEmail = emailInput.trim();
     if (!targetEmail) {
@@ -99,79 +129,127 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setIsLoading(true);
     setErrorMessage(null);
 
-    setTimeout(() => {
-      if (selectedTab === 'worker') {
-        const nameToUse = fullName.trim() || targetEmail.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
-        const workerId = `${nameToUse.toLowerCase().replace(/\s+/g, '-')}-${Math.floor(1000 + Math.random() * 9000)}`;
-        
-        // Calculate initial synthetic CRI
-        const calculatedCri = Math.min(95, Math.max(50, Math.round(55 + (monthlyInflow / 50000) * 35)));
-        const resilienceTier = calculatedCri >= 75 ? 'PRIME_RESILIENT' : calculatedCri >= 60 ? 'NEAR_PRIME' : 'VULNERABLE';
+    if (selectedTab === 'worker') {
+      const nameToUse = fullName.trim() || targetEmail.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      // Attempt backend SQLite registration
+      try {
+        const response = await fetch('http://localhost:8000/api/worker/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: targetEmail,
+            name: nameToUse,
+            platform: selectedPlatform,
+            monthly_inflow: monthlyInflow
+          })
+        });
 
-        const newWorker: ExtendedWorkerProfile = {
-          worker_id: workerId,
-          worker_name: nameToUse,
-          email: targetEmail,
-          phone: phone.trim() || "+91 98000 11223",
-          did: `did:india:worker:${workerId.split('-').pop()}`,
-          category: `${selectedPlatform} Fleet Partner`,
-          credit_bureau_status: "THIN_FILE_VERIFIED_BY_GIGNITE",
-          platform_badges: [selectedPlatform],
-          platform_details: [
-            {
-              platform: selectedPlatform,
-              role: `${selectedPlatform} Delivery Partner`,
-              rating: 4.85,
-              trips_completed: 340,
-              verified_active: true,
-              payout_frequency: "Weekly",
-              badge: `${selectedPlatform} Verified Partner`,
-              payout_amount_inr: monthlyInflow
-            }
-          ],
-          telemetry_summary: {
-            telemetry_period_days: 90,
-            active_working_days: 78,
-            active_days_ratio: 0.866,
-            consistency_rate: "86.6%",
-            consistency_ratio: 0.866,
-            stability_rate: "92.0%",
-            stability_index: 0.92,
-            monthly_inflow_inr: monthlyInflow,
-            gross_earnings_180d_inr: monthlyInflow * 3,
-            net_earnings_180d_inr: monthlyInflow * 2.4,
-            zero_income_weeks: 0
-          },
-          cri_score: calculatedCri,
-          resilience_tier: resilienceTier,
-          max_prime_credit_limit_inr: Math.round(monthlyInflow * 0.7),
-          instant_safe_floor_inr: Math.round(monthlyInflow * 0.5)
-        };
-
-        onLoginSuccess({ type: 'worker', worker: newWorker });
-      } else {
-        const instName = institutionName.trim() || targetEmail.split('@')[0].toUpperCase() + ' Capital';
-        const lenderId = `${instName.toLowerCase().replace(/\s+/g, '-')}-${Math.floor(100 + Math.random() * 900)}`;
-
-        const newLender: ExtendedLenderProfile = {
-          id: lenderId,
-          name: instName,
-          email: targetEmail,
-          portal_name: `${instName} Underwriting Portal`,
-          code: `${instName.toUpperCase().replace(/\s+/g, '_')}_DESK`,
-          focus: lenderFocus,
-          max_limit_inr: 40000,
-          min_cri: minCri,
-          base_apr_p_a: "13.5%",
-          base_apr_numeric: 13.5,
-          max_tenure_months: 12,
-          badge: `${instName} Institutional Desk`,
-          accent_color: "purple"
-        };
-
-        onLoginSuccess({ type: 'lender', lender: newLender });
+        if (response.ok) {
+          const registeredWorker = await response.json();
+          try {
+            localStorage.setItem('gignite_active_user', JSON.stringify(registeredWorker));
+            localStorage.setItem('gignite_current_user', JSON.stringify({ type: 'worker', worker: registeredWorker }));
+          } catch {
+            // ignore
+          }
+          onLoginSuccess({ type: 'worker', worker: registeredWorker });
+          setIsLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('Backend SQLite register failed, using client-side generator:', err);
       }
-    }, 450);
+
+      // Client-side fallback registration
+      const workerId = `${nameToUse.toLowerCase().replace(/\s+/g, '-')}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const calculatedCri = 82.4;
+
+      const fallbackWorker: ExtendedWorkerProfile = {
+        worker_id: workerId,
+        worker_name: nameToUse,
+        email: targetEmail,
+        phone: phone.trim() || "+91 98000 11223",
+        did: `did:gignite:worker:${targetEmail.split('@')[0]}`,
+        category: `${selectedPlatform} Fleet Partner`,
+        credit_bureau_status: "THIN_FILE_VERIFIED_BY_GIGNITE",
+        platform_badges: [selectedPlatform],
+        platform_details: [
+          {
+            platform: selectedPlatform,
+            role: `${selectedPlatform} Driver Partner`,
+            rating: 4.86,
+            trips_completed: 450,
+            verified_active: true,
+            payout_frequency: "Weekly",
+            badge: `${selectedPlatform} Verified Partner`,
+            payout_amount_inr: monthlyInflow
+          }
+        ],
+        telemetry_summary: {
+          telemetry_period_days: 180,
+          active_working_days: 160,
+          active_days_ratio: 0.89,
+          consistency_rate: "89.0%",
+          consistency_ratio: 0.89,
+          stability_rate: "100.0%",
+          stability_index: 1.0,
+          monthly_inflow_inr: monthlyInflow,
+          gross_earnings_180d_inr: monthlyInflow * 6,
+          net_earnings_180d_inr: monthlyInflow * 4.7,
+          zero_income_weeks: 0
+        },
+        cri_score: calculatedCri,
+        resilience_tier: "PRIME_RESILIENT",
+        max_prime_credit_limit_inr: Math.round(monthlyInflow * 0.7),
+        instant_safe_floor_inr: Math.round(monthlyInflow * 0.5)
+      };
+
+      try {
+        localStorage.setItem('gignite_active_user', JSON.stringify(fallbackWorker));
+        localStorage.setItem('gignite_current_user', JSON.stringify({ type: 'worker', worker: fallbackWorker }));
+      } catch {
+        // ignore
+      }
+
+      onLoginSuccess({ type: 'worker', worker: fallbackWorker });
+      setIsLoading(false);
+    } else {
+      // Lender Registration
+      const instName = institutionName.trim() || targetEmail.split('@')[0].toUpperCase() + ' Capital';
+      const lenderId = `${instName.toLowerCase().replace(/\s+/g, '-')}-${Math.floor(100 + Math.random() * 900)}`;
+
+      const newLender: ExtendedLenderProfile = {
+        id: lenderId,
+        name: instName,
+        email: targetEmail,
+        portal_name: `${instName} Underwriting Portal`,
+        code: `${instName.toUpperCase().replace(/\s+/g, '_')}_DESK`,
+        focus: lenderFocus,
+        max_limit_inr: 40000,
+        min_cri: minCri,
+        base_apr_p_a: "13.5%",
+        base_apr_numeric: 13.5,
+        max_tenure_months: 12,
+        badge: `${instName} Institutional Desk`,
+        accent_color: "purple"
+      };
+
+      try {
+        localStorage.setItem('gignite_current_user', JSON.stringify({ type: 'lender', lender: newLender }));
+      } catch {
+        // ignore
+      }
+
+      onLoginSuccess({ type: 'lender', lender: newLender });
+      setIsLoading(false);
+    }
+  };
+
+  // Quick helper to directly trigger sign up with entered email
+  const handleQuickRegisterPrompt = () => {
+    setAuthMode('signup');
+    setNotFoundPrompt(null);
   };
 
   return (
@@ -223,7 +301,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               <p className="text-xs sm:text-sm text-[#9CA3AF] mt-1">
                 {authMode === 'signin'
                   ? 'Enter your registered email to load your cryptographic telemetry or underwriting desk'
-                  : 'Register your decentralized identity with verified zkTLS telemetry integration'}
+                  : 'Register your decentralized identity with verified SQLite telemetry integration'}
               </p>
             </div>
           </div>
@@ -298,7 +376,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       if (errorMessage) setErrorMessage(null);
                       if (notFoundPrompt) setNotFoundPrompt(null);
                     }}
-                    placeholder={selectedTab === 'worker' ? 'e.g., ramesh@swiggy.in' : 'e.g., underwriter@finprime.com'}
+                    placeholder={selectedTab === 'worker' ? 'e.g., ramesh@uber.com or itsmedwin@uber' : 'e.g., underwriter@finprime.com'}
                     className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl pl-10 pr-4 py-3 text-sm text-white placeholder-[#6B7280] focus:outline-none focus:border-purple-500/60 transition-colors font-mono"
                     autoFocus
                   />
@@ -322,7 +400,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     <div>
                       <p className="font-bold text-white">No account found for "{notFoundPrompt}"</p>
                       <p className="text-[#9CA3AF] mt-0.5">
-                        Would you like to register this email and create a new GIgnite Financial Identity?
+                        Would you like to register this email and create a new GIgnite Financial Identity in SQLite?
                       </p>
                     </div>
                   </div>
@@ -330,10 +408,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   <div className="flex items-center gap-2 pt-1 border-t border-purple-500/20">
                     <button
                       type="button"
-                      onClick={() => {
-                        setAuthMode('signup');
-                        setNotFoundPrompt(null);
-                      }}
+                      onClick={handleQuickRegisterPrompt}
                       className="flex-1 py-2 px-3 rounded-xl purple-magenta-gradient text-white font-bold text-xs shadow-md hover:opacity-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <span>Yes, Sign Up Now</span>
@@ -356,7 +431,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 disabled={isLoading}
                 className="w-full py-3.5 px-4 rounded-2xl purple-magenta-gradient hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg glow-purple transition-all cursor-pointer disabled:opacity-50"
               >
-                <span>{isLoading ? 'Verifying Identity...' : 'Access Financial Identity'}</span>
+                <span>{isLoading ? 'Verifying Identity in SQLite...' : 'Access Financial Identity'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -377,7 +452,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </form>
           ) : (
             /* ---------------------------------------------------------------- */
-            /* MODE 2: SIGN UP VIEW                                             */
+            /* MODE 2: SIGN UP VIEW (Saves directly to SQLite DB)               */
             /* ---------------------------------------------------------------- */
             <form onSubmit={handleSignUp} className="flex flex-col gap-4 animate-in fade-in">
               
@@ -399,7 +474,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     autoComplete="name"
                     value={selectedTab === 'worker' ? fullName : institutionName}
                     onChange={(e) => selectedTab === 'worker' ? setFullName(e.target.value) : setInstitutionName(e.target.value)}
-                    placeholder={selectedTab === 'worker' ? 'e.g., Ananya Roy' : 'e.g., Apex Capital NBFC'}
+                    placeholder={selectedTab === 'worker' ? 'e.g., Edwin' : 'e.g., Apex Capital NBFC'}
                     className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#6B7280] focus:outline-none focus:border-purple-500/60 transition-colors"
                     required
                   />
@@ -425,7 +500,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         // ignore
                       }
                     }}
-                    placeholder="e.g., ananya@uber.com"
+                    placeholder="e.g., itsmedwin@uber"
                     className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#6B7280] focus:outline-none focus:border-purple-500/60 transition-colors font-mono"
                     required
                   />
@@ -444,8 +519,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                           onChange={(e) => setSelectedPlatform(e.target.value)}
                           className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-2xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/60 transition-colors cursor-pointer"
                         >
+                          <option value="Uber">Uber India</option>
                           <option value="Swiggy">Swiggy Delivery</option>
-                          <option value="Uber India">Uber Rides</option>
                           <option value="Zomato">Zomato Fleet</option>
                           <option value="Blinkit">Blinkit Express</option>
                           <option value="Zepto">Zepto Dispatch</option>
@@ -468,7 +543,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="phone" className="text-xs font-semibold text-slate-300">Mobile Phone</label>
+                    <label htmlFor="phone" className="text-xs font-semibold text-slate-300">Mobile Phone (Optional)</label>
                     <div className="relative">
                       <Phone className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
@@ -520,7 +595,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 disabled={isLoading}
                 className="w-full py-3.5 px-4 rounded-2xl purple-magenta-gradient hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg glow-purple transition-all cursor-pointer disabled:opacity-50 mt-2"
               >
-                <span>{isLoading ? 'Minting Identity & Issuing W3C Proof...' : 'Complete Registration & Enter'}</span>
+                <span>{isLoading ? 'Registering in SQLite & Issuing W3C Proof...' : 'Complete Registration & Enter'}</span>
                 <CheckCircle2 className="w-4 h-4" />
               </button>
 
@@ -545,7 +620,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
       {/* Footer */}
       <footer className="w-full text-center py-4 text-xs text-[#6B7280] font-mono relative z-10">
-        GIgnite Verifiable Identity Airlock • RFC 8785 Canonical Serialization • Ed25519 Cryptographic Signatures
+        GIgnite Verifiable Identity Airlock • SQLite Account Registry • RFC 8785 Canonical Serialization
       </footer>
 
     </div>

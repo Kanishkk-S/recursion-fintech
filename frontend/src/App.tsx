@@ -196,6 +196,7 @@ export default function App() {
 
   const handleLogout = () => {
     try {
+      localStorage.removeItem('gignite_active_user');
       localStorage.removeItem('gignite_current_user');
       localStorage.removeItem('gignite_active_session');
       // Retain gignite_last_email so the login input is prefilled
