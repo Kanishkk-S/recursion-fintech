@@ -282,3 +282,6 @@ def seed_initial_feed(db_path: str = DEFAULT_DB_PATH, force: bool = False):
 # Auto-initialize and seed on module import
 init_db()
 seed_initial_feed()
+
+# Alias for serverless import compatibility
+seed_feed = seed_initial_feed
