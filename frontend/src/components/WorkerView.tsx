@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import type { WorkerProfile, W3CCredential } from '../types';
 import { WORKER_PERSONAS } from '../data/personas';
+import { DailyWageSparkline } from './DailyWageSparkline';
 
 interface WorkerViewProps {
   profile: WorkerProfile;
@@ -421,6 +422,16 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
         </div>
 
       </div>
+
+      {/* 30-Day Daily Wage Stream Sparkline Section */}
+      <DailyWageSparkline
+        dailyWages={profile.daily_wages_30d || profile.telemetry_summary.daily_wages_30d}
+        monthlyInflow={profile.telemetry_summary.monthly_inflow_inr}
+        consistencyRate={profile.telemetry_summary.consistency_rate}
+        activeDays={profile.telemetry_summary.active_working_days}
+        workerName={profile.worker_name}
+        className="w-full"
+      />
 
       {/* ==================================================================== */}
       {/* EXPORT CREDENTIAL MODAL                                              */}

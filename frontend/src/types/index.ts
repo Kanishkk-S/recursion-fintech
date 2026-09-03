@@ -35,6 +35,8 @@ export interface WorkerTelemetry {
   gross_earnings_180d_inr: number;
   net_earnings_180d_inr: number;
   zero_income_weeks: number;
+  daily_wages_30d?: number[];
+  earning_bracket?: 'entry' | 'standard' | 'high' | string;
 }
 
 export interface WorkerProfile {
@@ -50,6 +52,8 @@ export interface WorkerProfile {
   resilience_tier: string;
   max_prime_credit_limit_inr: number;
   instant_safe_floor_inr: number;
+  daily_wages_30d?: number[];
+  earning_bracket?: 'entry' | 'standard' | 'high' | string;
 }
 
 export interface W3CCredential {

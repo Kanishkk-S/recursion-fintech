@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import type { WorkerProfile, W3CCredential, UnderwritingResult, LenderProfile } from '../types';
 import { LENDER_PERSONAS } from '../data/personas';
+import { DailyWageSparkline } from './DailyWageSparkline';
 
 interface LenderViewProps {
   profile: WorkerProfile;
@@ -221,6 +222,18 @@ export const LenderView: React.FC<LenderViewProps> = ({
                 <span>Shift Consistency:</span>
                 <span className="text-white font-semibold">{profile.telemetry_summary.consistency_rate}</span>
               </div>
+            </div>
+
+            {/* 30-Day Daily Wage Stream Telemetry Sparkline */}
+            <div className="pt-2 border-t border-[#1C0B3B]">
+              <DailyWageSparkline
+                dailyWages={profile.daily_wages_30d || profile.telemetry_summary.daily_wages_30d}
+                monthlyInflow={profile.telemetry_summary.monthly_inflow_inr}
+                consistencyRate={profile.telemetry_summary.consistency_rate}
+                activeDays={profile.telemetry_summary.active_working_days}
+                workerName={profile.worker_name}
+                className="!p-3.5 !rounded-2xl !bg-[#07030F]"
+              />
             </div>
           </div>
 

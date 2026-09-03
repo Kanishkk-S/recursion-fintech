@@ -14,6 +14,31 @@ export interface ExtendedLenderProfile extends LenderProfile {
   portal_name: string;
 }
 
+// Pre-generated realistic 30-day daily payout arrays
+const RAMESH_30D_WAGES = [
+  1850, 1920, 2100, 1780, 1950, 2250, 0, // W1 (1 rest day)
+  1800, 1910, 2050, 1890, 2150, 2300, 0, // W2
+  1940, 1820, 2010, 1980, 2120, 2280, 0, // W3
+  1890, 1950, 2040, 1880, 2200, 2350, 0, // W4
+  1960, 2106                              // Days 29-30 (Total = 49,066)
+];
+
+const PRIYA_30D_WAGES = [
+  950, 1020, 1100, 920, 1050, 0, 0,      // W1 (2 rest days)
+  980, 1040, 1120, 960, 1080, 1150, 0,   // W2
+  1010, 940, 1060, 990, 1110, 0, 0,      // W3
+  1020, 980, 1090, 1030, 1140, 1200, 0,  // W4
+  1050, 1100                              // Days 29-30 (Total = 24,800)
+];
+
+const VIKRAM_30D_WAGES = [
+  750, 0, 820, 0, 780, 890, 0,           // W1 (3 rest days)
+  0, 810, 0, 840, 0, 910, 0,             // W2
+  760, 0, 830, 0, 800, 0, 0,             // W3
+  880, 0, 790, 850, 0, 920, 0,           // W4
+  830, 0                                 // Days 29-30 (Total = 11,200)
+];
+
 export const WORKER_PERSONAS: Record<string, ExtendedWorkerProfile> = {
   "ramesh-kumar-9872": {
     worker_id: "ramesh-kumar-9872",
@@ -57,12 +82,16 @@ export const WORKER_PERSONAS: Record<string, ExtendedWorkerProfile> = {
       monthly_inflow_inr: 49066.00,
       gross_earnings_180d_inr: 294396.12,
       net_earnings_180d_inr: 231590.25,
-      zero_income_weeks: 0
+      zero_income_weeks: 0,
+      daily_wages_30d: RAMESH_30D_WAGES,
+      earning_bracket: 'high'
     },
     cri_score: 88.7,
     resilience_tier: "PRIME_RESILIENT",
     max_prime_credit_limit_inr: 34346.20,
-    instant_safe_floor_inr: 24500.00
+    instant_safe_floor_inr: 24500.00,
+    daily_wages_30d: RAMESH_30D_WAGES,
+    earning_bracket: 'high'
   },
 
   "priya-sharma-3411": {
@@ -100,28 +129,32 @@ export const WORKER_PERSONAS: Record<string, ExtendedWorkerProfile> = {
       telemetry_period_days: 60,
       active_working_days: 47,
       active_days_ratio: 0.7833,
-      consistency_rate: "78.0%",
-      consistency_ratio: 0.78,
+      consistency_rate: "78.3%",
+      consistency_ratio: 0.783,
       stability_rate: "85.0%",
       stability_index: 0.85,
       monthly_inflow_inr: 24800.00,
-      gross_earnings_180d_inr: 49600.00,
-      net_earnings_180d_inr: 38200.00,
-      zero_income_weeks: 1
+      gross_earnings_180d_inr: 148800.00,
+      net_earnings_180d_inr: 114576.00,
+      zero_income_weeks: 1,
+      daily_wages_30d: PRIYA_30D_WAGES,
+      earning_bracket: 'standard'
     },
     cri_score: 64.2,
     resilience_tier: "NEAR_PRIME",
     max_prime_credit_limit_inr: 17360.00,
-    instant_safe_floor_inr: 12400.00
+    instant_safe_floor_inr: 12400.00,
+    daily_wages_30d: PRIYA_30D_WAGES,
+    earning_bracket: 'standard'
   },
 
   "vikram-singh-1029": {
     worker_id: "vikram-singh-1029",
     worker_name: "Vikram Singh",
     email: "vikram@zomato.com",
-    phone: "+91 97222 33445",
+    phone: "+91 98222 33445",
     did: "did:india:worker:1029",
-    category: "On-Demand Delivery Associate",
+    category: "Entry-Level Food Delivery Partner",
     credit_bureau_status: "THIN_FILE_UNBANKED",
     platform_badges: ["Zomato"],
     platform_details: [
@@ -145,19 +178,23 @@ export const WORKER_PERSONAS: Record<string, ExtendedWorkerProfile> = {
       stability_rate: "50.0%",
       stability_index: 0.50,
       monthly_inflow_inr: 11200.00,
-      gross_earnings_180d_inr: 11200.00,
-      net_earnings_180d_inr: 8900.00,
-      zero_income_weeks: 2
+      gross_earnings_180d_inr: 67200.00,
+      net_earnings_180d_inr: 49728.00,
+      zero_income_weeks: 3,
+      daily_wages_30d: VIKRAM_30D_WAGES,
+      earning_bracket: 'entry'
     },
     cri_score: 41.0,
     resilience_tier: "VULNERABLE",
     max_prime_credit_limit_inr: 7840.00,
-    instant_safe_floor_inr: 5600.00
+    instant_safe_floor_inr: 5600.00,
+    daily_wages_30d: VIKRAM_30D_WAGES,
+    earning_bracket: 'entry'
   }
 };
 
 // ==============================================================================
-// 2 REGISTERED LENDER PERSONAS
+// 2 INSTITUTIONAL LENDER PROFILES
 // ==============================================================================
 
 export const LENDER_PERSONAS: Record<string, ExtendedLenderProfile> = {
@@ -165,36 +202,143 @@ export const LENDER_PERSONAS: Record<string, ExtendedLenderProfile> = {
     id: "finprime-nbfc",
     name: "FinPrime NBFC",
     email: "underwriter@finprime.com",
-    portal_name: "FinPrime Institutional Credit Terminal",
+    portal_name: "FinPrime Institutional Credit Portal",
     code: "FINPRIME_PRIME_DESK",
-    focus: "Low Risk / Prime Focus",
+    focus: "Prime & Near-Prime Mandate (Low Risk)",
     max_limit_inr: 50000,
     min_cri: 75,
     base_apr_p_a: "11.5%",
     base_apr_numeric: 11.5,
     max_tenure_months: 12,
-    badge: "Tier-1 Prime Mandate",
+    badge: "FinPrime A+ Institutional Desk",
     accent_color: "emerald"
   },
+
   "microflex-capital": {
     id: "microflex-capital",
     name: "MicroFlex Capital",
     email: "desk@microflex.capital",
-    portal_name: "MicroFlex High-Yield Underwriting Desk",
+    portal_name: "MicroFlex High-Yield Desk",
     code: "MICROFLEX_GROWTH_DESK",
-    focus: "High Yield / Flexible Micro-Lender",
+    focus: "Growth & Developing Mandate (Flexible)",
     max_limit_inr: 25000,
     min_cri: 50,
     base_apr_p_a: "16.5%",
     base_apr_numeric: 16.5,
     max_tenure_months: 6,
-    badge: "Tier-2 Growth Mandate",
-    accent_color: "indigo"
+    badge: "MicroFlex Growth NBFC Desk",
+    accent_color: "purple"
   }
 };
 
 // ==============================================================================
-// EMAIL RESOLUTION HELPER
+// 30-DAY DAILY WAGE STREAM SIMULATOR
+// ==============================================================================
+
+export type EarningBracketKey = 'entry' | 'standard' | 'high';
+
+export interface BracketConfig {
+  key: EarningBracketKey;
+  label: string;
+  range: string;
+  minDaily: number;
+  maxDaily: number;
+  avgDaily: number;
+  description: string;
+  color: string;
+}
+
+export const EARNING_BRACKETS: Record<EarningBracketKey, BracketConfig> = {
+  entry: {
+    key: 'entry',
+    label: 'Entry',
+    range: '₹600 - ₹900 / day',
+    minDaily: 600,
+    maxDaily: 900,
+    avgDaily: 750,
+    description: 'Casual or flexible part-time shifts',
+    color: '#F59E0B' // Amber
+  },
+  standard: {
+    key: 'standard',
+    label: 'Standard',
+    range: '₹1,000 - ₹1,500 / day',
+    minDaily: 1000,
+    maxDaily: 1500,
+    avgDaily: 1250,
+    description: 'Standard 6-day fleet shift (Recommended)',
+    color: '#C084FC' // Purple
+  },
+  high: {
+    key: 'high',
+    label: 'High Velocity',
+    range: '₹1,600 - ₹2,200 / day',
+    minDaily: 1600,
+    maxDaily: 2200,
+    avgDaily: 1900,
+    description: 'Peak surge & multi-platform continuous schedule',
+    color: '#10B981' // Emerald
+  }
+};
+
+export interface GeneratedWageStream {
+  dailyStream: number[];
+  totalMonthlyInflow: number;
+  activeWorkingDays: number;
+  restDaysCount: number;
+  shiftConsistency: string;
+  consistencyRatio: number;
+  averageActiveDaily: number;
+  bracket: EarningBracketKey;
+}
+
+export function generate30DayWageStream(bracketKey: EarningBracketKey = 'standard'): GeneratedWageStream {
+  const cfg = EARNING_BRACKETS[bracketKey] || EARNING_BRACKETS.standard;
+  
+  // 4 to 6 random rest days (₹0 earnings)
+  const restDaysCount = Math.floor(4 + Math.random() * 3);
+  const restDayIndices = new Set<number>();
+  while (restDayIndices.size < restDaysCount) {
+    const day = Math.floor(Math.random() * 30);
+    restDayIndices.add(day);
+  }
+
+  const dailyStream: number[] = [];
+  let totalSum = 0;
+  let activeCount = 0;
+
+  for (let i = 0; i < 30; i++) {
+    if (restDayIndices.has(i)) {
+      dailyStream.push(0);
+    } else {
+      activeCount++;
+      // Slight realistic variance (+-15%) on active days
+      const base = cfg.minDaily + Math.random() * (cfg.maxDaily - cfg.minDaily);
+      const variance = 1 + (Math.random() * 0.30 - 0.15); // 0.85 to 1.15
+      const dayVal = Math.round((base * variance) / 10) * 10;
+      dailyStream.push(dayVal);
+      totalSum += dayVal;
+    }
+  }
+
+  const consistencyRatio = Math.round((activeCount / 30) * 1000) / 1000;
+  const shiftConsistency = `${(consistencyRatio * 100).toFixed(1)}%`;
+  const averageActiveDaily = activeCount > 0 ? Math.round(totalSum / activeCount) : 0;
+
+  return {
+    dailyStream,
+    totalMonthlyInflow: totalSum,
+    activeWorkingDays: activeCount,
+    restDaysCount,
+    shiftConsistency,
+    consistencyRatio,
+    averageActiveDaily,
+    bracket: bracketKey
+  };
+}
+
+// ==============================================================================
+// ACCOUNT RESOLVER
 // ==============================================================================
 
 export type ResolvedAccount = 

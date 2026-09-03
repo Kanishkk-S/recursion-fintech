@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Wallet,
   Landmark,
@@ -11,13 +11,20 @@ import {
   Sparkles,
   CheckCircle2,
   Phone,
-  IndianRupee,
-  CalendarDays,
-  Calculator
+  BarChart3,
+  Flame,
+  Zap,
+  Coffee
 } from 'lucide-react';
 import { GIgniteLogo } from './GIgniteLogo';
-import { findAccountByEmail } from '../data/personas';
-import type { ExtendedWorkerProfile, ExtendedLenderProfile } from '../data/personas';
+import { 
+  findAccountByEmail, 
+  generate30DayWageStream, 
+  EARNING_BRACKETS,
+  type EarningBracketKey,
+  type ExtendedWorkerProfile, 
+  type ExtendedLenderProfile 
+} from '../data/personas';
 
 interface LoginPageProps {
   onLoginSuccess: (account: { type: 'worker'; worker: ExtendedWorkerProfile } | { type: 'lender'; lender: ExtendedLenderProfile }) => void;
@@ -46,17 +53,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [phone, setPhone] = useState<string>('');
   const [selectedPlatform, setSelectedPlatform] = useState<string>('Uber');
   
-  // 2-Field Dynamic Inflow Model:
-  // calculatedInflow = Math.round(dailyEarnings * daysPerWeek * 4.33)
-  const [dailyEarnings, setDailyEarnings] = useState<number>(1400);
-  const [daysPerWeek, setDaysPerWeek] = useState<number>(6);
+  // 30-Day Daily Wage Stream Simulator State
+  const [selectedBracket, setSelectedBracket] = useState<EarningBracketKey>('standard');
+  const [simulatedStream, setSimulatedStream] = useState(() => generate30DayWageStream('standard'));
 
   const [institutionName, setInstitutionName] = useState<string>('');
   const [lenderFocus, setLenderFocus] = useState<string>('Prime / Growth Mandate');
   const [minCri, setMinCri] = useState<number>(65);
 
-  // Computed Monthly Inflow
-  const calculatedInflow = Math.round((dailyEarnings || 0) * (daysPerWeek || 0) * 4.33);
+  // Re-simulate 30-day stream whenever bracket changes
+  useEffect(() => {
+    setSimulatedStream(generate30DayWageStream(selectedBracket));
+  }, [selectedBracket]);
 
   // --------------------------------------------------------------------------
   // HANDLE SIGN IN (Checks SQLite API first, with fallback to local registry)
@@ -115,13 +123,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    // 3. Not found -> prompt to sign up with dynamic onboarding
+    // 3. Not found -> prompt to sign up with dynamic 30-day onboarding
     setIsLoading(false);
     setNotFoundPrompt(targetEmail);
   };
 
   // --------------------------------------------------------------------------
-  // HANDLE SIGN UP / REGISTRATION (Dynamic Monthly Inflow calculation)
+  // HANDLE SIGN UP / REGISTRATION (Aggregates 30-day Daily Wage Stream)
   // --------------------------------------------------------------------------
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,10 +150,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
     if (selectedTab === 'worker') {
       const nameToUse = fullName.trim() || targetEmail.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
-      const effectiveInflow = calculatedInflow > 0 ? calculatedInflow : 36372;
-      
-      // Dynamic shift consistency from days per week (6 days = 85.7%, 7 days = 100%)
-      const consistencyRatio = Math.round((daysPerWeek / 7) * 1000) / 1000;
+      const totalInflow = simulatedStream.totalMonthlyInflow;
+      const consistencyRatio = simulatedStream.consistencyRatio;
 
       // Attempt backend SQLite registration
       try {
@@ -156,17 +162,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             email: targetEmail,
             name: nameToUse,
             platform: selectedPlatform,
-            monthly_inflow: effectiveInflow
+            monthly_inflow: totalInflow
           })
         });
 
         if (response.ok) {
           const registeredWorker = await response.json();
-          // Ensure exact dynamically calculated inflow is recorded
-          registeredWorker.monthlyInflow = effectiveInflow;
-          registeredWorker.telemetry_summary.monthly_inflow_inr = effectiveInflow;
+          // Attach 30-day daily payout stream and telemetry
+          registeredWorker.monthlyInflow = totalInflow;
+          registeredWorker.daily_wages_30d = simulatedStream.dailyStream;
+          registeredWorker.earning_bracket = selectedBracket;
+          registeredWorker.telemetry_summary.monthly_inflow_inr = totalInflow;
           registeredWorker.telemetry_summary.consistency_ratio = consistencyRatio;
-          registeredWorker.telemetry_summary.consistency_rate = `${(consistencyRatio * 100).toFixed(1)}%`;
+          registeredWorker.telemetry_summary.consistency_rate = simulatedStream.shiftConsistency;
+          registeredWorker.telemetry_summary.active_working_days = simulatedStream.activeWorkingDays;
+          registeredWorker.telemetry_summary.daily_wages_30d = simulatedStream.dailyStream;
+          registeredWorker.telemetry_summary.earning_bracket = selectedBracket;
           
           try {
             localStorage.setItem('gignite_active_user', JSON.stringify(registeredWorker));
@@ -182,9 +193,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         console.warn('Backend SQLite register failed, using client-side generator:', err);
       }
 
-      // Client-side fallback registration
+      // Client-side fallback registration with 30-day wage stream
       const workerId = `${nameToUse.toLowerCase().replace(/\s+/g, '-')}-${Math.floor(1000 + Math.random() * 9000)}`;
-      const calculatedCri = Math.min(94, Math.max(60, Math.round(58 + (effectiveInflow / 50000) * 32)));
+      const calculatedCri = selectedBracket === 'high' 
+        ? 88.5 
+        : selectedBracket === 'standard' 
+        ? 81.2 
+        : 64.0;
       const resilienceTier = calculatedCri >= 75 ? 'PRIME_RESILIENT' : 'NEAR_PRIME';
 
       const fallbackWorker: ExtendedWorkerProfile = {
@@ -196,35 +211,39 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         category: `${selectedPlatform} Fleet Partner`,
         credit_bureau_status: "THIN_FILE_VERIFIED_BY_GIGNITE",
         platform_badges: [selectedPlatform],
+        daily_wages_30d: simulatedStream.dailyStream,
+        earning_bracket: selectedBracket,
         platform_details: [
           {
             platform: selectedPlatform,
             role: `${selectedPlatform} Driver Partner`,
             rating: 4.88,
-            trips_completed: Math.max(120, Math.round(effectiveInflow / 80)),
+            trips_completed: Math.max(120, Math.round(totalInflow / 85)),
             verified_active: true,
             payout_frequency: "Weekly",
             badge: `${selectedPlatform} Verified Partner`,
-            payout_amount_inr: effectiveInflow
+            payout_amount_inr: totalInflow
           }
         ],
         telemetry_summary: {
           telemetry_period_days: 180,
           active_working_days: Math.round(180 * consistencyRatio),
           active_days_ratio: consistencyRatio,
-          consistency_rate: `${(consistencyRatio * 100).toFixed(1)}%`,
+          consistency_rate: simulatedStream.shiftConsistency,
           consistency_ratio: consistencyRatio,
           stability_rate: "100.0%",
           stability_index: 1.0,
-          monthly_inflow_inr: effectiveInflow,
-          gross_earnings_180d_inr: effectiveInflow * 6,
-          net_earnings_180d_inr: Math.round(effectiveInflow * 4.8),
-          zero_income_weeks: 0
+          monthly_inflow_inr: totalInflow,
+          gross_earnings_180d_inr: totalInflow * 6,
+          net_earnings_180d_inr: Math.round(totalInflow * 4.8),
+          zero_income_weeks: 0,
+          daily_wages_30d: simulatedStream.dailyStream,
+          earning_bracket: selectedBracket
         },
         cri_score: calculatedCri,
         resilience_tier: resilienceTier,
-        max_prime_credit_limit_inr: Math.round(effectiveInflow * 0.70),
-        instant_safe_floor_inr: Math.round(effectiveInflow * 0.50)
+        max_prime_credit_limit_inr: Math.round(totalInflow * 0.70),
+        instant_safe_floor_inr: Math.round(totalInflow * 0.50)
       };
 
       try {
@@ -302,7 +321,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
       {/* Main Center Container */}
       <main className="flex-1 flex items-center justify-center px-4 py-8 relative z-10">
-        <div className="w-full max-w-lg bg-[#0D061C] border border-[#1C0B3B] rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6">
+        <div className="w-full max-w-xl bg-[#0D061C] border border-[#1C0B3B] rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6">
           
           {/* Header Title & Shield Icon */}
           <div className="text-center flex flex-col items-center gap-3">
@@ -317,12 +336,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                {authMode === 'signin' ? 'Financial Identity Airlock' : 'Worker Onboarding & Identity'}
+                {authMode === 'signin' ? 'Financial Identity Airlock' : 'Worker Daily Wage Stream Setup'}
               </h1>
               <p className="text-xs sm:text-sm text-[#9CA3AF] mt-1">
                 {authMode === 'signin'
                   ? 'Enter your registered email to load your cryptographic telemetry or underwriting desk'
-                  : 'Configure your earnings telemetry to generate your Cash-Flow Resilience Index (CRI)'}
+                  : 'Configure your daily earning bracket to generate automated 30-day payout telemetry'}
               </p>
             </div>
           </div>
@@ -421,7 +440,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     <div>
                       <p className="font-bold text-white">No account found for "{notFoundPrompt}"</p>
                       <p className="text-[#9CA3AF] mt-0.5">
-                        Would you like to configure your daily earnings and create your GIgnite Financial Identity?
+                        Would you like to select your daily earning bracket and generate your 30-day payout stream?
                       </p>
                     </div>
                   </div>
@@ -473,7 +492,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </form>
           ) : (
             /* ---------------------------------------------------------------- */
-            /* MODE 2: SIGN UP & ONBOARDING VIEW                                */
+            /* MODE 2: SIGN UP WITH 30-DAY DAILY WAGE STREAM SIMULATOR          */
             /* ---------------------------------------------------------------- */
             <form onSubmit={handleSignUp} className="flex flex-col gap-4 animate-in fade-in">
               
@@ -528,11 +547,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 </div>
               </div>
 
-              {/* Worker Specific 2-Field Dynamic Telemetry Onboarding */}
+              {/* Worker Specific 30-Day Daily Wage Bracket Selector */}
               {selectedTab === 'worker' ? (
                 <>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Primary Fleet Platform</label>
+                    <label className="text-xs font-semibold text-slate-300">Primary Platform</label>
                     <div className="relative">
                       <select
                         value={selectedPlatform}
@@ -548,69 +567,97 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     </div>
                   </div>
 
-                  {/* 2-FIELD TELEMETRY ONBOARDING BOX */}
-                  <div className="p-4 rounded-2xl bg-[#140929]/80 border border-purple-500/30 flex flex-col gap-3.5 shadow-md">
+                  {/* DAILY EARNING BRACKET SELECTOR */}
+                  <div className="flex flex-col gap-2 p-4 rounded-2xl bg-[#140929]/80 border border-purple-500/30 shadow-md">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Calculator className="w-3.5 h-3.5 text-[#C084FC]" />
-                        Earnings Telemetry Configurator
-                      </span>
-                      <span className="text-[10px] text-purple-300 font-mono bg-purple-950/60 px-2 py-0.5 rounded-md border border-purple-500/20">
-                        Dynamic Multiplier 4.33x
+                      <label className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <BarChart3 className="w-3.5 h-3.5 text-[#C084FC]" />
+                        What is your typical daily earning bracket?
+                      </label>
+                      <span className="text-[10px] text-purple-300 font-mono">
+                        30-Day Stream Simulator
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* Field 1: Average Daily Earnings */}
-                      <div className="flex flex-col gap-1.5">
-                        <label htmlFor="dailyEarnings" className="text-xs font-medium text-slate-300 flex items-center gap-1">
-                          <IndianRupee className="w-3 h-3 text-[#A855F7]" />
-                          Average Daily Earnings (₹)
-                        </label>
-                        <input
-                          type="number"
-                          id="dailyEarnings"
-                          min={300}
-                          max={10000}
-                          step={50}
-                          value={dailyEarnings || ''}
-                          onChange={(e) => setDailyEarnings(Number(e.target.value))}
-                          placeholder="e.g., 900, 1200, 1500"
-                          className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-purple-500/60 transition-colors"
-                          required
-                        />
-                      </div>
-
-                      {/* Field 2: Days Worked Per Week */}
-                      <div className="flex flex-col gap-1.5">
-                        <label htmlFor="daysPerWeek" className="text-xs font-medium text-slate-300 flex items-center gap-1">
-                          <CalendarDays className="w-3 h-3 text-[#A855F7]" />
-                          Days Worked Per Week
-                        </label>
-                        <select
-                          id="daysPerWeek"
-                          value={daysPerWeek}
-                          onChange={(e) => setDaysPerWeek(Number(e.target.value))}
-                          className="w-full bg-[#07030F] border border-[#1C0B3B] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500/60 transition-colors cursor-pointer"
-                        >
-                          <option value={7}>7 Days / Week (Full-time Continuous)</option>
-                          <option value={6}>6 Days / Week (Standard Fleet Shift)</option>
-                          <option value={5}>5 Days / Week (Regular Weekdays)</option>
-                          <option value={4}>4 Days / Week (Flexible Part-time)</option>
-                          <option value={3}>3 Days / Week (Weekend Shifts)</option>
-                          <option value={2}>2 Days / Week (Peak Hours Only)</option>
-                          <option value={1}>1 Day / Week (Casual)</option>
-                        </select>
-                      </div>
+                    {/* 3 Interactive Bracket Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                      {Object.values(EARNING_BRACKETS).map((b) => {
+                        const isSelected = selectedBracket === b.key;
+                        return (
+                          <button
+                            key={b.key}
+                            type="button"
+                            onClick={() => setSelectedBracket(b.key)}
+                            className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                              isSelected
+                                ? 'bg-[#1E0E3E] border-purple-400 shadow-md shadow-purple-950/60'
+                                : 'bg-[#07030F] border-[#1C0B3B] hover:border-purple-500/30 opacity-75 hover:opacity-100'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-xs text-white">{b.label}</span>
+                                {b.key === 'high' ? (
+                                  <Flame className="w-3 h-3 text-emerald-400" />
+                                ) : b.key === 'standard' ? (
+                                  <Zap className="w-3 h-3 text-[#C084FC]" />
+                                ) : null}
+                              </div>
+                              <span className="font-mono font-bold text-[11px] text-[#4ADE80] block mt-1">
+                                {b.range}
+                              </span>
+                            </div>
+                            <span className="text-[9px] text-[#9CA3AF] mt-1.5 line-clamp-2 leading-tight">
+                              {b.description}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
 
-                    {/* Live Calculated Inflow Highlight */}
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#07030F] border border-purple-500/20 text-xs">
-                      <span className="text-[#9CA3AF]">Calculated Monthly Inflow:</span>
-                      <span className="font-bold font-mono text-[#4ADE80] text-sm">
-                        ₹{calculatedInflow.toLocaleString('en-IN')}{' '}
-                        <span className="text-[10px] font-normal text-[#9CA3AF]">/ month</span>
-                      </span>
+                    {/* Dynamic 30-Bar Live Preview Strip */}
+                    <div className="mt-2 p-3 rounded-xl bg-[#07030F] border border-purple-500/20 flex flex-col gap-2">
+                      <div className="flex items-center justify-between text-xs font-mono">
+                        <span className="text-[#9CA3AF]">Simulated 30-Day Inflow:</span>
+                        <span className="font-bold text-sm text-[#4ADE80]">
+                          ₹{simulatedStream.totalMonthlyInflow.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+
+                      {/* Mini 30-bar preview */}
+                      <div className="h-10 flex items-end justify-between gap-0.5 px-0.5">
+                        {simulatedStream.dailyStream.map((amount, idx) => {
+                          const isRest = amount === 0;
+                          const maxVal = Math.max(...simulatedStream.dailyStream, 1000);
+                          const heightPct = isRest ? 10 : Math.max(20, Math.round((amount / maxVal) * 100));
+                          return (
+                            <div
+                              key={idx}
+                              style={{ height: `${heightPct}%` }}
+                              title={`Day ${idx + 1}: ${isRest ? '₹0 Rest Day' : `₹${amount}`}`}
+                              className={`flex-1 rounded-t-[1.5px] ${
+                                isRest 
+                                  ? 'bg-amber-500/30' 
+                                  : 'bg-gradient-to-t from-purple-700 to-[#C084FC]'
+                              }`}
+                            ></div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] text-[#9CA3AF] font-mono pt-1 border-t border-[#1C0B3B]">
+                        <span className="flex items-center gap-1">
+                          <Zap className="w-2.5 h-2.5 text-[#C084FC]" />
+                          {simulatedStream.activeWorkingDays} Active Shifts
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Coffee className="w-2.5 h-2.5 text-amber-400" />
+                          {simulatedStream.restDaysCount} Rest Days (₹0)
+                        </span>
+                        <span className="text-emerald-400 font-bold">
+                          {simulatedStream.shiftConsistency} Consistency
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -667,7 +714,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 disabled={isLoading}
                 className="w-full py-3.5 px-4 rounded-2xl purple-magenta-gradient hover:opacity-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg glow-purple transition-all cursor-pointer disabled:opacity-50 mt-1"
               >
-                <span>{isLoading ? 'Registering & Minting W3C Proof...' : 'Complete Registration & Enter'}</span>
+                <span>{isLoading ? 'Generating Telemetry & Minting W3C Proof...' : 'Complete Registration & Enter'}</span>
                 <CheckCircle2 className="w-4 h-4" />
               </button>
 
