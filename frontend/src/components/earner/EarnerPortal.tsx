@@ -34,18 +34,25 @@ export function EarnerPortal() {
   const [selectiveDisclosure, setSelectiveDisclosure] = useState(false);
   const [issuedVc, setIssuedVc] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   if (!profile) return null;
   
   const handleIssue = async () => {
     // Simulated network delay for POST request
     await new Promise(r => setTimeout(r, 600));
-    setIssuedVc(JSON.stringify(VALID_VC_PAYLOAD, null, 2));
+    const payload = JSON.parse(JSON.stringify(VALID_VC_PAYLOAD));
+    if (selectiveDisclosure) {
+      payload.credentialSubject.sd_full_history = true;
+    }
+    setIssuedVc(JSON.stringify(payload, null, 2));
   };
   
   const handleCopy = () => {
     if (issuedVc) {
       navigator.clipboard.writeText(issuedVc);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -148,21 +155,21 @@ export function EarnerPortal() {
               <div className="flex gap-2">
                 <button 
                   onClick={handleCopy}
-                  className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition-colors flex justify-center items-center gap-1.5"
+                  className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors flex justify-center items-center gap-1.5 ${copied ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}
                 >
-                  <Copy className="w-3.5 h-3.5" /> Copy Payload
+                  {copied ? 'Copied!' : <><Copy className="w-3.5 h-3.5" /> Copy Credential JSON</>}
                 </button>
                 <button 
                   onClick={() => setShowQr(true)}
                   className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition-colors flex justify-center items-center gap-1.5"
                 >
-                  <QrCode className="w-3.5 h-3.5" /> View Credential QR
+                  <QrCode className="w-3.5 h-3.5" /> Show Verifiable QR
                 </button>
               </div>
             </div>
             
             {showQr && (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative flex flex-col items-center">
                   <button 
                     onClick={() => setShowQr(false)}
@@ -170,11 +177,20 @@ export function EarnerPortal() {
                   >
                     <X className="w-5 h-5" />
                   </button>
-                  <h3 className="text-lg font-bold text-white mb-2">Credential QR</h3>
-                  <p className="text-xs text-slate-400 text-center mb-6">Scan this QR code from the Lender Desk to securely transfer your verifiable credential.</p>
-                  <div className="p-4 bg-white rounded-2xl flex justify-center items-center w-full max-w-[200px] aspect-square">
+                  <h3 className="text-lg font-bold text-white mb-2 text-center leading-tight">Decentralized Credential Presentation</h3>
+                  <p className="text-xs text-slate-400 text-center mb-6">Scan to import verifiable income profile</p>
+                  <div className="p-4 bg-white rounded-2xl flex justify-center items-center w-full max-w-[200px] aspect-square mb-6">
                      <QRCode value={issuedVc} size={160} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />
                   </div>
+                  <button 
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('DIRECT_SYNC', { detail: issuedVc }));
+                      setShowQr(false);
+                    }}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]"
+                  >
+                    Direct Sync to Lender Desk
+                  </button>
                 </div>
               </div>
             )}
