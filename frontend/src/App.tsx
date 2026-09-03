@@ -3,17 +3,75 @@ import { GIgniteLogo } from './components/GIgniteLogo';
 import { RoleNav } from './components/RoleNav';
 import { WorkerView } from './components/WorkerView';
 import { LenderView } from './components/LenderView';
+import { LoginPage } from './components/LoginPage';
+import { LogOut } from 'lucide-react';
 import type { WorkerProfile, W3CCredential, UnderwritingResult, LenderProfile } from './types';
-import { WORKER_PERSONAS, LENDER_PERSONAS, generateWorkerCredential } from './data/personas';
+import { 
+  WORKER_PERSONAS, 
+  LENDER_PERSONAS, 
+  generateWorkerCredential,
+  type ExtendedWorkerProfile,
+  type ExtendedLenderProfile
+} from './data/personas';
+
+interface StoredSession {
+  role: 'worker' | 'lender';
+  workerId?: string;
+  lenderId?: string;
+  email: string;
+}
 
 export default function App() {
-  // Navigation State
+  // Session State (null = show LoginPage)
+  const [session, setSession] = useState<StoredSession | null>(() => {
+    try {
+      const saved = localStorage.getItem('gignite_active_session');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+
+  // Navigation Role State ('worker' | 'lender')
   const [activeRole, setActiveRole] = useState<'worker' | 'lender'>('worker');
 
   // Active Personas Data
-  const [profile, setProfile] = useState<WorkerProfile>(WORKER_PERSONAS['ramesh-kumar-9872']);
-  const [activeLender, setActiveLender] = useState<LenderProfile>(LENDER_PERSONAS['finprime-nbfc']);
-  const [rawCredential, setRawCredential] = useState<W3CCredential | null>(generateWorkerCredential(WORKER_PERSONAS['ramesh-kumar-9872']));
+  const [profile, setProfile] = useState<WorkerProfile>(() => {
+    try {
+      const saved = localStorage.getItem('gignite_active_session');
+      if (saved) {
+        const parsed: StoredSession = JSON.parse(saved);
+        if (parsed.workerId && WORKER_PERSONAS[parsed.workerId]) {
+          return WORKER_PERSONAS[parsed.workerId];
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return WORKER_PERSONAS['ramesh-kumar-9872'];
+  });
+
+  const [activeLender, setActiveLender] = useState<LenderProfile>(() => {
+    try {
+      const saved = localStorage.getItem('gignite_active_session');
+      if (saved) {
+        const parsed: StoredSession = JSON.parse(saved);
+        if (parsed.lenderId && LENDER_PERSONAS[parsed.lenderId]) {
+          return LENDER_PERSONAS[parsed.lenderId];
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return LENDER_PERSONAS['finprime-nbfc'];
+  });
+
+  const [rawCredential, setRawCredential] = useState<W3CCredential | null>(() => {
+    return generateWorkerCredential(WORKER_PERSONAS['ramesh-kumar-9872']);
+  });
 
   // Engine & Health States
   const [isLiveEngine, setIsLiveEngine] = useState<boolean>(false);
@@ -24,6 +82,62 @@ export default function App() {
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
   const [underwritingResult, setUnderwritingResult] = useState<UnderwritingResult | null>(null);
 
+  // Sync session on mount
+  useEffect(() => {
+    if (session) {
+      if (session.role === 'worker') {
+        setActiveRole('worker');
+        if (session.workerId && WORKER_PERSONAS[session.workerId]) {
+          const w = WORKER_PERSONAS[session.workerId];
+          setProfile(w);
+          setRawCredential(generateWorkerCredential(w));
+        }
+      } else if (session.role === 'lender') {
+        setActiveRole('lender');
+        if (session.lenderId && LENDER_PERSONAS[session.lenderId]) {
+          setActiveLender(LENDER_PERSONAS[session.lenderId]);
+        }
+      }
+    }
+  }, []);
+
+  // ----------------------------------------------------------------------------
+  // AUTHENTICATION HANDLERS
+  // ----------------------------------------------------------------------------
+  const handleLoginSuccess = (account: { type: 'worker'; worker: ExtendedWorkerProfile } | { type: 'lender'; lender: ExtendedLenderProfile }) => {
+    if (account.type === 'worker') {
+      const newSession: StoredSession = {
+        role: 'worker',
+        workerId: account.worker.worker_id,
+        email: account.worker.email
+      };
+      localStorage.setItem('gignite_active_session', JSON.stringify(newSession));
+      setSession(newSession);
+      setProfile(account.worker);
+      setRawCredential(generateWorkerCredential(account.worker));
+      setActiveRole('worker');
+      const defaultLoan = Math.round(account.worker.telemetry_summary.monthly_inflow_inr * 0.65 / 1000) * 1000;
+      setRequestedLoan(Math.max(10000, defaultLoan));
+    } else {
+      const newSession: StoredSession = {
+        role: 'lender',
+        lenderId: account.lender.id,
+        email: account.lender.email
+      };
+      localStorage.setItem('gignite_active_session', JSON.stringify(newSession));
+      setSession(newSession);
+      setActiveLender(account.lender);
+      setActiveRole('lender');
+    }
+    setUnderwritingResult(null);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('gignite_active_session');
+    setSession(null);
+    setUnderwritingResult(null);
+  };
+
   // ----------------------------------------------------------------------------
   // WORKER SELECTION HANDLER
   // ----------------------------------------------------------------------------
@@ -31,6 +145,17 @@ export default function App() {
     const newProfile = WORKER_PERSONAS[workerId] || WORKER_PERSONAS['ramesh-kumar-9872'];
     setProfile(newProfile);
     
+    // Update active stored session
+    if (session?.role === 'worker') {
+      const updatedSession: StoredSession = {
+        ...session,
+        workerId: newProfile.worker_id,
+        email: newProfile.email
+      };
+      localStorage.setItem('gignite_active_session', JSON.stringify(updatedSession));
+      setSession(updatedSession);
+    }
+
     // Auto-adjust default loan target to worker's scale
     const defaultLoan = Math.round(newProfile.telemetry_summary.monthly_inflow_inr * 0.65 / 1000) * 1000;
     setRequestedLoan(Math.max(10000, defaultLoan));
@@ -47,6 +172,17 @@ export default function App() {
   const handleSelectLender = (lenderId: string) => {
     const newLender = LENDER_PERSONAS[lenderId] || LENDER_PERSONAS['finprime-nbfc'];
     setActiveLender(newLender);
+
+    // Update active stored session
+    if (session?.role === 'lender') {
+      const updatedSession: StoredSession = {
+        ...session,
+        lenderId: newLender.id,
+        email: newLender.email
+      };
+      localStorage.setItem('gignite_active_session', JSON.stringify(updatedSession));
+      setSession(updatedSession);
+    }
     
     // Clamp loan request to lender maximum
     if (requestedLoan > newLender.max_limit_inr) {
@@ -108,7 +244,7 @@ export default function App() {
   }, []);
 
   // ----------------------------------------------------------------------------
-  // RUN ZERO-TRUST UNDERWRITE (DYNAMIC MULTI-LENDER & MULTI-WORKER EVALUATOR)
+  // RUN ZERO-TRUST UNDERWRITE
   // ----------------------------------------------------------------------------
   const handleUnderwrite = async () => {
     setIsEvaluating(true);
@@ -144,7 +280,6 @@ export default function App() {
 
         if (response.ok || response.status === 403) {
           const result = await response.json();
-          // Adjust APR and branding if evaluated under active lender
           if (result.decision === 'APPROVED') {
             result.annual_interest_rate_p_a = activeLender.base_apr_p_a;
           }
@@ -319,6 +454,11 @@ export default function App() {
     setIsEvaluating(false);
   };
 
+  // If no active session, render the Login Page
+  if (!session) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#07030F] text-[#F3F4F6] flex flex-col font-sans selection:bg-purple-600 selection:text-white relative overflow-x-hidden">
       
@@ -341,11 +481,11 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <span className="font-bold text-lg tracking-tight text-white">GIgnite</span>
                 <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#7E22CE]/15 text-[#D8B4FE] border border-purple-500/20 tracking-wider">
-                  FINTECH AIRLOCK
+                  AIRLOCK
                 </span>
               </div>
               <p className="text-[10px] text-[#9CA3AF] font-medium hidden sm:block">
-                Multi-Tenant Cryptographic Financial Identity for Gig Workers
+                Zero-Trust Verifiable Financial Identity Engine
               </p>
             </div>
           </div>
@@ -359,21 +499,42 @@ export default function App() {
             />
           </div>
 
-          {/* Right: Engine Health Indicator & Quick Persona Chip */}
+          {/* Right: User Pill, Engine Health Indicator & Logout Button */}
           <div className="flex items-center gap-2.5 self-end md:self-auto">
+            
+            {/* Live Engine Indicator */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#07030F] border border-[#1C0B3B]">
               {isLiveEngine ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
-                  <span className="text-[11px] font-bold text-[#10B981] tracking-wider font-mono">LIVE ENGINE</span>
+                  <span className="text-[11px] font-bold text-[#10B981] tracking-wider font-mono">LIVE</span>
                 </>
               ) : (
                 <>
                   <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                  <span className="text-[11px] font-bold text-amber-400 tracking-wider font-mono">MOCK FIXTURE MODE</span>
+                  <span className="text-[11px] font-bold text-amber-400 tracking-wider font-mono">MOCK</span>
                 </>
               )}
             </div>
+
+            {/* Logged in User Pill */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-[#140929] border border-purple-500/30 text-xs">
+              <span className="text-[#9CA3AF]">Logged in:</span>
+              <span className="font-bold text-white truncate max-w-[120px]">
+                {activeRole === 'worker' ? profile.worker_name.split(' ')[0] : activeLender.name.split(' ')[0]}
+              </span>
+            </div>
+
+            {/* Sign Out Button */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#180933] border border-[#1C0B3B] hover:border-rose-500/40 text-xs font-semibold text-[#9CA3AF] hover:text-rose-300 transition-colors cursor-pointer"
+              title="Sign Out to Login Portal"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
           </div>
 
         </div>

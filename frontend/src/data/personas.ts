@@ -1,27 +1,25 @@
-import type { WorkerProfile, W3CCredential } from '../types';
+import type { WorkerProfile, W3CCredential, LenderProfile } from '../types';
 
-export interface LenderProfile {
-  id: string;
-  name: string;
-  code: string;
-  focus: string;
-  max_limit_inr: number;
-  min_cri: number;
-  base_apr_p_a: string;
-  base_apr_numeric: number;
-  max_tenure_months: number;
-  badge: string;
-  accent_color: string;
+// ==============================================================================
+// 3 REGISTERED WORKER PERSONAS
+// ==============================================================================
+
+export interface ExtendedWorkerProfile extends WorkerProfile {
+  email: string;
+  phone: string;
 }
 
-// ==============================================================================
-// 3 WORKER PERSONAS (PRIME, DEVELOPING, THIN-FILE)
-// ==============================================================================
+export interface ExtendedLenderProfile extends LenderProfile {
+  email: string;
+  portal_name: string;
+}
 
-export const WORKER_PERSONAS: Record<string, WorkerProfile> = {
+export const WORKER_PERSONAS: Record<string, ExtendedWorkerProfile> = {
   "ramesh-kumar-9872": {
     worker_id: "ramesh-kumar-9872",
     worker_name: "Ramesh Kumar",
+    email: "ramesh@swiggy.in",
+    phone: "+91 98765 43210",
     did: "did:india:worker:9872",
     category: "Urban Micro-Mobility & Food Delivery Partner",
     credit_bureau_status: "THIN_FILE_NO_CIBIL_RECORD",
@@ -70,6 +68,8 @@ export const WORKER_PERSONAS: Record<string, WorkerProfile> = {
   "priya-sharma-3411": {
     worker_id: "priya-sharma-3411",
     worker_name: "Priya Sharma",
+    email: "priya@blinkit.com",
+    phone: "+91 98111 22334",
     did: "did:india:worker:3411",
     category: "Quick-Commerce Dark Store Picker & Rider",
     credit_bureau_status: "THIN_FILE_NEW_TO_CREDIT",
@@ -118,6 +118,8 @@ export const WORKER_PERSONAS: Record<string, WorkerProfile> = {
   "vikram-singh-1029": {
     worker_id: "vikram-singh-1029",
     worker_name: "Vikram Singh",
+    email: "vikram@zomato.com",
+    phone: "+91 97222 33445",
     did: "did:india:worker:1029",
     category: "On-Demand Delivery Associate",
     credit_bureau_status: "THIN_FILE_UNBANKED",
@@ -155,13 +157,15 @@ export const WORKER_PERSONAS: Record<string, WorkerProfile> = {
 };
 
 // ==============================================================================
-// 2 LENDER INSTITUTION PERSONAS
+// 2 REGISTERED LENDER PERSONAS
 // ==============================================================================
 
-export const LENDER_PERSONAS: Record<string, LenderProfile> = {
+export const LENDER_PERSONAS: Record<string, ExtendedLenderProfile> = {
   "finprime-nbfc": {
     id: "finprime-nbfc",
     name: "FinPrime NBFC",
+    email: "underwriter@finprime.com",
+    portal_name: "FinPrime Institutional Credit Terminal",
     code: "FINPRIME_PRIME_DESK",
     focus: "Low Risk / Prime Focus",
     max_limit_inr: 50000,
@@ -175,6 +179,8 @@ export const LENDER_PERSONAS: Record<string, LenderProfile> = {
   "microflex-capital": {
     id: "microflex-capital",
     name: "MicroFlex Capital",
+    email: "desk@microflex.capital",
+    portal_name: "MicroFlex High-Yield Underwriting Desk",
     code: "MICROFLEX_GROWTH_DESK",
     focus: "High Yield / Flexible Micro-Lender",
     max_limit_inr: 25000,
@@ -188,7 +194,53 @@ export const LENDER_PERSONAS: Record<string, LenderProfile> = {
 };
 
 // ==============================================================================
-// CREDENTIAL GENERATOR FOR ANY WORKER PERSONA
+// EMAIL RESOLUTION HELPER
+// ==============================================================================
+
+export type ResolvedAccount = 
+  | { type: 'worker'; worker: ExtendedWorkerProfile }
+  | { type: 'lender'; lender: ExtendedLenderProfile }
+  | null;
+
+export function findAccountByEmail(inputEmail: string): ResolvedAccount {
+  const normalized = inputEmail.trim().toLowerCase();
+
+  // 1. Check workers
+  for (const worker of Object.values(WORKER_PERSONAS)) {
+    if (
+      worker.email.toLowerCase() === normalized ||
+      worker.worker_name.toLowerCase().includes(normalized) ||
+      worker.worker_id.toLowerCase().includes(normalized)
+    ) {
+      return { type: 'worker', worker };
+    }
+  }
+
+  // 2. Check aliases for workers
+  if (normalized.includes('ramesh')) return { type: 'worker', worker: WORKER_PERSONAS['ramesh-kumar-9872'] };
+  if (normalized.includes('priya')) return { type: 'worker', worker: WORKER_PERSONAS['priya-sharma-3411'] };
+  if (normalized.includes('vikram')) return { type: 'worker', worker: WORKER_PERSONAS['vikram-singh-1029'] };
+
+  // 3. Check lenders
+  for (const lender of Object.values(LENDER_PERSONAS)) {
+    if (
+      lender.email.toLowerCase() === normalized ||
+      lender.name.toLowerCase().includes(normalized) ||
+      lender.id.toLowerCase().includes(normalized)
+    ) {
+      return { type: 'lender', lender };
+    }
+  }
+
+  // 4. Check aliases for lenders
+  if (normalized.includes('finprime') || normalized.includes('prime')) return { type: 'lender', lender: LENDER_PERSONAS['finprime-nbfc'] };
+  if (normalized.includes('microflex') || normalized.includes('flex')) return { type: 'lender', lender: LENDER_PERSONAS['microflex-capital'] };
+
+  return null;
+}
+
+// ==============================================================================
+// CREDENTIAL GENERATOR
 // ==============================================================================
 
 export function generateWorkerCredential(profile: WorkerProfile): W3CCredential {
