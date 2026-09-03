@@ -7,7 +7,6 @@ import {
   Fingerprint,
   Search,
   Lock,
-  Zap,
   CheckCircle2,
   TrendingUp,
   Wallet,
@@ -21,6 +20,7 @@ import {
   Bike,
   Calendar
 } from 'lucide-react';
+import { GIgniteLogo } from './components/GIgniteLogo';
 
 // ==============================================================================
 // TYPE DEFINITIONS
@@ -506,8 +506,8 @@ export default function App() {
             {/* Brand Logo & Airlock Badge */}
             <div className="flex items-center justify-between pb-4 border-b border-[#1C0B3B]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#8B2CB0] via-[#6D28D9] to-[#3B1599] flex items-center justify-center shadow-md shadow-purple-950/50 border border-purple-400/20">
-                  <Zap className="w-5 h-5 text-white fill-white" />
+                <div className="w-11 h-11 rounded-2xl bg-[#140929] border border-purple-500/30 flex items-center justify-center shadow-md shadow-purple-950/40 p-1">
+                  <GIgniteLogo size={36} className="w-9 h-9" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
