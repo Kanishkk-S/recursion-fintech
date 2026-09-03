@@ -1,13 +1,49 @@
+# Environments and Secrets
+.env
+.env.local
+.env.*.local
+
+# Python artifacts
 __pycache__/
+*.py[cod]
+*$py.class
 *.pyc
 *.pyo
-*.pyd
-*.db
-.env
-.venv/
+
+# Virtual Environments
 venv/
+.venv/
 env/
-.system_generated/
-*.log
-cloudflared.exe
+ENV/
+env.bak/
+venv.bak/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Distribution / Packaging
+*.egg-info/
+.installed.cfg
+*.egg
+dist/
+build/
+eggs/
+parts/
+bin/
+var/
+sdist/
+develop-eggs/
+
+# Database files & Executables
+*.db
+*.sqlite
+*.sqlite3
+*.exe
+
+# OS metadata
 .DS_Store
+Thumbs.db
