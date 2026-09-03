@@ -1,5 +1,4 @@
-﻿{
-  "version": 2,
+{
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
@@ -8,6 +7,6 @@
     { "source": "/underwrite", "destination": "/api/index.py" },
     { "source": "/issue", "destination": "/api/index.py" },
     { "source": "/health", "destination": "/api/index.py" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/|verify|underwrite|issue|health).*)", "destination": "/index.html" }
   ]
 }
