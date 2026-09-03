@@ -56,16 +56,45 @@ export function EarnerPortal() {
   const strokeDasharray = 283;
   const strokeDashoffset = strokeDasharray - (strokeDasharray * criScore) / 100;
 
+  let gaugeColor = 'stroke-amber-900';
+  let textColor = 'text-amber-700';
+  let labelText = "Caution: High Volatility Detected";
+
+  if (criScore >= 80) {
+    gaugeColor = 'stroke-yellow-500';
+    textColor = 'text-yellow-500';
+    labelText = "Elite Trust Tier: Highly Resilient";
+  } else if (criScore >= 50) {
+    gaugeColor = 'stroke-[#D4AF37]';
+    textColor = 'text-[#D4AF37]';
+    labelText = "Growth Tier: Building Trust";
+  }
+
   return (
-    <div className="bg-slate-900/40 border border-white/5 rounded-3xl p-8 shadow-2xl space-y-6 flex flex-col relative max-w-sm mx-auto w-full backdrop-blur-xl transition-all duration-300 hover:shadow-emerald-500/10 hover:border-white/10">
+    <div className="bg-[#1E293B] border border-slate-700 rounded-2xl p-8 shadow-lg flex flex-col h-full relative max-w-sm mx-auto w-full transition-all duration-300">
+      
+      {/* Score Insights Panel (Absolute) */}
+      <div className="absolute -left-[240px] top-10 w-[200px] hidden xl:block bg-[#1E293B] border border-slate-700 rounded-2xl p-6 shadow-[0_10px_25px_rgba(0,0,0,0.3)]">
+        <h4 className="text-[10px] text-slate-400 uppercase tracking-widest font-mono mb-4">Score Insights</h4>
+        <div className="space-y-4">
+          <div>
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Rank</p>
+            <p className="text-sm font-bold text-[#D4AF37]">Top 12% in India</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Score Variance</p>
+            <p className="text-sm font-bold text-slate-200">Low</p>
+          </div>
+        </div>
+      </div>
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold text-white tracking-tight">{profile?.name || "Ramesh Kumar"}</h2>
         <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">did:india:worker:ramesh-kumar-9872</p>
         <div className="flex flex-wrap justify-center gap-2 pt-2">
           {(profile?.platforms || fallbackPlatforms).map((p, idx) => (
-            <div key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-slate-900/60 rounded-full border border-white/5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-white/10 hover:shadow-emerald-500/10">
-              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+            <div key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-[#0F172A] rounded-full border border-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/50">
+              <ShieldCheck className="w-3 h-3 text-[#D4AF37]" />
               <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide">
                 {p.name} ★{p.rating} ({p.tenure_months} mos)
               </span>
@@ -77,22 +106,22 @@ export function EarnerPortal() {
       {/* Gauge */}
       <div className="flex flex-col items-center justify-center pt-2 pb-4">
         <div className="relative w-40 h-40 flex items-center justify-center">
-          <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]" viewBox="0 0 100 100">
+          <svg className={`w-full h-full transform -rotate-90`} viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="45" fill="transparent" stroke="#1E293B" strokeWidth="8" />
             <circle
-              cx="50" cy="50" r="45" fill="transparent" stroke="#10B981" strokeWidth="8" strokeLinecap="round"
-              className="transition-all duration-1000 ease-out drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+              cx="50" cy="50" r="45" fill="transparent" strokeWidth="8" strokeLinecap="round"
+              className={`transition-all duration-1000 ease-out ${gaugeColor}`}
               style={{ strokeDasharray, strokeDashoffset }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-4xl font-bold text-white">{criScore}</span>
-            <span className="text-[10px] text-slate-400 font-semibold tracking-wider">CRI SCORE</span>
+            <span className={`text-4xl font-bold ${textColor}`}>{criScore}</span>
+            <span className="text-[10px] text-slate-400 font-semibold tracking-wider mt-1">CRI SCORE</span>
           </div>
         </div>
-        <div className="mt-3 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-          <span className="text-[10px] font-bold text-emerald-400 tracking-widest uppercase">
-            {(profile?.resilience_tier || "PRIME_RESILIENT").replace('_', ' ')}
+        <div className="mt-3 px-3 py-1 bg-[#0F172A] border border-slate-700 rounded-full shadow-sm">
+          <span className={`text-[10px] font-bold ${textColor} tracking-widest uppercase`}>
+            {labelText}
           </span>
         </div>
       </div>
@@ -102,39 +131,35 @@ export function EarnerPortal() {
         className="relative group cursor-pointer"
         onClick={() => setShowTelemetryDrawer(true)}
       >
-        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
-        <div className="relative grid grid-cols-3 gap-2 bg-slate-900 rounded-xl p-1 border border-slate-700/50 hover:border-emerald-500/40 transition-all group-hover:border-emerald-500/50">
-          <div className="bg-slate-800/80 rounded-lg p-2 text-center">
+        <div className="relative grid grid-cols-3 gap-2 bg-[#0F172A] rounded-xl p-1 border border-slate-700 hover:border-[#D4AF37]/50 transition-all">
+          <div className="bg-[#1E293B] rounded-lg p-2 text-center">
             <p className="text-[10px] text-slate-400 font-semibold uppercase mb-0.5">Inflow</p>
-            <p className="text-sm font-bold text-white">₹{((profile?.avg_monthly_inflow || 49066)/1000).toFixed(1)}k</p>
+            <p className="text-sm font-bold text-slate-200">₹{((profile?.avg_monthly_inflow || 49066)/1000).toFixed(1)}k</p>
           </div>
-          <div className="bg-slate-800/80 rounded-lg p-2 text-center">
+          <div className="bg-[#1E293B] rounded-lg p-2 text-center">
             <p className="text-[10px] text-slate-400 font-semibold uppercase mb-0.5">Consist.</p>
-            <p className="text-sm font-bold text-white">{((profile?.consistency_rate || 0.935) * 100).toFixed(1)}%</p>
+            <p className="text-sm font-bold text-slate-200">{((profile?.consistency_rate || 0.935) * 100).toFixed(1)}%</p>
           </div>
-          <div className="bg-slate-800/80 rounded-lg p-2 text-center">
+          <div className="bg-[#1E293B] rounded-lg p-2 text-center">
             <p className="text-[10px] text-slate-400 font-semibold uppercase mb-0.5">Stable</p>
-            <p className="text-sm font-bold text-white">100%</p>
-            <p className="text-[8px] text-slate-500">180d</p>
+            <p className="text-sm font-bold text-slate-200">100%</p>
+            <p className="text-[8px] text-slate-500 mt-0.5">180d</p>
           </div>
-        </div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800/95 text-emerald-300 text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded-lg border border-emerald-500/30 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-xl z-10 pointer-events-none">
-          Click for 180-day telemetry breakdown
         </div>
       </div>
 
       {/* Credential Issuance */}
-      <div className="pt-2 space-y-4">
-        <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-slate-700">
+      <div className="pt-2 space-y-4 mt-auto">
+        <div className="flex items-center justify-between p-3 bg-[#0F172A] rounded-xl border border-slate-700 shadow-inner">
           <div className="flex flex-col">
             <span className="text-xs font-semibold text-slate-200">Selective Disclosure</span>
-            <span className="text-[10px] text-slate-400">
+            <span className="text-[10px] text-stone-500">
               {selectiveDisclosure ? "Full 180-day history" : "Baseline score only"}
             </span>
           </div>
           <button
             onClick={() => setSelectiveDisclosure(!selectiveDisclosure)}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${selectiveDisclosure ? 'bg-emerald-500' : 'bg-slate-600'}`}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${selectiveDisclosure ? 'bg-amber-600' : 'bg-slate-700'}`}
           >
             <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${selectiveDisclosure ? 'translate-x-5' : 'translate-x-1'}`} />
           </button>
@@ -143,38 +168,38 @@ export function EarnerPortal() {
         {!issuedVc ? (
           <button
             onClick={handleIssue}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] flex items-center justify-center gap-2"
+            className="w-full py-4 bg-[#D4AF37] hover:bg-[#C5A028] text-slate-900 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
           >
             <Lock className="w-4 h-4" />
             Issue Cryptographic Credential
           </button>
         ) : (
           <div className="space-y-3">
-            <div className="bg-[#050505] border border-white/10 rounded-xl overflow-hidden relative group shadow-2xl transition-all duration-300 hover:border-white/20">
-              <div className="bg-slate-900/60 border-b border-white/10 px-3 py-2 flex items-center gap-2">
+            <div className="bg-[#0F172A] border border-slate-700 rounded-xl overflow-hidden relative shadow-md transition-all duration-300">
+              <div className="bg-[#1E293B] border-b border-slate-700 px-3 py-2 flex items-center gap-2">
                 <div className="flex gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                   <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                 </div>
-                <p className="text-[10px] font-mono text-emerald-400 ml-2 tracking-widest uppercase opacity-80">VC_Generated</p>
+                <p className="text-[10px] font-mono text-[#D4AF37] ml-2 tracking-widest uppercase opacity-80">VC_Generated</p>
               </div>
               <div className="p-3">
                 <textarea
                   readOnly
                   value={issuedVc}
-                  className="w-full h-24 bg-transparent text-[10px] font-mono text-emerald-400 resize-none outline-none no-scrollbar mb-3"
+                  className="w-full h-24 bg-transparent text-[10px] font-mono text-[#D4AF37] resize-none outline-none no-scrollbar mb-3"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handleCopy}
-                    className="flex-1 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-white/5 hover:border-white/10 hover:shadow-emerald-500/10 rounded-lg text-xs font-semibold transition-all duration-300 hover:-translate-y-1 flex justify-center items-center gap-1.5"
+                    className="flex-1 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 border border-slate-600 rounded-lg text-xs font-semibold transition-all duration-300 flex justify-center items-center gap-1.5"
                   >
                     <Copy className="w-3.5 h-3.5" /> Copy Payload
                   </button>
                   <button
                     onClick={() => setShowQr(true)}
-                    className="flex-1 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-white/5 hover:border-white/10 hover:shadow-emerald-500/10 rounded-lg text-xs font-semibold transition-all duration-300 hover:-translate-y-1 flex justify-center items-center gap-1.5"
+                    className="flex-1 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 border border-slate-600 rounded-lg text-xs font-semibold transition-all duration-300 flex justify-center items-center gap-1.5"
                   >
                     <QrCode className="w-3.5 h-3.5" /> View Credential QR
                   </button>
@@ -183,19 +208,26 @@ export function EarnerPortal() {
             </div>
 
             {showQr && (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative flex flex-col items-center">
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/90 backdrop-blur-sm p-4">
+                <div className="bg-[#1E293B] border border-slate-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative flex flex-col items-center">
                   <button
                     onClick={() => setShowQr(false)}
-                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-full transition-colors"
+                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-[#0F172A] hover:bg-slate-700 rounded-full transition-colors border border-slate-600"
                   >
                     <X className="w-5 h-5" />
                   </button>
                   <h3 className="text-lg font-bold text-white mb-2">Credential QR</h3>
                   <p className="text-xs text-slate-400 text-center mb-6">Scan this QR code from the Lender Desk to securely transfer your verifiable credential.</p>
-                  <div className="p-4 bg-white rounded-2xl flex justify-center items-center w-full max-w-[200px] aspect-square">
+                  <div className="p-4 bg-white rounded-2xl flex justify-center items-center w-full max-w-[200px] aspect-square shadow-sm">
                     <QRCode value={issuedVc} size={160} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />
                   </div>
+                  
+                  <button 
+                    onClick={() => setShowQr(false)}
+                    className="w-full mt-6 py-3 bg-[#0F172A] hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-sm transition-all border border-slate-700"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
             )}
@@ -206,42 +238,42 @@ export function EarnerPortal() {
       {/* Telemetry Modal */}
       {showTelemetryDrawer && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative flex flex-col">
+          <div className="bg-[#0B1325] border border-amber-900/30 rounded-3xl p-8 max-w-sm w-full shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative flex flex-col">
             <button 
               onClick={() => setShowTelemetryDrawer(false)}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-full transition-colors"
+              className="absolute top-4 right-4 p-2 text-stone-400 hover:text-amber-400 bg-[#02050D]/50 hover:bg-[#02050D] border border-amber-900/30 rounded-full transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
             <h3 className="text-lg font-bold text-white mb-1">180-Day Cash Flow Telemetry Deep-Dive</h3>
-            <p className="text-[10px] text-slate-400 font-mono uppercase tracking-widest mb-6">Verified Income History</p>
+            <p className="text-[10px] text-stone-500 font-mono uppercase tracking-widest mb-6">Verified Income History</p>
             
             <div className="space-y-5 flex-1 overflow-y-auto no-scrollbar pb-4">
               {/* Platform Split */}
               <div className="space-y-3">
-                <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Platform Contribution</h4>
+                <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Platform Contribution</h4>
                 <div className="space-y-2">
-                  <div className="bg-slate-900 rounded-xl p-3 border border-slate-800 flex justify-between items-center">
+                  <div className="bg-[#02050D] rounded-xl p-3 border border-amber-900/30 flex justify-between items-center">
                     <div>
-                      <p className="text-xs font-bold text-white">Swiggy <span className="text-slate-500 font-normal ml-1">(14 months active)</span></p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">58% share of inflow</p>
+                      <p className="text-xs font-bold text-slate-200">Swiggy <span className="text-stone-500 font-normal ml-1">(14 months active)</span></p>
+                      <p className="text-[10px] text-stone-400 mt-0.5">58% share of inflow</p>
                     </div>
-                    <p className="text-sm font-bold text-emerald-400">₹28,400<span className="text-[10px] text-slate-500 font-normal">/mo</span></p>
+                    <p className="text-sm font-bold text-amber-400">₹28,400<span className="text-[10px] text-stone-500 font-normal">/mo</span></p>
                   </div>
-                  <div className="bg-slate-900 rounded-xl p-3 border border-slate-800 flex justify-between items-center">
+                  <div className="bg-[#02050D] rounded-xl p-3 border border-amber-900/30 flex justify-between items-center">
                     <div>
-                      <p className="text-xs font-bold text-white">Uber <span className="text-slate-500 font-normal ml-1">(22 months active)</span></p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">42% share of inflow</p>
+                      <p className="text-xs font-bold text-slate-200">Uber <span className="text-stone-500 font-normal ml-1">(22 months active)</span></p>
+                      <p className="text-[10px] text-stone-400 mt-0.5">42% share of inflow</p>
                     </div>
-                    <p className="text-sm font-bold text-emerald-400">₹20,700<span className="text-[10px] text-slate-500 font-normal">/mo</span></p>
+                    <p className="text-sm font-bold text-amber-400">₹20,700<span className="text-[10px] text-stone-500 font-normal">/mo</span></p>
                   </div>
                 </div>
               </div>
 
               {/* 6-Month Table */}
               <div className="space-y-3">
-                <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">6-Month Inflow Stability</h4>
-                <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden text-xs">
+                <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">6-Month Inflow Stability</h4>
+                <div className="bg-[#02050D] rounded-xl border border-amber-900/30 overflow-hidden text-xs">
                   {[
                     { m: "Month 1", v: "₹48,200", s: "42 shifts" },
                     { m: "Month 2", v: "₹49,800", s: "44 shifts" },
@@ -250,11 +282,11 @@ export function EarnerPortal() {
                     { m: "Month 5", v: "₹49,400", s: "43 shifts" },
                     { m: "Month 6", v: "₹49,066", s: "43 shifts" }
                   ].map((row, i) => (
-                    <div key={i} className={`flex justify-between p-2.5 ${i !== 5 ? 'border-b border-slate-800/50' : ''}`}>
-                      <span className="text-slate-400">{row.m}</span>
+                    <div key={i} className={`flex justify-between p-2.5 ${i !== 5 ? 'border-b border-amber-900/20' : ''}`}>
+                      <span className="text-stone-400">{row.m}</span>
                       <div className="text-right">
-                        <span className="font-bold text-white block">{row.v}</span>
-                        <span className="text-[10px] text-slate-500">{row.s}</span>
+                        <span className="font-bold text-slate-200 block">{row.v}</span>
+                        <span className="text-[10px] text-stone-500">{row.s}</span>
                       </div>
                     </div>
                   ))}
@@ -262,18 +294,18 @@ export function EarnerPortal() {
               </div>
 
               {/* Volatility */}
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex items-center justify-between">
+              <div className="bg-[#02050D] border border-amber-900/30 rounded-xl p-3 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Volatility Score</p>
-                  <p className="text-[10px] text-slate-300 mt-0.5">"Prime Resilient Stability"</p>
+                  <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Volatility Score</p>
+                  <p className="text-[10px] text-stone-300 mt-0.5">"Prime Resilient Stability"</p>
                 </div>
-                <div className="text-sm font-bold text-emerald-400">&lt; 4.8%</div>
+                <div className="text-sm font-bold text-amber-400">&lt; 4.8%</div>
               </div>
             </div>
 
             <button 
               onClick={() => setShowTelemetryDrawer(false)}
-              className="mt-4 w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-sm transition-all"
+              className="mt-4 w-full py-3 bg-[#02050D] border border-amber-900/30 hover:bg-[#02050D]/50 hover:border-amber-700/50 text-slate-200 rounded-xl font-bold text-sm transition-all"
             >
               Close Telemetry Inspection
             </button>
