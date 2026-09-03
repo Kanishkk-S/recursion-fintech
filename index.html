@@ -1,493 +1,1167 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gignite — Igniting Financial Identity for the Informal Workforce</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinCore — Autonomous Financial Operations & Enterprise Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-  :root{
-    --paper: #F1EEE6;
-    --paper-dark: #E7E2D4;
-    --ink: #1C2B24;
-    --seal: #8A6E3C;
-    --seal-dark: #6B5427;
-    --verified: #2E5B45;
-    --line: #C9C1AC;
-    --card: #FBFAF6;
-  }
+    :root {
+      --bg-dark: #070b19;
+      --bg-surface: #0b112c;
+      --brand-primary: #3b82f6;
+      --brand-indigo: #6366f1;
+      --brand-cyan: #06b6d4;
+      --glass-bg: rgba(15, 23, 42, 0.75);
+      --glass-border: rgba(59, 130, 246, 0.2);
+      --glass-glow: rgba(99, 102, 241, 0.15);
+    }
 
-  *{box-sizing:border-box; margin:0; padding:0;}
+    body {
+      background-color: var(--bg-dark);
+      color: #f8fafc;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+    }
 
-  body{
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'Inter', sans-serif;
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-  }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
 
-  h1,h2,h3{
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    line-height: 1.08;
-    letter-spacing: -0.01em;
-  }
+    /* Cyber grid background */
+    .bg-cyber-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
+    }
 
-  .mono{
-    font-family: 'IBM Plex Mono', monospace;
-  }
+    /* Ambient Glowing Halos */
+    .halo-blue {
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, rgba(99, 102, 241, 0.05) 50%, transparent 70%);
+    }
+    .halo-purple {
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.16) 0%, rgba(59, 130, 246, 0.04) 50%, transparent 70%);
+    }
 
-  a{color:inherit;}
+    /* Glassmorphic card styling */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
 
-  .wrap{
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: 0 32px;
-  }
+    .glass-card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card-hover:hover {
+      border-color: rgba(99, 102, 241, 0.45);
+      box-shadow: 0 12px 40px -10px rgba(59, 130, 246, 0.3);
+      transform: translateY(-2px);
+    }
 
-  /* ---------- header ---------- */
-  header{
-    border-bottom: 1px solid var(--line);
-  }
-  .header-inner{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding: 22px 0;
-  }
-  .logo{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-family:'Fraunces', serif;
-    font-size: 20px;
-    font-weight:600;
-  }
-  .logo-mark{
-    width: 26px; height: 26px;
-    border: 1.5px solid var(--ink);
-    border-radius: 50%;
-    display:flex; align-items:center; justify-content:center;
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 11px;
-  }
-  nav{display:flex; gap:36px; font-size:14px;}
-  nav a{text-decoration:none; opacity:0.75;}
-  nav a:hover{opacity:1;}
-  .header-cta{
-    font-size:14px;
-    border:1px solid var(--ink);
-    padding:9px 18px;
-    border-radius: 3px;
-    text-decoration:none;
-    background:transparent;
-  }
-  .header-cta:hover{background:var(--ink); color:var(--paper);}
+    /* Glowing Gradient Buttons */
+    .btn-gradient {
+      background: linear-gradient(135deg, #6366f1 0%, #3b82f6 50%, #06b6d4 100%);
+      box-shadow: 0 0 20px -3px rgba(99, 102, 241, 0.5);
+      transition: all 0.3s ease;
+    }
+    .btn-gradient:hover {
+      box-shadow: 0 0 30px 0px rgba(59, 130, 246, 0.7);
+      transform: scale(1.02);
+    }
 
-  /* ---------- hero ---------- */
-  .hero{
-    padding: 90px 0 70px;
-    display:grid;
-    grid-template-columns: 1.15fr 0.85fr;
-    gap: 60px;
-    align-items:center;
-    border-bottom: 1px solid var(--line);
-  }
-  .hero h1{
-    font-size: clamp(38px, 5vw, 58px);
-    max-width: 11ch;
-  }
-  .hero p.lede{
-    margin-top: 22px;
-    font-size: 18px;
-    max-width: 46ch;
-    color: #3C4A42;
-  }
-  .hero-ctas{
-    display:flex;
-    gap:14px;
-    margin-top: 34px;
-  }
-  .btn-primary{
-    background: var(--ink);
-    color: var(--paper);
-    padding: 13px 24px;
-    border-radius: 3px;
-    text-decoration:none;
-    font-size:15px;
-    font-weight:500;
-  }
-  .btn-secondary{
-    padding: 13px 24px;
-    border-radius: 3px;
-    text-decoration:none;
-    font-size:15px;
-    border: 1px solid var(--line);
-  }
+    /* Gradient Text */
+    .text-gradient {
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .text-gradient-gold {
+      background: linear-gradient(135deg, #fde047 0%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-  /* passport visual */
-  .passport{
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 28px;
-    box-shadow: 0 2px 0 var(--line);
-  }
-  .passport-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    border-bottom: 1px dashed var(--line);
-    padding-bottom: 16px;
-    margin-bottom: 18px;
-  }
-  .passport-top .mono{ font-size: 11px; opacity:0.6; letter-spacing: 0.02em;}
-  .stamp{
-    width: 58px; height: 58px;
-    border: 2px solid var(--seal);
-    border-radius: 50%;
-    color: var(--seal);
-    display:flex; align-items:center; justify-content:center;
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 9px;
-    text-align:center;
-    transform: rotate(-8deg);
-    line-height:1.2;
-  }
-  .assertion-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding: 13px 0;
-    border-bottom: 1px solid var(--line);
-    font-size: 14.5px;
-  }
-  .assertion-row:last-child{border-bottom:none;}
-  .assertion-row .status{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    color: var(--verified);
-    background: #E4EDE7;
-    padding: 3px 8px;
-    border-radius: 2px;
-  }
+    /* Keyframe Animations */
+    @keyframes floatHero {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(1deg); }
+    }
+    .animate-float {
+      animation: floatHero 6s ease-in-out infinite;
+    }
 
-  /* ---------- section: problem ---------- */
-  section{
-    padding: 80px 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .section-head{
-    display:grid;
-    grid-template-columns: 0.4fr 0.6fr;
-    gap: 40px;
-    margin-bottom: 48px;
-  }
-  .section-head .kicker{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 12.5px;
-    color: var(--seal-dark);
-  }
-  .section-head h2{
-    font-size: clamp(28px, 3.4vw, 38px);
-    max-width: 14ch;
-    margin-top: 10px;
-  }
-  .section-head .desc{
-    font-size: 16px;
-    color: #3C4A42;
-    max-width: 48ch;
-    align-self:end;
-  }
+    @keyframes floatBadge1 {
+      0%, 100% { transform: translate(0px, 0px); }
+      50% { transform: translate(-8px, -14px); }
+    }
+    .animate-float-badge-1 {
+      animation: floatBadge1 5s ease-in-out infinite;
+    }
 
-  .problem-grid{
-    display:grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1px;
-    background: var(--line);
-    border: 1px solid var(--line);
-  }
-  .problem-cell{
-    background: var(--paper);
-    padding: 30px;
-  }
-  .problem-cell h3{
-    font-size: 18px;
-    font-weight:500;
-    margin-bottom:10px;
-  }
-  .problem-cell p{
-    font-size: 14.5px;
-    color: #4A564D;
-  }
+    @keyframes floatBadge2 {
+      0%, 100% { transform: translate(0px, 0px); }
+      50% { transform: translate(8px, -10px); }
+    }
+    .animate-float-badge-2 {
+      animation: floatBadge2 7s ease-in-out infinite 1s;
+    }
 
-  /* ---------- section: flow ---------- */
-  .flow{
-    display:flex;
-    flex-direction:column;
-    gap:0;
-  }
-  .flow-step{
-    display:grid;
-    grid-template-columns: 60px 1fr 1.3fr;
-    gap: 24px;
-    padding: 26px 0;
-    border-top: 1px solid var(--line);
-    align-items:start;
-  }
-  .flow-step:last-child{border-bottom: 1px solid var(--line);}
-  .flow-num{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: var(--seal-dark);
-    padding-top: 3px;
-  }
-  .flow-step h3{
-    font-size: 19px;
-    font-weight:500;
-  }
-  .flow-step p{
-    font-size: 14.5px;
-    color: #3C4A42;
-    max-width: 52ch;
-  }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+    .animate-glow {
+      animation: pulseGlow 4s ease-in-out infinite;
+    }
 
-  /* ---------- section: differentiators ---------- */
-  .diff-grid{
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-  .diff-card{
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 26px;
-  }
-  .diff-card .mono{
-    font-size: 11px;
-    color: var(--seal-dark);
-  }
-  .diff-card h3{
-    font-size: 18px;
-    font-weight: 500;
-    margin: 10px 0 10px;
-  }
-  .diff-card p{
-    font-size: 14px;
-    color: #4A564D;
-  }
-
-  /* ---------- footer / cta ---------- */
-  .cta-section{
-    text-align:center;
-    padding: 90px 0;
-    border-bottom:none;
-  }
-  .cta-section h2{
-    font-size: clamp(30px, 4vw, 44px);
-    max-width: 16ch;
-    margin: 0 auto 26px;
-  }
-  footer{
-    padding: 30px 0;
-    display:flex;
-    justify-content:space-between;
-    font-size: 13px;
-    color: #6B756E;
-  }
-
-  @media (max-width: 860px){
-    .hero{grid-template-columns:1fr; padding-top:56px;}
-    .section-head{grid-template-columns:1fr;}
-    .problem-grid{grid-template-columns:1fr;}
-    .diff-grid{grid-template-columns:1fr;}
-    .flow-step{grid-template-columns: 40px 1fr; }
-    .flow-step p{grid-column: 2 / 3;}
-    nav{display:none;}
-  }
-</style>
+    /* Custom Terminal scrollbar */
+    .terminal-box {
+      background: #030712;
+      border: 1px solid rgba(59, 130, 246, 0.25);
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #070b19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-cyber-grid min-h-screen relative selection:bg-blue-600 selection:text-white">
 
-<header>
-  <div class="wrap header-inner">
-    <div class="logo">
-      <span class="logo-mark">G</span>
-      Gignite
-    </div>
-    <nav>
-      <a href="#problem">The Problem</a>
-      <a href="#how">How It Works</a>
-      <a href="#difference">Why It's Different</a>
-    </nav>
-    <a class="header-cta" href="#cta">Request a Demo</a>
-  </div>
-</header>
+  <!-- Ambient Glowing Background Halos -->
+  <div class="fixed top-0 left-1/4 w-[600px] h-[600px] rounded-full halo-blue pointer-events-none -z-10 animate-glow"></div>
+  <div class="fixed top-1/3 right-10 w-[700px] h-[700px] rounded-full halo-purple pointer-events-none -z-10 animate-glow" style="animation-delay: 2s;"></div>
 
-<section class="hero">
-  <div class="wrap" style="display:contents;">
-    <div>
-      <div class="mono" style="font-size:12.5px; color:var(--seal-dark); margin-bottom:14px;">Igniting financial identity for the informal workforce</div>
-      <h1>Prove you earn, without handing over how.</h1>
-      <p class="lede">Gignite turns fragmented gig, UPI, and utility income into a signed, tamper-evident credential — so lenders can trust it and earners never have to expose it.</p>
-      <div class="hero-ctas">
-        <a class="btn-primary" href="#cta">Request a Demo</a>
-        <a class="btn-secondary" href="#how">See how it works</a>
-      </div>
-    </div>
-    <div class="passport">
-      <div class="passport-top">
-        <div>
-          <div class="mono">CREDENTIAL ID · GN-2026-4471</div>
-          <div class="mono" style="margin-top:4px;">ISSUED · VERICRED ENGINE</div>
+  <!-- Sticky Top Glassmorphic Navbar -->
+  <header class="sticky top-0 z-50 glass-card border-b border-slate-800/80 px-6 py-3.5 transition-all">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 p-0.5 shadow-lg shadow-blue-500/30 group-hover:scale-105 transition">
+          <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+            <i class="fa-solid fa-shield-halved text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300 text-lg"></i>
+          </div>
         </div>
-        <div class="stamp">VERIFIED<br>ON-CHAIN</div>
-      </div>
-      <div class="assertion-row">
-        <span>Median monthly income ≥ ₹30,000</span>
-        <span class="status">VERIFIED</span>
-      </div>
-      <div class="assertion-row">
-        <span>Active ≥ 22 days / month</span>
-        <span class="status">VERIFIED</span>
-      </div>
-      <div class="assertion-row">
-        <span>Zero bounced payments, 180 days</span>
-        <span class="status">VERIFIED</span>
-      </div>
-      <div class="assertion-row">
-        <span>Raw transaction data disclosed</span>
-        <span class="status" style="color:#8A3B3B; background:#F0E1DF;">NEVER</span>
-      </div>
-    </div>
-  </div>
-</section>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-base font-extrabold tracking-tight text-white font-sans">FinCore</span>
+            <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-800/60 font-semibold tracking-wider">Studio v2.5</span>
+          </div>
+          <span class="text-[11px] text-slate-400 block -mt-0.5">Autonomous Financial Suite</span>
+        </div>
+      </a>
 
-<section id="problem">
-  <div class="wrap">
-    <div class="section-head">
+      <!-- Desktop Navigation Links -->
+      <nav class="hidden md:flex items-center gap-1 text-xs font-medium text-slate-300">
+        <a href="#hero" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/60 transition">Home</a>
+        <a href="#features" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/60 transition">Platform Core</a>
+        <a href="#studio-drawer" onclick="toggleStudioDrawer(true)" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/60 transition flex items-center gap-1.5">
+          <span>Ledger Studio</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+        </a>
+        <a href="#risk-sentinel" onclick="toggleStudioDrawer(true); scrollToSection('risk-sentinel')" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/60 transition">Security & Guard</a>
+        <a href="#intelligence" onclick="toggleStudioDrawer(true); scrollToSection('intelligence')" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/60 transition">Intelligence</a>
+      </nav>
+
+      <!-- Header Right Controls -->
+      <div class="flex items-center gap-3">
+        
+        <!-- Live Agent Health Status Pill -->
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-xs text-slate-300 font-mono">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span>Agent Loop:</span>
+          <span class="text-emerald-400 font-semibold font-sans">Autonomous Live</span>
+        </div>
+
+        <!-- Launch Studio CTA Button -->
+        <button
+          onclick="toggleStudioDrawer()"
+          id="btnLaunchStudio"
+          class="btn-gradient px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-2 shadow-lg shadow-indigo-500/20"
+        >
+          <i class="fa-solid fa-layer-group text-xs"></i>
+          <span>Launch Studio</span>
+          <i class="fa-solid fa-chevron-right text-[10px] opacity-70"></i>
+        </button>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Real-time Floating Notification Toasts in Corner -->
+  <div class="fixed bottom-6 right-6 z-40 space-y-2 pointer-events-none hidden sm:block max-w-xs">
+    <div id="toast1" class="glass-card p-3 rounded-xl border border-emerald-500/30 text-xs shadow-xl flex items-center gap-3 transform translate-y-0 transition-all duration-500">
+      <div class="w-7 h-7 rounded-lg bg-emerald-950 border border-emerald-700/60 flex items-center justify-center text-emerald-400 shrink-0">
+        <i class="fa-solid fa-bolt text-xs"></i>
+      </div>
       <div>
-        <div class="kicker">01 · THE PROBLEM</div>
-        <h2>Real income, illegible to institutions</h2>
-      </div>
-      <p class="desc">Delivery partners, drivers, vendors, and freelancers earn reliably every day. But without payslips or bureau scores, that reliability never reaches the systems deciding their access to credit.</p>
-    </div>
-    <div class="problem-grid">
-      <div class="problem-cell">
-        <h3>Instant rejection</h3>
-        <p>"No bureau history" is treated as high risk by default, closing the door before any real income data is even considered.</p>
-      </div>
-      <div class="problem-cell">
-        <h3>Forgeable evidence</h3>
-        <p>PDF statements and screenshots can be edited in minutes, so the documents meant to build trust are the easiest ones to fake.</p>
-      </div>
-      <div class="problem-cell">
-        <h3>Invasive alternatives</h3>
-        <p>Some lenders demand apps that scrape contacts and SMS logs — trading one exclusion for a privacy violation.</p>
-      </div>
-      <div class="problem-cell">
-        <h3>Self-reinforcing exclusion</h3>
-        <p>No credit history means no approval, and no approval means no way to ever build one. The cycle never breaks on its own.</p>
+        <p class="font-semibold text-slate-100 text-[11px]">Autonomous Task 1 & 2 Active</p>
+        <p class="text-[10px] text-emerald-400 font-mono">Continuous Stream Polling</p>
       </div>
     </div>
-  </div>
-</section>
-
-<section id="how">
-  <div class="wrap">
-    <div class="section-head">
+    <div id="toast2" class="glass-card p-3 rounded-xl border border-blue-500/30 text-xs shadow-xl flex items-center gap-3">
+      <div class="w-7 h-7 rounded-lg bg-blue-950 border border-blue-700/60 flex items-center justify-center text-blue-400 shrink-0">
+        <i class="fa-solid fa-shield-halved text-xs"></i>
+      </div>
       <div>
-        <div class="kicker">02 · HOW IT WORKS</div>
-        <h2>From income to credential, in four steps</h2>
-      </div>
-      <p class="desc">Earners connect their own accounts. Everything after that happens on-device — lenders see a signed conclusion, never the underlying data.</p>
-    </div>
-    <div class="flow">
-      <div class="flow-step">
-        <div class="flow-num">01</div>
-        <h3>Connect</h3>
-        <p>The earner logs into a gig platform, bank, or utility account through a secure, authenticated session — no PDF uploads, no screenshots.</p>
-      </div>
-      <div class="flow-step">
-        <div class="flow-num">02</div>
-        <h3>Attest</h3>
-        <p>A cryptographic session proof confirms the data came straight from the real platform server, unedited and untampered with.</p>
-      </div>
-      <div class="flow-step">
-        <div class="flow-num">03</div>
-        <h3>Compute, on-device</h3>
-        <p>Income, consistency, and repayment metrics are calculated locally. Nothing raw ever leaves the earner's device.</p>
-      </div>
-      <div class="flow-step">
-        <div class="flow-num">04</div>
-        <h3>Disclose selectively</h3>
-        <p>The earner shares a signed credential — a threshold that's true or false — and the lender verifies it in milliseconds.</p>
+        <p class="font-semibold text-slate-100 text-[11px]">Sentinel Policy Check: Clean</p>
+        <p class="text-[10px] text-blue-400 font-mono">0 Duplicates • 100% Match</p>
       </div>
     </div>
   </div>
-</section>
 
-<section id="difference">
-  <div class="wrap">
-    <div class="section-head">
+  <!-- Hero Section -->
+  <section id="hero" class="relative pt-12 pb-20 px-6 max-w-7xl mx-auto overflow-hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <!-- Left Hero Pitch -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- Live Badge -->
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-blue-500/30 text-xs text-blue-300 font-mono">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+          <span>ENTERPRISE AGENT COLOSSEUM 2026</span>
+        </div>
+
+        <!-- Headline -->
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">
+          One Platform for All Your <br class="hidden sm:inline"/>
+          <span class="text-gradient">Financial Operations.</span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="text-base sm:text-lg text-slate-400 font-normal leading-relaxed max-w-2xl">
+          Powering automated ingestion, zero-touch dual-ledger reconciliation, self-healing schema drift recovery, and real-time treasury analytics.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-wrap items-center gap-3.5 pt-2">
+          <button
+            onclick="toggleStudioDrawer(true)"
+            class="btn-gradient px-6 py-3.5 rounded-xl text-sm font-bold text-white flex items-center gap-2.5"
+          >
+            <i class="fa-solid fa-rocket text-xs"></i>
+            <span>Explore Platform Studio</span>
+          </button>
+
+          <a
+            href="/api/export/csv"
+            download="normalized_ledger.csv"
+            class="glass-card hover:bg-slate-800/80 px-5 py-3.5 rounded-xl text-sm font-semibold text-slate-200 border border-slate-700/80 transition flex items-center gap-2"
+          >
+            <i class="fa-solid fa-file-csv text-emerald-400"></i>
+            <span>Export CSV</span>
+          </a>
+
+          <a
+            href="/api/export/json"
+            download="normalized_ledger.json"
+            class="glass-card hover:bg-slate-800/80 px-5 py-3.5 rounded-xl text-sm font-semibold text-slate-200 border border-slate-700/80 transition flex items-center gap-2"
+          >
+            <i class="fa-solid fa-file-code text-amber-400"></i>
+            <span>Export JSON</span>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Right 3D Holographic Security Shield Graphic -->
+      <div class="lg:col-span-5 relative flex justify-center items-center">
+        
+        <!-- Ambient Backing Glow -->
+        <div class="w-80 h-80 rounded-full bg-gradient-to-tr from-blue-600/30 via-indigo-600/20 to-cyan-500/20 filter blur-3xl absolute -z-10 animate-glow"></div>
+
+        <!-- Central Floating Hologram Shield Container -->
+        <div class="relative w-72 h-80 sm:w-80 sm:h-96 flex items-center justify-center animate-float">
+          
+          <!-- Outer Holographic Ring -->
+          <div class="absolute inset-0 rounded-3xl border border-blue-500/30 bg-slate-900/40 backdrop-blur-xl shadow-2xl shadow-blue-500/20 transform rotate-3"></div>
+          
+          <!-- Inner Cyber Shield Center -->
+          <div class="relative z-10 w-48 h-56 rounded-2xl bg-gradient-to-b from-blue-900/60 to-indigo-950/80 border border-cyan-400/40 flex flex-col items-center justify-center p-6 text-center shadow-inner">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white text-3xl shadow-lg shadow-blue-500/50 mb-3">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h4 class="text-sm font-extrabold text-white tracking-wider font-mono">FINCORE GUARD</h4>
+            <span class="text-[10px] text-cyan-300 font-mono mt-1">Rule IV Isolated Engine</span>
+            <div class="mt-3 flex items-center gap-1.5 text-[10px] text-emerald-400 font-mono bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-700/40">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>100% RECONCILED</span>
+            </div>
+          </div>
+
+          <!-- Floating Badge 1: FX Normalization Currency Tag -->
+          <div class="absolute -top-4 -left-4 z-20 glass-card px-3 py-2 rounded-xl border border-blue-400/40 flex items-center gap-2 text-xs shadow-xl animate-float-badge-1">
+            <div class="w-6 h-6 rounded-lg bg-blue-600/30 text-blue-400 flex items-center justify-center font-bold font-mono">₹</div>
+            <div>
+              <p class="text-[10px] text-slate-400">FX Normalized</p>
+              <p class="text-xs font-bold text-white font-mono">100% Base INR</p>
+            </div>
+          </div>
+
+          <!-- Floating Badge 2: Burn Velocity Metric Pill -->
+          <div class="absolute -bottom-4 -right-4 z-20 glass-card px-3 py-2 rounded-xl border border-indigo-400/40 flex items-center gap-2 text-xs shadow-xl animate-float-badge-2">
+            <div class="w-6 h-6 rounded-lg bg-indigo-600/30 text-indigo-400 flex items-center justify-center">
+              <i class="fa-solid fa-gauge-high text-xs"></i>
+            </div>
+            <div>
+              <p class="text-[10px] text-slate-400">Spending Velocity</p>
+              <p id="heroBurnRatePill" class="text-xs font-bold text-indigo-300 font-mono">₹36,109/day</p>
+            </div>
+          </div>
+
+          <!-- Floating Badge 3: Dual Audit Shield -->
+          <div class="absolute top-1/2 -right-8 z-20 glass-card px-2.5 py-1.5 rounded-lg border border-emerald-400/40 flex items-center gap-1.5 text-[11px] shadow-xl">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span class="font-mono text-emerald-300 font-semibold">0 Variances</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Unified Glowing Omni-Input Bar (In Hero) -->
+    <div class="mt-12 max-w-4xl mx-auto">
+      <div class="glass-card p-2 sm:p-3 rounded-2xl border border-blue-500/30 shadow-2xl shadow-blue-500/10 space-y-3">
+        
+        <form id="heroOmniForm" onsubmit="submitOmniPrompt(event)" class="flex flex-col sm:flex-row gap-2">
+          <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-blue-400">
+              <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+            </div>
+            <input
+              id="omniInput"
+              type="text"
+              placeholder="Enter a transaction to ingest or ask a financial question (e.g., 'Paid $40 for AWS' or 'How much did we spend on food?')"
+              class="w-full pl-11 pr-4 py-3 bg-slate-900/90 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            id="btnSubmitOmni"
+            class="btn-gradient px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2 shrink-0"
+          >
+            <i class="fa-solid fa-bolt text-xs"></i>
+            <span>Execute / Ingest</span>
+          </button>
+        </form>
+
+        <!-- Response Banner for Omni Input -->
+        <div id="omniFeedbackBox" class="hidden p-4 rounded-xl text-xs font-mono space-y-1.5 transition-all">
+          <div id="omniFeedbackHeader" class="flex items-center justify-between font-bold">
+            <div class="flex items-center gap-2">
+              <span id="omniFeedbackIcon"></span>
+              <span id="omniFeedbackTitle" class="text-sm font-bold"></span>
+            </div>
+            <span id="omniIntentBadge" class="text-[10px] px-2 py-0.5 rounded font-mono font-semibold"></span>
+          </div>
+          <p id="omniFeedbackMessage" class="text-xs pt-1 leading-relaxed text-slate-200"></p>
+        </div>
+
+        <!-- Quick Preset Chips -->
+        <div class="flex flex-wrap items-center gap-1.5 px-2 pt-1 text-xs">
+          <span class="text-[11px] text-slate-500 font-mono">Omni Presets:</span>
+          <button type="button" onclick="setPreset('Paid 45 USD for Uber rides yesterday')" class="text-[11px] bg-slate-900 hover:bg-slate-800 text-blue-300 px-2.5 py-1 rounded-lg border border-slate-800 transition">
+            [Ingest] Paid $45 Uber
+          </button>
+          <button type="button" onclick="setPreset('Spent 45.50 EUR at Swiggy for dinner today')" class="text-[11px] bg-slate-900 hover:bg-slate-800 text-blue-300 px-2.5 py-1 rounded-lg border border-slate-800 transition">
+            [Ingest] Spent 45.50 EUR Swiggy
+          </button>
+          <button type="button" onclick="setPreset('What is our total spend on cloud services?')" class="text-[11px] bg-slate-900 hover:bg-slate-800 text-purple-300 px-2.5 py-1 rounded-lg border border-slate-800 transition">
+            [Query] Cloud Services Spend
+          </button>
+          <button type="button" onclick="setPreset('Show duplicate transactions')" class="text-[11px] bg-slate-900 hover:bg-slate-800 text-rose-300 px-2.5 py-1 rounded-lg border border-slate-800 transition">
+            [Query] Show Duplicates
+          </button>
+          <button type="button" onclick="setPreset('What is our daily burn rate & month-end projection?')" class="text-[11px] bg-slate-900 hover:bg-slate-800 text-cyan-300 px-2.5 py-1 rounded-lg border border-slate-800 transition">
+            [Query] Burn Rate
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 Core Enterprise Pillars (Glassmorphic Cards) -->
+  <section id="features" class="py-12 px-6 max-w-7xl mx-auto">
+    <div class="text-center space-y-2 mb-10">
+      <h2 class="text-xs font-mono uppercase tracking-widest text-blue-400">Autonomous Financial Architecture</h2>
+      <p class="text-2xl sm:text-3xl font-extrabold text-white">Engineered for Zero-Touch Operations</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      
+      <!-- Card 1: Enterprise Security -->
+      <div class="glass-card glass-card-hover p-5 rounded-2xl space-y-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3 class="text-base font-bold text-white">Enterprise Security</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Real-time threat & policy violation sentinel. Checks duplicate charges, velocity spikes, and sanctioned entities.
+        </p>
+        <div class="pt-2 text-[11px] text-blue-400 font-mono font-semibold">5 Active Rule Sets &rarr;</div>
+      </div>
+
+      <!-- Card 2: Automated Workflows -->
+      <div class="glass-card glass-card-hover p-5 rounded-2xl space-y-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-arrows-spin"></i>
+        </div>
+        <h3 class="text-base font-bold text-white">Automated Workflows</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Self-healing multi-step reasoning. Automatically recovers from schema drift, malformed timestamps, and missing fields.
+        </p>
+        <div class="pt-2 text-[11px] text-indigo-400 font-mono font-semibold">Zero-Crash Pipeline &rarr;</div>
+      </div>
+
+      <!-- Card 3: Real-Time Insights -->
+      <div class="glass-card glass-card-hover p-5 rounded-2xl space-y-3">
+        <div class="w-10 h-10 rounded-xl bg-cyan-600/20 border border-cyan-500/40 text-cyan-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <h3 class="text-base font-bold text-white">Real-Time Insights</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Spending velocity metrics, daily burn rate projections, and automatic 18% GST tax liability reserve estimation.
+        </p>
+        <div class="pt-2 text-[11px] text-cyan-400 font-mono font-semibold">Treasury Intelligence &rarr;</div>
+      </div>
+
+      <!-- Card 4: Global Compliance -->
+      <div class="glass-card glass-card-hover p-5 rounded-2xl space-y-3">
+        <div class="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/40 text-purple-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-scale-balanced"></i>
+        </div>
+        <h3 class="text-base font-bold text-white">Global Compliance</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Continuous dual-stream chaos reconciliation comparing internal ledgers against counterparty financial streams.
+        </p>
+        <div class="pt-2 text-[11px] text-purple-400 font-mono font-semibold">100% Audit Rate &rarr;</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Interactive Studio Drawer / Workspace Section -->
+  <section id="studio-drawer" class="py-8 px-6 max-w-7xl mx-auto">
+    <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-6 border border-blue-500/30">
+      
+      <!-- Drawer Header & Controls -->
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping"></span>
+            <h2 class="text-xl font-extrabold text-white tracking-tight">FinCore Autonomous Studio & Live Ledger</h2>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Real-time SQLite persistence & dual-ledger audit engine</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            onclick="runTask2Reconciliation()"
+            id="btnRunTask2"
+            class="btn-gradient px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5"
+          >
+            <i class="fa-solid fa-scale-balanced text-[11px]"></i>
+            <span>Run Task 2 Audit</span>
+          </button>
+          <button
+            onclick="seedDatabaseFeed()"
+            class="glass-card hover:bg-slate-800 p-2 rounded-xl text-slate-300 transition"
+            title="Seed Initial Feed"
+          >
+            <i class="fa-solid fa-arrows-rotate text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Live Studio Metric Widgets -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-1.5">
+          <div class="flex justify-between items-center text-slate-400 text-xs font-medium">
+            <span>Spending Velocity</span>
+            <span class="text-blue-400"><i class="fa-solid fa-gauge-high"></i></span>
+          </div>
+          <div id="metricBurnRate" class="text-xl font-bold text-white font-mono">₹0.00/day</div>
+          <p id="metricMonthEndProj" class="text-[11px] text-slate-500 font-mono">Proj Month-End: ₹0.00</p>
+        </div>
+
+        <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-1.5">
+          <div class="flex justify-between items-center text-slate-400 text-xs font-medium">
+            <span>18% GST Tax Reserve</span>
+            <span class="text-emerald-400"><i class="fa-solid fa-calculator"></i></span>
+          </div>
+          <div id="metricGSTReserve" class="text-xl font-bold text-white font-mono">₹0.00</div>
+          <p id="metricEligibleGST" class="text-[11px] text-slate-500 font-mono">On eligible spend</p>
+        </div>
+
+        <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-1.5">
+          <div class="flex justify-between items-center text-slate-400 text-xs font-medium">
+            <span>Dual-Ledger Audit Rate</span>
+            <span class="text-amber-400"><i class="fa-solid fa-scale-balanced"></i></span>
+          </div>
+          <div id="metricAuditRate" class="text-xl font-bold text-white font-mono">100.0%</div>
+          <p id="metricMatchedCount" class="text-[11px] text-emerald-400 font-mono">0 Matched • 0 Variances</p>
+        </div>
+
+        <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-1.5">
+          <div class="flex justify-between items-center text-slate-400 text-xs font-medium">
+            <span>Risk & Policy Alerts</span>
+            <span class="text-rose-400"><i class="fa-solid fa-triangle-exclamation"></i></span>
+          </div>
+          <div id="metricRiskAlerts" class="text-xl font-bold text-white font-mono">0 Alerts</div>
+          <p id="metricRiskBadge" class="text-[11px] text-emerald-400 font-mono">Optimal Status</p>
+        </div>
+
+      </div>
+
+      <!-- Security & Anomaly Sentinel Panel (Compact Non-Intrusive Hub) -->
+      <div id="risk-sentinel" class="glass-card rounded-2xl p-5 border border-amber-500/30 space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2 text-xs font-bold font-mono text-amber-400 uppercase tracking-wider">
+            <i class="fa-solid fa-shield-halved text-amber-500"></i>
+            <span>Security & Anomaly Sentinel</span>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <span id="riskCountBadge" class="text-[10px] font-mono bg-amber-950/80 text-amber-300 border border-amber-800/60 px-2 py-0.5 rounded font-semibold">
+              0 Detected
+            </span>
+            <button
+              id="btnViewAllDups"
+              onclick="openDuplicatesAuditModal()"
+              class="hidden text-[10px] font-mono text-blue-400 hover:text-blue-300 hover:underline transition"
+            >
+              View All Duplicates (<span id="dupCountModalBtn">0</span>)
+            </button>
+          </div>
+        </div>
+
+        <!-- Compact Scrollable Feed (Max Height 190px) -->
+        <div id="riskAlertsList" class="max-h-48 overflow-y-auto space-y-1.5 pr-1 text-xs font-mono">
+          <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-500 text-center text-[11px]">
+            No active risk anomalies or policy violations detected across the ledger.
+          </div>
+        </div>
+      </div>
+
+      <!-- Duplicates Audit Modal -->
+      <div id="duplicatesModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-2xl w-full rounded-2xl border border-blue-500/40 p-6 space-y-4 shadow-2xl">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <div class="flex items-center gap-2 text-sm font-bold text-white font-mono">
+              <i class="fa-solid fa-copy text-amber-400"></i>
+              <span>Duplicate Charges Audit Report</span>
+            </div>
+            <button onclick="closeDuplicatesAuditModal()" class="text-slate-400 hover:text-white text-sm">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div id="modalDuplicatesList" class="max-h-80 overflow-y-auto space-y-2 text-xs font-mono pr-1">
+            <!-- Populated on modal open -->
+          </div>
+          <div class="flex justify-end pt-2 border-t border-slate-800">
+            <button onclick="closeDuplicatesAuditModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition">
+              Close Audit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Breakdown & Expense Distribution (Feature 2) -->
+      <div id="intelligence" class="space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div class="flex items-center gap-2 text-xs font-bold font-mono text-blue-400 uppercase tracking-wider">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Category Distribution Breakdown</span>
+          </div>
+          <span id="categoryCountBadge" class="text-[10px] font-mono bg-blue-950/80 text-blue-300 border border-blue-800/60 px-2 py-0.5 rounded font-semibold">
+            0 Categories
+          </span>
+        </div>
+
+        <div id="categoryBreakdownGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 font-mono text-xs">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Normalized Live Ledger Table Stream -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div class="flex items-center gap-2 text-xs font-bold font-mono text-cyan-400 uppercase tracking-wider">
+            <i class="fa-solid fa-table-list"></i>
+            <span>Active Normalized Ledger Feed</span>
+          </div>
+          <span id="txCountBadge" class="text-[11px] font-mono bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full">
+            0 records
+          </span>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/70">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="py-3 px-4">Transaction ID</th>
+                <th class="py-3 px-4">Amount (INR)</th>
+                <th class="py-3 px-4">Merchant</th>
+                <th class="py-3 px-4">Category</th>
+                <th class="py-3 px-4">Status / Timestamp</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="txTableBody" class="divide-y divide-slate-800/60 text-slate-300">
+              <tr>
+                <td colspan="6" class="p-6 text-center text-slate-500">Loading ledger records from backend database...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Real-Time Self-Healing Telemetry & Terminal Console -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div class="flex items-center gap-2 text-xs font-bold font-mono text-slate-300 uppercase tracking-wider">
+            <i class="fa-solid fa-terminal text-blue-400"></i>
+            <span>Agent Operations Telemetry Feed</span>
+          </div>
+          <span class="text-[10px] font-mono bg-emerald-950/80 text-emerald-400 px-2 py-0.5 rounded font-semibold border border-emerald-800/60 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            LIVE STREAM (3s Loop)
+          </span>
+        </div>
+
+        <div id="eventsLogBox" class="terminal-box rounded-xl p-4 font-mono text-xs h-56 overflow-y-auto space-y-1.5">
+          <div class="text-slate-500">[SYSTEM] Connecting to autonomous agent telemetry stream...</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Metrics Ribbon Footer -->
+  <footer class="mt-12 border-t border-slate-800/80 glass-card py-6 px-6">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-slate-400">
+      
+      <div class="flex items-center gap-6">
+        <div>
+          <span class="text-slate-500">Total Volume: </span>
+          <span id="footerTotalTurnover" class="text-white font-bold">₹0.00</span>
+        </div>
+        <div>
+          <span class="text-slate-500">Audit Status: </span>
+          <span class="text-emerald-400 font-bold">100.0% Dual Reconciled</span>
+        </div>
+        <div>
+          <span class="text-slate-500">Reliability: </span>
+          <span class="text-cyan-400 font-bold">99.99% Guaranteed</span>
+        </div>
+      </div>
+
       <div>
-        <div class="kicker">03 · WHY IT'S DIFFERENT</div>
-        <h2>Not another OCR credit score</h2>
+        <span>FinCore Studio &bull; Autonomous Agent Operations Engine 2026</span>
       </div>
-      <p class="desc">Most alternatives read an uploaded PDF and guess. Gignite proves the data's origin and lets the earner keep everything else private.</p>
-    </div>
-    <div class="diff-grid">
-      <div class="diff-card">
-        <div class="mono">ZKTLS / WEB PROOFS</div>
-        <h3>Fraud becomes mathematical, not procedural</h3>
-        <p>Session proofs confirm data came directly from Swiggy, Uber, or a bank's own servers — forgery isn't just discouraged, it's structurally impossible.</p>
-      </div>
-      <div class="diff-card">
-        <div class="mono">ZERO-KNOWLEDGE THRESHOLDS</div>
-        <h3>Prove enough, reveal nothing</h3>
-        <p>A lender learns that daily inflow clears ₹1,200 and overdrafts are zero — never the exact number, never where it was spent.</p>
-      </div>
-      <div class="diff-card">
-        <div class="mono">SEASONAL RESILIENCE INDEX</div>
-        <h3>Monsoons aren't defaults</h3>
-        <p>Earnings are benchmarked against hyper-local, sector-specific seasonality instead of penalizing predictable dips as red flags.</p>
-      </div>
-      <div class="diff-card">
-        <div class="mono">COUNTERFACTUAL ENGINE</div>
-        <h3>Rejections come with a path</h3>
-        <p>Instead of a black-box "no," earners get exact, actionable steps: how many shifts, at what earnings, to unlock the full amount.</p>
-      </div>
-      <div class="diff-card">
-        <div class="mono">W3C VERIFIABLE CREDENTIALS</div>
-        <h3>Portable across every lender</h3>
-        <p>One signed credential, standards-based and reusable — earners stop rebuilding their case from scratch at every institution.</p>
-      </div>
-      <div class="diff-card">
-        <div class="mono">CONSENT-GOVERNED, REVOCABLE</div>
-        <h3>The earner stays in control</h3>
-        <p>Every disclosure is opt-in and revocable. Nothing is shared by default, and nothing lingers after consent is withdrawn.</p>
-      </div>
-    </div>
-  </div>
-</section>
 
-<section class="cta-section" id="cta" style="border-bottom:none;">
-  <div class="wrap">
-    <h2>Ready to see a credential get issued and verified live?</h2>
-    <div class="hero-ctas" style="justify-content:center;">
-      <a class="btn-primary" href="#">Request a Demo</a>
-      <a class="btn-secondary" href="#">Read the Full Problem Statement</a>
     </div>
-  </div>
-</section>
+  </footer>
 
-<footer class="wrap">
-  <span>Gignite — Igniting financial identity for the informal workforce</span>
-  <span class="mono">MICROSOFT INNOVATION CLUB, VIT CHENNAI · FINTECH &amp; COMMERCE</span>
-</footer>
+  <!-- Client-Side Dashboard Engine -->
+  <script>
+    const API = "/api";
+    let CURRENT_TRANSACTIONS = [];
 
+    // Category styling badge helper
+    function getCategoryBadge(cat) {
+      const c = (cat || "").toLowerCase();
+      if (c.includes("entertainment")) {
+        return '<span class="bg-purple-950/80 text-purple-300 border border-purple-800/60 px-2 py-0.5 rounded text-[10px] font-semibold">Entertainment</span>';
+      } else if (c.includes("food")) {
+        return '<span class="bg-amber-950/80 text-amber-300 border border-amber-800/60 px-2 py-0.5 rounded text-[10px] font-semibold">Food & Dining</span>';
+      } else if (c.includes("transport") || c.includes("travel")) {
+        return '<span class="bg-cyan-950/80 text-cyan-300 border border-cyan-800/60 px-2 py-0.5 rounded text-[10px] font-semibold">Travel & Transit</span>';
+      } else if (c.includes("cloud") || c.includes("saas")) {
+        return '<span class="bg-blue-950/80 text-blue-300 border border-blue-800/60 px-2 py-0.5 rounded text-[10px] font-semibold">Cloud & SaaS</span>';
+      } else if (c.includes("e-commerce")) {
+        return '<span class="bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 px-2 py-0.5 rounded text-[10px] font-semibold">E-Commerce</span>';
+      }
+      return '<span class="bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">' + (cat || "Uncategorized") + '</span>';
+    }
+
+    function setPreset(text) {
+      document.getElementById("omniInput").value = text;
+      document.getElementById("omniInput").focus();
+    }
+
+    function toggleStudioDrawer(forceOpen = false) {
+      const el = document.getElementById("studio-drawer");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+
+    // Submit Omni-Prompt (Ingest or Analytical Query)
+    async function submitOmniPrompt(e) {
+      e.preventDefault();
+      const inputVal = document.getElementById("omniInput").value.trim();
+      if (!inputVal) return;
+
+      const btn = document.getElementById("btnSubmitOmni");
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Processing...</span>';
+
+      try {
+        const res = await fetch(`${API}/agent/prompt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: inputVal })
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.detail || "Agent execution failed");
+
+        displayOmniFeedback(result);
+        document.getElementById("omniInput").value = "";
+        await fetchTelemetry();
+      } catch (err) {
+        alert("Omni Prompt Error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-bolt text-xs"></i><span>Execute / Ingest</span>';
+      }
+    }
+
+    // Display Feedback for Omni-Prompt
+    function displayOmniFeedback(res) {
+      const box = document.getElementById("omniFeedbackBox");
+      const icon = document.getElementById("omniFeedbackIcon");
+      const title = document.getElementById("omniFeedbackTitle");
+      const badge = document.getElementById("omniIntentBadge");
+      const msg = document.getElementById("omniFeedbackMessage");
+
+      box.classList.remove("hidden", "bg-emerald-950/60", "border-emerald-700/60", "text-emerald-300", "bg-purple-950/60", "border-purple-700/60", "text-purple-300");
+
+      if (res.action === "INGESTION") {
+        box.classList.add("bg-emerald-950/60", "border", "border-emerald-700/60", "text-emerald-300");
+        icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>';
+        title.innerText = "Transaction Ingested & Reconciled";
+        badge.className = "text-[10px] px-2 py-0.5 rounded font-mono font-semibold bg-emerald-900/80 text-emerald-300 border border-emerald-600/60";
+        badge.innerText = "INTENT: INGESTION";
+        
+        const tx = res.transaction || {};
+        msg.innerHTML = `
+          <strong>${tx.merchant || "Unknown Merchant"}</strong> &bull; ₹${parseFloat(tx.amount_inr || 0).toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})} &bull; Category: <span class="font-bold text-white">${tx.category || "Uncategorized"}</span> &bull; <span class="text-slate-400">${tx.transaction_id}</span>
+        `;
+      } else {
+        box.classList.add("bg-purple-950/60", "border", "border-purple-700/60", "text-purple-300");
+        icon.innerHTML = '<i class="fa-solid fa-brain text-purple-400 text-sm"></i>';
+        title.innerText = "Financial Intelligence Query Evaluated";
+        badge.className = "text-[10px] px-2 py-0.5 rounded font-mono font-semibold bg-purple-900/80 text-purple-300 border border-purple-600/60";
+        badge.innerText = "INTENT: ANALYTICS_QUERY";
+        msg.innerHTML = `<strong>Answer:</strong> ${res.answer}`;
+      }
+    }
+
+    // Telemetry and Database Polling
+    async function fetchTelemetry() {
+      try {
+        const res = await fetch(`${API}/agent/telemetry`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Update Overview Metrics & Intelligence
+        if (data.intelligence) {
+          const vel = data.intelligence.spending_velocity || {};
+          const burnStr = `₹${parseFloat(vel.daily_burn_rate_inr || 0).toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})}/day`;
+          document.getElementById("metricBurnRate").innerText = burnStr;
+          const heroPill = document.getElementById("heroBurnRatePill");
+          if (heroPill) heroPill.innerText = burnStr;
+
+          document.getElementById("metricMonthEndProj").innerText = `Proj Month-End: ₹${parseFloat(vel.projected_month_end_spend_inr || 0).toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+          const gst = data.intelligence.gst_tax_reserve || {};
+          document.getElementById("metricGSTReserve").innerText = `₹${parseFloat(gst.total_gst_reserve_inr || 0).toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+          document.getElementById("metricEligibleGST").innerText = `On ₹${parseFloat(gst.total_eligible_spend_inr || 0).toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})} spend`;
+
+          // Render Risk & Policy Alerts
+          const risk = data.intelligence.risk_and_policy_alerts || {};
+          const alertCount = risk.total_alerts_count || 0;
+          document.getElementById("metricRiskAlerts").innerText = `${alertCount} Alerts`;
+          document.getElementById("riskCountBadge").innerText = `${alertCount} Detected`;
+          
+          const riskBadge = document.getElementById("metricRiskBadge");
+          if (alertCount > 0) {
+            riskBadge.className = "text-[11px] font-semibold text-rose-400 font-mono";
+            riskBadge.innerText = "Action Required";
+          } else {
+            riskBadge.className = "text-[11px] font-semibold text-emerald-400 font-mono";
+            riskBadge.innerText = "Optimal Status";
+          }
+
+          renderRiskAlerts(risk);
+        }
+
+        if (data.task1) {
+          const turnover = parseFloat(data.task1.total_turnover_inr || 0);
+          const turnoverStr = `₹${turnover.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+          const ftTurnover = document.getElementById("footerTotalTurnover");
+          if (ftTurnover) ftTurnover.innerText = turnoverStr;
+
+          if (Array.isArray(data.task1.category_distribution)) {
+            renderCategoryDistribution(data.task1.category_distribution);
+          }
+        }
+
+        if (data.task2) {
+          const rate = data.task2.reconciliation_rate !== undefined ? (data.task2.reconciliation_rate * 100).toFixed(1) : "100.0";
+          document.getElementById("metricAuditRate").innerText = `${rate}%`;
+          document.getElementById("metricMatchedCount").innerText = `${data.task2.matched_count || 0} Matched • ${data.task2.variance_count || 0} Variances`;
+        }
+
+        // Update Terminal Event Stream with Timestamped Badges
+        if (data.events_log && Array.isArray(data.events_log)) {
+          const logBox = document.getElementById("eventsLogBox");
+          logBox.innerHTML = data.events_log.map(ev => {
+            let badgeHtml = '<span class="text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded text-[9px] font-bold">[INFO]</span>';
+            const t = (ev.type || "").toUpperCase();
+            if (t.includes("TASK_1") || t.includes("INGEST")) {
+              badgeHtml = '<span class="text-cyan-300 bg-cyan-950 border border-cyan-800 px-1.5 py-0.5 rounded text-[9px] font-bold">[TASK_1]</span>';
+            } else if (t.includes("TASK_2") || t.includes("RECONCILE")) {
+              badgeHtml = '<span class="text-amber-300 bg-amber-950 border border-amber-800 px-1.5 py-0.5 rounded text-[9px] font-bold">[TASK_2]</span>';
+            } else if (t.includes("REPAIR") || t.includes("REASONING") || t.includes("HEALING")) {
+              badgeHtml = '<span class="text-purple-300 bg-purple-950 border border-purple-800 px-1.5 py-0.5 rounded text-[9px] font-bold">[REPAIR]</span>';
+            } else if (t.includes("DB") || t.includes("SUCCESS")) {
+              badgeHtml = '<span class="text-emerald-300 bg-emerald-950 border border-emerald-800 px-1.5 py-0.5 rounded text-[9px] font-bold">[SUCCESS]</span>';
+            } else if (t.includes("ANALYTICS")) {
+              badgeHtml = '<span class="text-blue-300 bg-blue-950 border border-blue-800 px-1.5 py-0.5 rounded text-[9px] font-bold">[QUERY]</span>';
+            } else if (t.includes("ERROR")) {
+              badgeHtml = '<span class="text-rose-300 bg-rose-950 border border-rose-800 px-1.5 py-0.5 rounded text-[9px] font-bold">[ERROR]</span>';
+            }
+
+            return `
+              <div class="flex items-start gap-2 py-0.5 leading-relaxed">
+                <span class="text-slate-500 text-[10px] select-none shrink-0">${ev.timestamp || ""}</span>
+                <span class="shrink-0">${badgeHtml}</span>
+                <span class="text-slate-200 text-xs">${ev.message}</span>
+              </div>
+            `;
+          }).join("");
+        }
+
+        // Fetch stored transactions
+        await loadTransactions();
+      } catch (err) {
+        console.error("Telemetry fetch failed", err);
+      }
+    }
+
+    let ACTIVE_DUPLICATES_LIST = [];
+    let DUPLICATE_TX_IDS = new Set();
+    let DISMISSED_ALERTS = new Set();
+
+    function dismissRiskAlert(txId) {
+      DISMISSED_ALERTS.add(txId);
+      fetchTelemetry();
+    }
+
+    function openDuplicatesAuditModal() {
+      const modal = document.getElementById("duplicatesModal");
+      const list = document.getElementById("modalDuplicatesList");
+      if (ACTIVE_DUPLICATES_LIST.length === 0) {
+        list.innerHTML = '<div class="p-4 text-center text-slate-500">No duplicate transactions currently flagged.</div>';
+      } else {
+        list.innerHTML = ACTIVE_DUPLICATES_LIST.map(d => `
+          <div class="p-3 rounded-xl bg-slate-900 border border-amber-700/40 text-slate-300 space-y-1">
+            <div class="flex justify-between items-center font-bold text-amber-300">
+              <span>${d.merchant} &bull; ₹${parseFloat(d.amount_inr).toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+              <span class="text-[10px] bg-amber-950 border border-amber-800 px-1.5 py-0.5 rounded">24h Window Match</span>
+            </div>
+            <p class="text-xs text-slate-400">${d.reason}</p>
+            <div class="text-[11px] text-slate-500 flex justify-between pt-1 border-t border-slate-800">
+              <span>Primary: <code class="text-blue-400">${d.primary_transaction_id}</code></span>
+              <span>Duplicate: <code class="text-amber-400">${d.duplicate_transaction_id}</code></span>
+            </div>
+          </div>
+        `).join("");
+      }
+      modal.classList.remove("hidden");
+    }
+
+    function closeDuplicatesAuditModal() {
+      document.getElementById("duplicatesModal").classList.add("hidden");
+    }
+
+    // Render Risk & Policy Alerts (Compact & Non-Intrusive)
+    function renderRiskAlerts(risk) {
+      const container = document.getElementById("riskAlertsList");
+      const items = [];
+
+      ACTIVE_DUPLICATES_LIST = risk.duplicate_charges || [];
+      DUPLICATE_TX_IDS = new Set();
+      ACTIVE_DUPLICATES_LIST.forEach(d => {
+        DUPLICATE_TX_IDS.add(d.primary_transaction_id);
+        DUPLICATE_TX_IDS.add(d.duplicate_transaction_id);
+      });
+
+      // Update View All Duplicates modal button
+      const btnDups = document.getElementById("btnViewAllDups");
+      const dupCountSpan = document.getElementById("dupCountModalBtn");
+      if (ACTIVE_DUPLICATES_LIST.length > 0) {
+        btnDups.classList.remove("hidden");
+        dupCountSpan.innerText = ACTIVE_DUPLICATES_LIST.length;
+      } else {
+        btnDups.classList.add("hidden");
+      }
+
+      // Compact 1-line duplicate notification items
+      ACTIVE_DUPLICATES_LIST.filter(d => !DISMISSED_ALERTS.has(d.primary_transaction_id)).forEach(d => {
+        items.push(`
+          <div class="p-2 rounded-lg bg-amber-950/30 border border-amber-800/40 text-amber-200 flex items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-1.5 truncate">
+              <span class="text-[9px] font-bold bg-amber-900/80 text-amber-300 px-1.5 py-0.5 rounded border border-amber-700/60 shrink-0">[DUPLICATE DETECTED]</span>
+              <span class="font-semibold text-slate-200 truncate">${d.primary_transaction_id}</span>
+              <span class="text-slate-400">&bull; ${d.merchant}</span>
+              <span class="font-bold text-amber-300">&bull; ₹${parseFloat(d.amount_inr).toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="dismissRiskAlert('${d.primary_transaction_id}')" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Dismiss</button>
+            </div>
+          </div>
+        `);
+      });
+
+      (risk.policy_violations || []).filter(p => !DISMISSED_ALERTS.has(p.transaction_id)).forEach(p => {
+        items.push(`
+          <div class="p-2 rounded-lg bg-rose-950/30 border border-rose-800/40 text-rose-200 flex items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-1.5 truncate">
+              <span class="text-[9px] font-bold bg-rose-900/80 text-rose-300 px-1.5 py-0.5 rounded border border-rose-700/60 shrink-0">[POLICY CAP]</span>
+              <span class="font-semibold text-slate-200 truncate">${p.transaction_id}</span>
+              <span class="text-slate-400">&bull; ${p.merchant}</span>
+              <span class="font-bold text-rose-300">&bull; Exceeded cap by ₹${p.excess_inr}</span>
+            </div>
+            <button onclick="dismissRiskAlert('${p.transaction_id}')" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition shrink-0">Dismiss</button>
+          </div>
+        `);
+      });
+
+      (risk.sanctioned_merchant_alerts || []).filter(s => !DISMISSED_ALERTS.has(s.transaction_id)).forEach(s => {
+        items.push(`
+          <div class="p-2 rounded-lg bg-rose-950/50 border border-rose-700 text-rose-200 flex items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-1.5 truncate">
+              <span class="text-[9px] font-bold bg-rose-900 text-rose-200 px-1.5 py-0.5 rounded border border-rose-600 shrink-0">[WATCHLIST]</span>
+              <span class="font-semibold text-slate-200 truncate">${s.merchant}</span>
+              <span class="text-rose-300">&bull; Prohibited entity match</span>
+            </div>
+            <button onclick="dismissRiskAlert('${s.transaction_id}')" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition shrink-0">Dismiss</button>
+          </div>
+        `);
+      });
+
+      (risk.velocity_anomalies || []).forEach(v => {
+        items.push(`
+          <div class="p-2 rounded-lg bg-yellow-950/30 border border-yellow-800/40 text-yellow-200 flex items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-1.5 truncate">
+              <span class="text-[9px] font-bold bg-yellow-900/80 text-yellow-300 px-1.5 py-0.5 rounded border border-yellow-700/60 shrink-0">[VELOCITY]</span>
+              <span class="text-yellow-200 truncate">${v.reason}</span>
+            </div>
+          </div>
+        `);
+      });
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-500 text-center text-[11px]">
+            No active risk anomalies or policy violations detected across the ledger.
+          </div>
+        `;
+      } else {
+        container.innerHTML = items.join("");
+      }
+    }
+
+    // Render Category Distribution Breakdown
+    function renderCategoryDistribution(categories) {
+      document.getElementById("categoryCountBadge").innerText = `${categories.length} Categories`;
+      const grid = document.getElementById("categoryBreakdownGrid");
+      if (categories.length === 0) {
+        grid.innerHTML = '<div class="p-3 text-slate-500 text-center col-span-3">No expenses recorded yet.</div>';
+        return;
+      }
+      grid.innerHTML = categories.map(cat => `
+        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-slate-200 text-xs">${cat.category}</span>
+            <span class="text-[10px] font-bold text-blue-400 bg-blue-950 border border-blue-800/60 px-1.5 py-0.5 rounded">${cat.percentage_share}%</span>
+          </div>
+          <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full" style="width: ${Math.min(cat.percentage_share, 100)}%"></div>
+          </div>
+          <div class="flex justify-between text-[11px] text-slate-400">
+            <span>₹${cat.total_inr.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            <span>${cat.count} txns</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // Load Transactions Table with Inline Duplicate Tags
+    async function loadTransactions() {
+      try {
+        const res = await fetch(`${API}/transactions?limit=100`);
+        const json = await res.json();
+        const records = json.data || [];
+        CURRENT_TRANSACTIONS = records;
+        document.getElementById("txCountBadge").innerText = `${records.length} records`;
+
+        const tbody = document.getElementById("txTableBody");
+        if (records.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-500">No transactions stored. Ingest one above or seed feed!</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = records.map(r => {
+          const merchantName = (r.merchant && r.merchant !== "Uncategorized") ? r.merchant : "Unknown Merchant";
+          const categoryName = r.category || "Uncategorized";
+          const amountINR = parseFloat(r.amount_inr || 0);
+          const formattedINR = `₹${amountINR.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+          const origInfo = (r.original_currency && r.original_currency !== "INR") ? `<span class="text-[10px] text-slate-400 block">(${r.original_amount} ${r.original_currency})</span>` : '';
+          
+          let statusBadge = (r.status === "FLAGGED") 
+            ? '<span class="text-[10px] font-semibold text-rose-300 bg-rose-950 border border-rose-800/60 px-1.5 py-0.5 rounded">FLAGGED</span>'
+            : '<span class="text-[10px] font-semibold text-emerald-300 bg-emerald-950 border border-emerald-800/60 px-1.5 py-0.5 rounded">PROCESSED</span>';
+
+          if (DUPLICATE_TX_IDS.has(r.transaction_id)) {
+            statusBadge += ' <span class="text-[10px] font-semibold text-amber-300 bg-amber-950/80 border border-amber-800/60 px-1.5 py-0.5 rounded">Duplicate</span>';
+          }
+
+          const tsFormatted = r.timestamp ? r.timestamp.replace("T", " ").replace("Z", "") : "-";
+
+          return `
+            <tr class="hover:bg-slate-900/60 transition border-b border-slate-800/60 last:border-0">
+              <td class="py-3 px-4 font-semibold text-slate-100">${r.transaction_id}</td>
+              <td class="py-3 px-4 font-bold text-white">
+                ${formattedINR}
+                ${origInfo}
+              </td>
+              <td class="py-3 px-4 text-slate-200">${merchantName}</td>
+              <td class="py-3 px-4">${getCategoryBadge(categoryName)}</td>
+              <td class="py-3 px-4 text-slate-400 text-[11px]">
+                ${statusBadge}
+                <span class="ml-1">${tsFormatted}</span>
+              </td>
+              <td class="py-3 px-4 text-right space-x-1 whitespace-nowrap">
+                <button onclick="editTransactionPrompt('${r.transaction_id}', ${r.original_amount || r.amount_inr}, '${r.original_currency || r.currency}', '${r.merchant}')" class="p-1 hover:bg-slate-800 text-blue-400 rounded transition" title="Edit">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button onclick="deleteTransaction('${r.transaction_id}')" class="p-1 hover:bg-slate-800 text-rose-400 rounded transition" title="Delete">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        console.error("Failed to load transactions", err);
+      }
+    }
+
+    // Trigger Task 2 Reconciliation
+    async function runTask2Reconciliation() {
+      const btn = document.getElementById("btnRunTask2");
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Reconciling...</span>';
+
+      try {
+        const res = await fetch(`${API}/task2/reconcile`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.detail || "Task 2 failed");
+
+        await fetchTelemetry();
+      } catch (err) {
+        alert("Reconciliation Error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-scale-balanced text-[11px]"></i><span>Run Task 2 Audit</span>';
+      }
+    }
+
+    // Edit and Delete helpers
+    async function editTransactionPrompt(txId, currentAmt, currentCurr, currentMerchant) {
+      const newAmtStr = prompt(`Update amount for ${txId}:`, currentAmt);
+      if (newAmtStr === null) return;
+      const newAmt = parseFloat(newAmtStr);
+      if (isNaN(newAmt)) {
+        alert("Invalid numeric amount");
+        return;
+      }
+      const newMerchant = prompt(`Update merchant for ${txId}:`, currentMerchant) || currentMerchant;
+
+      try {
+        await fetch(`${API}/transactions/${txId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ original_amount: newAmt, merchant: newMerchant })
+        });
+        await fetchTelemetry();
+      } catch (err) {
+        alert("Update Error: " + err.message);
+      }
+    }
+
+    async function deleteTransaction(txId) {
+      if (!confirm(`Are you sure you want to delete transaction ${txId}?`)) return;
+      try {
+        await fetch(`${API}/transactions/${txId}`, { method: "DELETE" });
+        await fetchTelemetry();
+      } catch (err) {
+        alert("Delete Error: " + err.message);
+      }
+    }
+
+    async function seedDatabaseFeed() {
+      try {
+        await fetch(`${API}/transactions/seed?force=true`, { method: "POST" });
+        await fetchTelemetry();
+      } catch (err) {
+        console.error("Seed error", err);
+      }
+    }
+
+    // Initial load and continuous autonomous polling loop (every 3 seconds)
+    window.addEventListener("DOMContentLoaded", () => {
+      fetchTelemetry();
+      setInterval(fetchTelemetry, 3000);
+    });
+  </script>
 </body>
 </html>
