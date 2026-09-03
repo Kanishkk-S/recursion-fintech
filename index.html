@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VeriCred — Verifiable Financial Identity</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --paper: #F1EEE6;
+    --paper-dark: #E7E2D4;
+    --ink: #1C2B24;
+    --seal: #8A6E3C;
+    --seal-dark: #6B5427;
+    --verified: #2E5B45;
+    --line: #C9C1AC;
+    --card: #FBFAF6;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,h2,h3{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+  }
+
+  .mono{
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  a{color:inherit;}
+
+  .wrap{
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    border-bottom: 1px solid var(--line);
+  }
+  .header-inner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 22px 0;
+  }
+  .logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Fraunces', serif;
+    font-size: 20px;
+    font-weight:600;
+  }
+  .logo-mark{
+    width: 26px; height: 26px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+  }
+  nav{display:flex; gap:36px; font-size:14px;}
+  nav a{text-decoration:none; opacity:0.75;}
+  nav a:hover{opacity:1;}
+  .header-cta{
+    font-size:14px;
+    border:1px solid var(--ink);
+    padding:9px 18px;
+    border-radius: 3px;
+    text-decoration:none;
+    background:transparent;
+  }
+  .header-cta:hover{background:var(--ink); color:var(--paper);}
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding: 90px 0 70px;
+    display:grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 60px;
+    align-items:center;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero h1{
+    font-size: clamp(38px, 5vw, 58px);
+    max-width: 11ch;
+  }
+  .hero p.lede{
+    margin-top: 22px;
+    font-size: 18px;
+    max-width: 46ch;
+    color: #3C4A42;
+  }
+  .hero-ctas{
+    display:flex;
+    gap:14px;
+    margin-top: 34px;
+  }
+  .btn-primary{
+    background: var(--ink);
+    color: var(--paper);
+    padding: 13px 24px;
+    border-radius: 3px;
+    text-decoration:none;
+    font-size:15px;
+    font-weight:500;
+  }
+  .btn-secondary{
+    padding: 13px 24px;
+    border-radius: 3px;
+    text-decoration:none;
+    font-size:15px;
+    border: 1px solid var(--line);
+  }
+
+  /* passport visual */
+  .passport{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px;
+    box-shadow: 0 2px 0 var(--line);
+  }
+  .passport-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 16px;
+    margin-bottom: 18px;
+  }
+  .passport-top .mono{ font-size: 11px; opacity:0.6; letter-spacing: 0.02em;}
+  .stamp{
+    width: 58px; height: 58px;
+    border: 2px solid var(--seal);
+    border-radius: 50%;
+    color: var(--seal);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 9px;
+    text-align:center;
+    transform: rotate(-8deg);
+    line-height:1.2;
+  }
+  .assertion-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14.5px;
+  }
+  .assertion-row:last-child{border-bottom:none;}
+  .assertion-row .status{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color: var(--verified);
+    background: #E4EDE7;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  /* ---------- section: problem ---------- */
+  section{
+    padding: 80px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-head{
+    display:grid;
+    grid-template-columns: 0.4fr 0.6fr;
+    gap: 40px;
+    margin-bottom: 48px;
+  }
+  .section-head .kicker{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    color: var(--seal-dark);
+  }
+  .section-head h2{
+    font-size: clamp(28px, 3.4vw, 38px);
+    max-width: 14ch;
+    margin-top: 10px;
+  }
+  .section-head .desc{
+    font-size: 16px;
+    color: #3C4A42;
+    max-width: 48ch;
+    align-self:end;
+  }
+
+  .problem-grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .problem-cell{
+    background: var(--paper);
+    padding: 30px;
+  }
+  .problem-cell h3{
+    font-size: 18px;
+    font-weight:500;
+    margin-bottom:10px;
+  }
+  .problem-cell p{
+    font-size: 14.5px;
+    color: #4A564D;
+  }
+
+  /* ---------- section: flow ---------- */
+  .flow{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+  }
+  .flow-step{
+    display:grid;
+    grid-template-columns: 60px 1fr 1.3fr;
+    gap: 24px;
+    padding: 26px 0;
+    border-top: 1px solid var(--line);
+    align-items:start;
+  }
+  .flow-step:last-child{border-bottom: 1px solid var(--line);}
+  .flow-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--seal-dark);
+    padding-top: 3px;
+  }
+  .flow-step h3{
+    font-size: 19px;
+    font-weight:500;
+  }
+  .flow-step p{
+    font-size: 14.5px;
+    color: #3C4A42;
+    max-width: 52ch;
+  }
+
+  /* ---------- section: differentiators ---------- */
+  .diff-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .diff-card{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 26px;
+  }
+  .diff-card .mono{
+    font-size: 11px;
+    color: var(--seal-dark);
+  }
+  .diff-card h3{
+    font-size: 18px;
+    font-weight: 500;
+    margin: 10px 0 10px;
+  }
+  .diff-card p{
+    font-size: 14px;
+    color: #4A564D;
+  }
+
+  /* ---------- footer / cta ---------- */
+  .cta-section{
+    text-align:center;
+    padding: 90px 0;
+    border-bottom:none;
+  }
+  .cta-section h2{
+    font-size: clamp(30px, 4vw, 44px);
+    max-width: 16ch;
+    margin: 0 auto 26px;
+  }
+  footer{
+    padding: 30px 0;
+    display:flex;
+    justify-content:space-between;
+    font-size: 13px;
+    color: #6B756E;
+  }
+
+  @media (max-width: 860px){
+    .hero{grid-template-columns:1fr; padding-top:56px;}
+    .section-head{grid-template-columns:1fr;}
+    .problem-grid{grid-template-columns:1fr;}
+    .diff-grid{grid-template-columns:1fr;}
+    .flow-step{grid-template-columns: 40px 1fr; }
+    .flow-step p{grid-column: 2 / 3;}
+    nav{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-inner">
+    <div class="logo">
+      <span class="logo-mark">V</span>
+      VeriCred
+    </div>
+    <nav>
+      <a href="#problem">The Problem</a>
+      <a href="#how">How It Works</a>
+      <a href="#difference">Why It's Different</a>
+    </nav>
+    <a class="header-cta" href="#cta">Request a Demo</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap" style="display:contents;">
+    <div>
+      <h1>Prove you earn, without handing over how.</h1>
+      <p class="lede">VeriCred turns fragmented gig, UPI, and utility income into a signed, tamper-evident credential — so lenders can trust it and earners never have to expose it.</p>
+      <div class="hero-ctas">
+        <a class="btn-primary" href="#cta">Request a Demo</a>
+        <a class="btn-secondary" href="#how">See how it works</a>
+      </div>
+    </div>
+    <div class="passport">
+      <div class="passport-top">
+        <div>
+          <div class="mono">CREDENTIAL ID · VC-2026-4471</div>
+          <div class="mono" style="margin-top:4px;">ISSUED · VERICRED ENGINE</div>
+        </div>
+        <div class="stamp">VERIFIED<br>ON-CHAIN</div>
+      </div>
+      <div class="assertion-row">
+        <span>Median monthly income ≥ ₹30,000</span>
+        <span class="status">VERIFIED</span>
+      </div>
+      <div class="assertion-row">
+        <span>Active ≥ 22 days / month</span>
+        <span class="status">VERIFIED</span>
+      </div>
+      <div class="assertion-row">
+        <span>Zero bounced payments, 180 days</span>
+        <span class="status">VERIFIED</span>
+      </div>
+      <div class="assertion-row">
+        <span>Raw transaction data disclosed</span>
+        <span class="status" style="color:#8A3B3B; background:#F0E1DF;">NEVER</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="kicker">01 · THE PROBLEM</div>
+        <h2>Real income, illegible to institutions</h2>
+      </div>
+      <p class="desc">Delivery partners, drivers, vendors, and freelancers earn reliably every day. But without payslips or bureau scores, that reliability never reaches the systems deciding their access to credit.</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-cell">
+        <h3>Instant rejection</h3>
+        <p>"No bureau history" is treated as high risk by default, closing the door before any real income data is even considered.</p>
+      </div>
+      <div class="problem-cell">
+        <h3>Forgeable evidence</h3>
+        <p>PDF statements and screenshots can be edited in minutes, so the documents meant to build trust are the easiest ones to fake.</p>
+      </div>
+      <div class="problem-cell">
+        <h3>Invasive alternatives</h3>
+        <p>Some lenders demand apps that scrape contacts and SMS logs — trading one exclusion for a privacy violation.</p>
+      </div>
+      <div class="problem-cell">
+        <h3>Self-reinforcing exclusion</h3>
+        <p>No credit history means no approval, and no approval means no way to ever build one. The cycle never breaks on its own.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="kicker">02 · HOW IT WORKS</div>
+        <h2>From income to credential, in four steps</h2>
+      </div>
+      <p class="desc">Earners connect their own accounts. Everything after that happens on-device — lenders see a signed conclusion, never the underlying data.</p>
+    </div>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-num">01</div>
+        <h3>Connect</h3>
+        <p>The earner logs into a gig platform, bank, or utility account through a secure, authenticated session — no PDF uploads, no screenshots.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">02</div>
+        <h3>Attest</h3>
+        <p>A cryptographic session proof confirms the data came straight from the real platform server, unedited and untampered with.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">03</div>
+        <h3>Compute, on-device</h3>
+        <p>Income, consistency, and repayment metrics are calculated locally. Nothing raw ever leaves the earner's device.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">04</div>
+        <h3>Disclose selectively</h3>
+        <p>The earner shares a signed credential — a threshold that's true or false — and the lender verifies it in milliseconds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="difference">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="kicker">03 · WHY IT'S DIFFERENT</div>
+        <h2>Not another OCR credit score</h2>
+      </div>
+      <p class="desc">Most alternatives read an uploaded PDF and guess. VeriCred proves the data's origin and lets the earner keep everything else private.</p>
+    </div>
+    <div class="diff-grid">
+      <div class="diff-card">
+        <div class="mono">ZKTLS / WEB PROOFS</div>
+        <h3>Fraud becomes mathematical, not procedural</h3>
+        <p>Session proofs confirm data came directly from Swiggy, Uber, or a bank's own servers — forgery isn't just discouraged, it's structurally impossible.</p>
+      </div>
+      <div class="diff-card">
+        <div class="mono">ZERO-KNOWLEDGE THRESHOLDS</div>
+        <h3>Prove enough, reveal nothing</h3>
+        <p>A lender learns that daily inflow clears ₹1,200 and overdrafts are zero — never the exact number, never where it was spent.</p>
+      </div>
+      <div class="diff-card">
+        <div class="mono">SEASONAL RESILIENCE INDEX</div>
+        <h3>Monsoons aren't defaults</h3>
+        <p>Earnings are benchmarked against hyper-local, sector-specific seasonality instead of penalizing predictable dips as red flags.</p>
+      </div>
+      <div class="diff-card">
+        <div class="mono">COUNTERFACTUAL ENGINE</div>
+        <h3>Rejections come with a path</h3>
+        <p>Instead of a black-box "no," earners get exact, actionable steps: how many shifts, at what earnings, to unlock the full amount.</p>
+      </div>
+      <div class="diff-card">
+        <div class="mono">W3C VERIFIABLE CREDENTIALS</div>
+        <h3>Portable across every lender</h3>
+        <p>One signed credential, standards-based and reusable — earners stop rebuilding their case from scratch at every institution.</p>
+      </div>
+      <div class="diff-card">
+        <div class="mono">CONSENT-GOVERNED, REVOCABLE</div>
+        <h3>The earner stays in control</h3>
+        <p>Every disclosure is opt-in and revocable. Nothing is shared by default, and nothing lingers after consent is withdrawn.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section" id="cta" style="border-bottom:none;">
+  <div class="wrap">
+    <h2>Ready to see a credential get issued and verified live?</h2>
+    <div class="hero-ctas" style="justify-content:center;">
+      <a class="btn-primary" href="#">Request a Demo</a>
+      <a class="btn-secondary" href="#">Read the Full Problem Statement</a>
+    </div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <span>VeriCred — Verifiable Financial Identity</span>
+  <span class="mono">MICROSOFT INNOVATION CLUB, VIT CHENNAI · FINTECH &amp; COMMERCE</span>
+</footer>
+
+</body>
+</html>
