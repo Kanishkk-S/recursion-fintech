@@ -577,6 +577,63 @@ export default function App() {
     }
   };
 
+  // Soundbox zkTLS Verification Handler
+  const handleVerifySoundbox = (data: {
+    totalInflow: number;
+    criScore: number;
+    scans: number;
+    avgDaily: number;
+    credentialId: string;
+  }) => {
+    // Generate realistic daily distribution matching the 43,500 total
+    const soundboxWages = Array.from({ length: 30 }, (_, i) => {
+      if (i % 7 === 6) return 0; // 4 rest days
+      const base = 43500 / 26;
+      const jitter = (Math.sin(i * 1.8) * 0.15 + 1);
+      return Math.round((base * jitter) / 10) * 10;
+    });
+
+    const updatedProfile: WorkerProfile = {
+      ...profile,
+      cri_score: data.criScore,
+      resilience_tier: "PRIME_RESILIENT",
+      is_zktls_verified: true,
+      is_soundbox_verified: true,
+      verification_status: "ZKTLS_VERIFIED",
+      max_prime_credit_limit_inr: Math.round(data.totalInflow * 0.70),
+      instant_safe_floor_inr: Math.round(data.totalInflow * 0.50),
+      daily_wages_30d: soundboxWages,
+      soundbox_details: {
+        provider: "PhonePe Merchant Soundbox Rail",
+        scans: data.scans,
+        gross_volume: data.totalInflow,
+        avg_daily: data.avgDaily,
+        credential_id: data.credentialId
+      },
+      telemetry_summary: {
+        ...profile.telemetry_summary,
+        monthly_inflow_inr: data.totalInflow,
+        consistency_rate: "94.8%",
+        consistency_ratio: 0.948,
+        active_working_days: 26,
+        daily_wages_30d: soundboxWages,
+        is_zktls_verified: true,
+        is_soundbox_verified: true,
+        verification_status: "ZKTLS_VERIFIED"
+      }
+    };
+
+    setProfile(updatedProfile);
+    setRawCredential(generateWorkerCredential(updatedProfile));
+
+    try {
+      localStorage.setItem('gignite_active_user', JSON.stringify(updatedProfile));
+      localStorage.setItem('gignite_current_user', JSON.stringify({ type: 'worker', worker: updatedProfile }));
+    } catch {
+      // ignore
+    }
+  };
+
   // If no active session, render the Login Page
   if (!session) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
@@ -676,6 +733,7 @@ export default function App() {
             onSendToLender={() => setActiveRole('lender')}
             onRefreshCredential={() => fetchCredential(profile, requestedLoan)}
             onVerifyZkTls={handleVerifyZkTls}
+            onVerifySoundbox={handleVerifySoundbox}
           />
         ) : (
           <LenderView

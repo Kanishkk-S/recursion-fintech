@@ -186,8 +186,10 @@ export const LenderView: React.FC<LenderViewProps> = ({
             {/* Ingested Subject Summary */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
               <div className="bg-[#120826] p-3 rounded-2xl border border-[#1C0B3B]">
-                <span className="text-[10px] text-[#9CA3AF] block">Subject Worker</span>
-                <span className="font-semibold text-white truncate block">{profile.worker_name}</span>
+                <span className="text-[10px] text-[#9CA3AF] block">Subject Holder</span>
+                <span className="font-semibold text-white truncate block">
+                  {profile.worker_name} {profile.primary_domain ? `(${profile.primary_domain})` : ''}
+                </span>
                 <span className="text-[10px] font-mono text-[#6B7280] truncate block mt-0.5">{profile.did}</span>
               </div>
 
@@ -199,7 +201,7 @@ export const LenderView: React.FC<LenderViewProps> = ({
                 <span className={`text-[10px] block font-mono ${
                   profile.cri_score >= activeLender.min_cri ? 'text-emerald-400' : 'text-amber-400'
                 }`}>
-                  CRI Score: {profile.cri_score.toFixed(1)} ({profile.resilience_tier})
+                  CRI Score: {profile.cri_score.toFixed(1)} ({profile.resilience_tier.replace('_', ' ')})
                 </span>
               </div>
             </div>
@@ -209,13 +211,17 @@ export const LenderView: React.FC<LenderViewProps> = ({
               <div className="flex justify-between">
                 <span>Issuer Authority:</span>
                 <span className="text-slate-300 truncate max-w-[220px]">
-                  {rawCredential?.issuer?.id || "did:gignite:authority-node-01"}
+                  {profile.is_soundbox_verified 
+                    ? "Merchant Soundbox Rail (PhonePe Node 04)" 
+                    : (rawCredential?.issuer?.id || "did:gignite:authority-node-01")}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Min Inflow Claim (Guaranteed):</span>
                 <span className={`font-semibold ${isTamperMode ? 'text-rose-400' : 'text-[#10B981]'}`}>
-                  {isTamperMode ? "₹85,000 / mo [TAMPERED]" : `₹${Math.round(profile.telemetry_summary.monthly_inflow_inr * 0.5).toLocaleString('en-IN')} / mo [AUTHENTIC]`}
+                  {isTamperMode 
+                    ? `₹${(profile.telemetry_summary.monthly_inflow_inr + 100000).toLocaleString('en-IN')} / mo [TAMPERED]` 
+                    : `₹${Math.round(profile.telemetry_summary.monthly_inflow_inr * 0.5).toLocaleString('en-IN')} / mo [AUTHENTIC]`}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -299,8 +305,8 @@ export const LenderView: React.FC<LenderViewProps> = ({
                 </div>
                 <div>
                   <h4 className="text-xs sm:text-sm font-bold text-white">1-Bit Payload Tamper Simulation</h4>
-                  <p className="text-[11px] text-[#9CA3AF] mt-0.5">
-                    Injects artificial monthly inflow: ₹25,000 ➔ ₹85,000
+                  <p className="text-[11px] text-[#9CA3AF] mt-0.5 font-mono">
+                    Simulate 1-Bit Payload Tamper (₹{profile.telemetry_summary.monthly_inflow_inr.toLocaleString('en-IN')} ➔ ₹{(profile.telemetry_summary.monthly_inflow_inr + 100000).toLocaleString('en-IN')})
                   </p>
                 </div>
               </div>
@@ -377,17 +383,17 @@ export const LenderView: React.FC<LenderViewProps> = ({
             {underwritingResult ? (
               <div className={`p-4 sm:p-5 rounded-2xl border flex flex-col gap-4 transition-all duration-300 animate-in fade-in ${
                 underwritingResult.decision === 'REJECTED_SECURITY_HALT' || underwritingResult.decision === 'REJECTED_BELOW_MIN_CRI'
-                  ? 'bg-[#2A0815]/60 border-rose-500/40 shadow-lg glow-rose'
+                  ? 'bg-[#2A0815]/80 border-rose-500/60 shadow-lg glow-rose'
                   : underwritingResult.decision === 'APPROVED'
-                  ? 'bg-[#061F15]/60 border-emerald-500/40 shadow-lg glow-emerald'
-                  : 'bg-[#160A2E]/60 border-purple-500/40 shadow-lg glow-purple'
+                  ? 'bg-[#061F15]/80 border-emerald-500/60 shadow-lg glow-emerald'
+                  : 'bg-[#160A2E]/80 border-purple-500/50 shadow-lg glow-purple'
               }`}>
                 
                 {/* Result Header Banner */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     {underwritingResult.decision === 'REJECTED_SECURITY_HALT' ? (
-                      <ShieldAlert className="w-5 h-5 text-rose-400" />
+                      <ShieldAlert className="w-5 h-5 text-rose-400 animate-bounce" />
                     ) : underwritingResult.decision === 'REJECTED_BELOW_MIN_CRI' ? (
                       <AlertTriangle className="w-5 h-5 text-rose-400" />
                     ) : underwritingResult.decision === 'APPROVED' ? (
@@ -419,10 +425,10 @@ export const LenderView: React.FC<LenderViewProps> = ({
                 {/* Scenario 1: Fraud / Tamper Halt */}
                 {underwritingResult.decision === 'REJECTED_SECURITY_HALT' && (
                   <div className="flex flex-col gap-3 text-xs text-slate-300 font-mono">
-                    <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/25 text-rose-300">
-                      <span className="font-bold block mb-1">[!] FRAUD_TAMPER_DETECTED</span>
-                      <p className="leading-relaxed">
-                        {underwritingResult.error || "Signature mismatch on canonical payload. Credential altered after issuance."}
+                    <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 shadow-md">
+                      <span className="font-bold block mb-1 text-rose-400 text-sm">[!] HTTP 403 SECURITY HALT: FRAUD_TAMPER_DETECTED</span>
+                      <p className="leading-relaxed text-xs">
+                        RFC 8785 Canonical Digest Mismatch. Public key signature verification failed. Zero-trust isolation maintained.
                       </p>
                     </div>
 
@@ -477,17 +483,30 @@ export const LenderView: React.FC<LenderViewProps> = ({
                 {/* Scenario 3: Full Approved Loan */}
                 {underwritingResult.decision === 'APPROVED' && (
                   <div className="flex flex-col gap-3.5 text-xs">
+                    <div className="p-3.5 rounded-2xl bg-emerald-950/50 border border-emerald-500/30 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                        <div>
+                          <span className="font-bold text-emerald-400 text-sm block font-mono">HTTP 200 APPROVED</span>
+                          <span className="text-[11px] text-slate-200">Pre-approved credit line sanction cleared by {activeLender.name}</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                        Term: 90 Days
+                      </span>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-2 text-center">
                       <div className="bg-[#07030F] p-3 rounded-2xl border border-emerald-900/40">
-                        <span className="text-[10px] text-[#9CA3AF] block">Sanctioned Limit</span>
+                        <span className="text-[10px] text-[#9CA3AF] block">Sanctioned Credit Line</span>
                         <span className="text-lg font-bold font-mono text-emerald-400">
-                          ₹{underwritingResult.sanctioned_amount?.toLocaleString('en-IN')}
+                          ₹{(underwritingResult.sanctioned_amount || requestedLoan).toLocaleString('en-IN')}
                         </span>
                       </div>
                       <div className="bg-[#07030F] p-3 rounded-2xl border border-emerald-900/40">
                         <span className="text-[10px] text-[#9CA3AF] block">{activeLender.name} APR</span>
                         <span className="text-lg font-bold font-mono text-[#C084FC]">
-                          {underwritingResult.annual_interest_rate_p_a}
+                          {underwritingResult.annual_interest_rate_p_a || "11.5%"}
                         </span>
                       </div>
                     </div>
@@ -499,7 +518,7 @@ export const LenderView: React.FC<LenderViewProps> = ({
                       </div>
                       <div className="flex justify-between mb-1.5">
                         <span>Tenure Duration:</span>
-                        <span>{underwritingResult.tenure_months} Months</span>
+                        <span>{underwritingResult.tenure_months || 3} Months (90 Days)</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Underwriting Audit:</span>

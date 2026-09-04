@@ -41,6 +41,14 @@ export interface WorkerTelemetry {
   primary_domain_category?: string;
   is_zktls_verified?: boolean;
   verification_status?: 'UNVERIFIED_MANUAL_CLAIM' | 'ZKTLS_VERIFIED' | string;
+  is_soundbox_verified?: boolean;
+  soundbox_details?: {
+    provider: string;
+    scans: number;
+    gross_volume: number;
+    avg_daily: number;
+    credential_id: string;
+  };
 }
 
 export interface WorkerProfile {
@@ -62,6 +70,14 @@ export interface WorkerProfile {
   primary_domain_category?: string;
   is_zktls_verified?: boolean;
   verification_status?: 'UNVERIFIED_MANUAL_CLAIM' | 'ZKTLS_VERIFIED' | string;
+  is_soundbox_verified?: boolean;
+  soundbox_details?: {
+    provider: string;
+    scans: number;
+    gross_volume: number;
+    avg_daily: number;
+    credential_id: string;
+  };
 }
 
 export interface W3CCredential {

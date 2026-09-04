@@ -20,11 +20,15 @@ import {
   ChevronDown,
   UserCheck,
   ShoppingBag,
-  Briefcase
+  Briefcase,
+  Volume2,
+  ShieldCheck,
+  Zap
 } from 'lucide-react';
 import type { WorkerProfile, W3CCredential } from '../types';
 import { WORKER_PERSONAS } from '../data/personas';
 import { DailyWageSparkline } from './DailyWageSparkline';
+import { SoundboxModal } from './SoundboxModal';
 
 interface WorkerViewProps {
   profile: WorkerProfile;
@@ -33,6 +37,7 @@ interface WorkerViewProps {
   onSendToLender: () => void;
   onRefreshCredential: () => Promise<void>;
   onVerifyZkTls?: () => Promise<void> | void;
+  onVerifySoundbox?: (data: { totalInflow: number; criScore: number; scans: number; avgDaily: number; credentialId: string; }) => void;
 }
 
 export const WorkerView: React.FC<WorkerViewProps> = ({
@@ -41,11 +46,13 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
   onSelectWorker,
   onSendToLender,
   onRefreshCredential,
-  onVerifyZkTls
+  onVerifyZkTls,
+  onVerifySoundbox
 }) => {
   const [copiedDid, setCopiedDid] = useState<boolean>(false);
   const [copiedJson, setCopiedJson] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [isSoundboxModalOpen, setIsSoundboxModalOpen] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);
 
@@ -428,6 +435,87 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
                   </div>
                 </div>
               ))}
+              {/* PhonePe / Paytm Merchant Soundbox Connector Card */}
+              <div className={`p-4 rounded-2xl border transition-all duration-300 ${
+                profile.is_soundbox_verified
+                  ? 'bg-[#0B1E16]/80 border-emerald-500/30 shadow-md glow-emerald'
+                  : 'bg-[#120826] border-purple-500/25 hover:border-purple-500/40'
+              }`}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                      profile.is_soundbox_verified
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-[#160A2E] text-[#C084FC] border border-[#1C0B3B]'
+                    }`}>
+                      <Volume2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-[#F3F4F6]">PhonePe / Paytm Merchant Soundbox</span>
+                        {profile.is_soundbox_verified ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" />
+                            zkTLS Verified
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                            Awaiting zkTLS Attestation
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-[#9CA3AF] mt-0.5">
+                        {profile.is_soundbox_verified 
+                          ? "1,120 settled UPI QR micro-transactions • T+0 Daily Auto-Settlement"
+                          : "Hardware voice-box oracle for offline tea stalls, kiranas & daily merchants"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right sm:shrink-0 flex sm:flex-col items-center sm:items-end justify-between gap-2">
+                    {profile.is_soundbox_verified ? (
+                      <div>
+                        <span className="text-base font-bold font-mono text-[#10B981]">
+                          +₹43,500.00
+                        </span>
+                        <span className="text-[10px] text-[#6B7280] block font-mono">30d Gross Soundbox Inflow</span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsSoundboxModalOpen(true)}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl purple-magenta-gradient hover:opacity-95 text-white font-bold text-xs shadow-md glow-purple transition-all cursor-pointer"
+                      >
+                        <Zap className="w-3.5 h-3.5 text-[#E9D5FF]" />
+                        <span>⚡ Ingest via Merchant Soundbox</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Verified Micro-Transaction Ledger */}
+                {profile.is_soundbox_verified && (
+                  <div className="pt-3 mt-3 border-t border-emerald-950 flex flex-col gap-2 animate-in fade-in">
+                    <span className="text-[10px] font-mono text-[#9CA3AF] uppercase tracking-wider block">
+                      Attested Micro-Settlement Batches:
+                    </span>
+                    <div className="grid grid-cols-1 gap-1.5 text-xs font-mono">
+                      <div className="p-2 rounded-xl bg-[#07030F] border border-emerald-950 flex items-center justify-between">
+                        <span className="text-slate-300">Chai & Snacks Morning Rush (380 scans)</span>
+                        <span className="text-emerald-400 font-bold">₹5,700 • T+0 Settled</span>
+                      </div>
+                      <div className="p-2 rounded-xl bg-[#07030F] border border-emerald-950 flex items-center justify-between">
+                        <span className="text-slate-300">Afternoon Tap Volume (240 scans)</span>
+                        <span className="text-emerald-400 font-bold">₹3,600 • T+0 Settled</span>
+                      </div>
+                      <div className="p-2 rounded-xl bg-[#07030F] border border-emerald-950 flex items-center justify-between">
+                        <span className="text-slate-300">Evening Rush Hour (500 scans)</span>
+                        <span className="text-emerald-400 font-bold">₹7,500 • T+0 Settled</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Zero Knowledge Privacy Guarantee Note */}
@@ -437,6 +525,27 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
                 <span>Zero-Knowledge Selective Disclosure Enabled</span>
               </div>
               <span className="text-[11px] font-mono text-[#10B981]">GPS & Customer PII Redacted</span>
+            </div>
+
+            {/* Quick Action Button: Send Credential to NBFC Lender Terminal */}
+            <div className="bg-[#120826] p-4 rounded-2xl border border-purple-500/25 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#180933] border border-purple-500/30 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 text-[#C084FC]" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-white">Underwriting Sandbox Link</h4>
+                  <p className="text-[11px] text-[#9CA3AF]">Transfer live credential payload to NBFC underwriting desk</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onSendToLender}
+                className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl purple-magenta-gradient hover:opacity-95 text-white font-bold text-xs shadow-md glow-purple transition-all cursor-pointer shrink-0"
+              >
+                <span>Send Credential to NBFC Lender Terminal</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
 
           </div>
@@ -530,6 +639,20 @@ export const WorkerView: React.FC<WorkerViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* ==================================================================== */}
+      {/* SOUNDBOX zkTLS INGESTION MODAL                                       */}
+      {/* ==================================================================== */}
+      <SoundboxModal
+        isOpen={isSoundboxModalOpen}
+        onClose={() => setIsSoundboxModalOpen(false)}
+        workerName={profile.worker_name}
+        onApplyCredential={(data) => {
+          if (onVerifySoundbox) {
+            onVerifySoundbox(data);
+          }
+        }}
+      />
 
     </div>
   );
