@@ -40,7 +40,7 @@ export function useWorkerProfile(workerId: string = "ramesh-kumar-9872") {
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const response = await fetch(`http://localhost:8000/api/worker/profile?worker_id=${workerId}`);
+        const response = await fetch(`/api/worker/profile?worker_id=${workerId}`);
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
         setProfile(data);

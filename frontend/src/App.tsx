@@ -279,7 +279,7 @@ export default function App() {
   // ----------------------------------------------------------------------------
   const fetchCredential = async (worker: WorkerProfile, loanAmount: number) => {
     try {
-      const credRes = await fetch('http://localhost:8000/api/credential/issue', {
+      const credRes = await fetch('/api/credential/issue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -307,7 +307,7 @@ export default function App() {
 
     async function checkHealthAndFetch() {
       try {
-        const healthRes = await fetch('http://localhost:8000/health');
+        const healthRes = await fetch('/health');
         if (healthRes.ok) {
           if (isMounted) setIsLiveEngine(true);
         } else {
@@ -352,7 +352,7 @@ export default function App() {
     try {
       // If backend live, attempt call; fallback to comprehensive client evaluator
       if (isLiveEngine) {
-        const response = await fetch('http://localhost:8000/api/lender/underwrite', {
+        const response = await fetch('/api/lender/underwrite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -426,7 +426,7 @@ export default function App() {
             {
               day_range: "Weeks 3-4",
               title: "Peak-Hour Inflow Acceleration",
-              action: `Complete ~5 additional delivery orders daily during high-demand slots to boost monthly earnings past ₹${(requestedLoan * 1.5).toLocaleString('en-IN')}.`,
+              action: `Complete ~5 additional delivery orders daily during high-demand slots to boost monthly earnings past â‚¹${(requestedLoan * 1.5).toLocaleString('en-IN')}.`,
               target_delta: `Qualify for ${activeLender.name} Min CRI ${activeLender.min_cri}`
             }
           ]
@@ -507,8 +507,8 @@ export default function App() {
           {
             day_range: "Days 1-7",
             title: "Peak-Hour Shift Optimization",
-            action: `Add ~${trips} orders daily during peak surge slots to narrow the ₹${inflowGap.toLocaleString('en-IN')} inflow gap.`,
-            target_delta: `+₹${(dailyExtra * 7).toLocaleString('en-IN', { maximumFractionDigits: 2 })} weekly inflow`
+            action: `Add ~${trips} orders daily during peak surge slots to narrow the â‚¹${inflowGap.toLocaleString('en-IN')} inflow gap.`,
+            target_delta: `+â‚¹${(dailyExtra * 7).toLocaleString('en-IN', { maximumFractionDigits: 2 })} weekly inflow`
           },
           {
             day_range: "Days 8-14",
@@ -519,8 +519,8 @@ export default function App() {
           {
             day_range: "Days 15-21",
             title: "Telemetry Refresh & Full Disbursal",
-            action: `Re-issue Verifiable Credential to unlock the remaining ₹${gap.toLocaleString('en-IN', { maximumFractionDigits: 2 })} credit line.`,
-            target_delta: `Full ₹${requestedLoan.toLocaleString('en-IN')} Working Capital Disbursal`
+            action: `Re-issue Verifiable Credential to unlock the remaining â‚¹${gap.toLocaleString('en-IN', { maximumFractionDigits: 2 })} credit line.`,
+            target_delta: `Full â‚¹${requestedLoan.toLocaleString('en-IN')} Working Capital Disbursal`
           }
         ]
       },
@@ -767,8 +767,8 @@ export default function App() {
       {/* Footer Strip */}
       <footer className="w-full border-t border-[#17223B] py-4 text-center text-xs text-slate-500 font-mono">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>GIgnite Protocol • Multi-Tenant Verifiable Identity Architecture</span>
-          <span>RFC 8785 Canonical JSON • Ed25519 Cryptographic Proofs</span>
+          <span>GIgnite Protocol â€¢ Multi-Tenant Verifiable Identity Architecture</span>
+          <span>RFC 8785 Canonical JSON â€¢ Ed25519 Cryptographic Proofs</span>
         </div>
       </footer>
 
