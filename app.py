@@ -56,7 +56,7 @@ ISSUER_DID = "did:gignite:authority-node-01"
 ISSUER_KEY_ID = "did:gignite:authority-node-01#key-2026"
 ED25519_SEED = hashlib.sha256(b"gignite_ed25519_authority_node_01_2026").digest()
 SIGNING_SECRET_KEY = b"gignite_ed25519_hsm_secret_authority_node_01_2026"
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gignite.db")
+DB_PATH = "/tmp/gignite.db" if os.environ.get("VERCEL") else os.path.join(os.path.dirname(os.path.abspath(__file__)), "gignite.db")
 
 # Setup Ed25519 Private Key and Public Key
 if HAS_ED25519_NATIVE:
@@ -435,7 +435,7 @@ def health_check():
         "crypto_engine": "Ed25519 Native" if HAS_ED25519_NATIVE else "HMAC-SHA512 Fallback",
         "issuer": ISSUER_DID,
         "users_count": len(USERS_DB),
-        "protocol": "RFC 8785 Canonical JSON • Ed25519",
+        "protocol": "RFC 8785 Canonical JSON â€¢ Ed25519",
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
@@ -980,8 +980,8 @@ def underwrite_loan(req: UnderwriteRequest):
                     {
                         "day_range": "Days 1-7",
                         "title": "Peak-Hour Shift Optimization",
-                        "action": f"Add ~{trips} delivery orders or ₹{daily_extra} daily QR settlements during peak velocity hours.",
-                        "target_delta": f"+₹{round(daily_extra * 7, 2)} weekly inflow"
+                        "action": f"Add ~{trips} delivery orders or â‚¹{daily_extra} daily QR settlements during peak velocity hours.",
+                        "target_delta": f"+â‚¹{round(daily_extra * 7, 2)} weekly inflow"
                     },
                     {
                         "day_range": "Days 8-14",
@@ -992,8 +992,8 @@ def underwrite_loan(req: UnderwriteRequest):
                     {
                         "day_range": "Days 15-21",
                         "title": "Telemetry Refresh & Auto-Unlock",
-                        "action": f"Re-issue Verifiable Credential to automatically unlock the remaining ₹{gap} working capital credit line.",
-                        "target_delta": f"Full ₹{requested_loan} Working Capital Disbursal"
+                        "action": f"Re-issue Verifiable Credential to automatically unlock the remaining â‚¹{gap} working capital credit line.",
+                        "target_delta": f"Full â‚¹{requested_loan} Working Capital Disbursal"
                     }
                 ]
             },
