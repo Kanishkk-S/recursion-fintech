@@ -351,7 +351,7 @@ export default function App() {
 
     try {
       // If backend live, attempt call; fallback to comprehensive client evaluator
-      if (isLiveEngine && profile.worker_id === 'ramesh-kumar-9872') {
+      if (isLiveEngine) {
         const response = await fetch('http://localhost:8000/api/lender/underwrite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -734,6 +734,18 @@ export default function App() {
             onRefreshCredential={() => fetchCredential(profile, requestedLoan)}
             onVerifyZkTls={handleVerifyZkTls}
             onVerifySoundbox={handleVerifySoundbox}
+            onOnboardSuccess={(newWorker) => {
+              setProfile(newWorker);
+              setRawCredential(generateWorkerCredential(newWorker));
+              const defaultLoan = Math.round((newWorker.telemetry_summary?.monthly_inflow_inr || newWorker.monthly_inflow || 40000) * 0.65 / 1000) * 1000;
+              setRequestedLoan(Math.max(10000, defaultLoan));
+              try {
+                localStorage.setItem('gignite_current_user', JSON.stringify({ type: 'worker', worker: newWorker }));
+                localStorage.setItem('gignite_last_email', newWorker.email || `${newWorker.worker_id}@gignite.network`);
+              } catch {
+                // ignore
+              }
+            }}
           />
         ) : (
           <LenderView

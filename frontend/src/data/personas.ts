@@ -156,12 +156,91 @@ export const WORKER_PERSONAS: Record<string, ExtendedWorkerProfile> = {
     verification_status: 'ZKTLS_VERIFIED'
   },
 
+  "murugan-tea-4821": {
+    worker_id: "murugan-tea-4821",
+    worker_name: "Murugan Tea Stall",
+    email: "murugan@phonepe.business",
+    phone: "+91 98450 12345",
+    did: "did:india:merchant:murugan-tea-4821",
+    persona_type: "UPI_MERCHANT",
+    category: "PhonePe Business QR Merchant & Micro-Vendor",
+    credit_bureau_status: "THIN_FILE_VERIFIED_BY_GIGNITE",
+    platform_badges: ["PhonePe Business"],
+    platform_details: [
+      {
+        platform: "PhonePe Business",
+        role: "Verified QR Merchant",
+        rating: 4.95,
+        trips_completed: 4260,
+        verified_active: true,
+        payout_frequency: "Daily Settlement",
+        badge: "PhonePe Top Merchant",
+        payout_amount_inr: 42850.00
+      }
+    ],
+    sources: [
+      {
+        platform: "PhonePe Business",
+        role: "Verified QR Merchant",
+        vpa: "murugantea@ybl",
+        bank_account: "Canara Bank (A/C ****4821)",
+        daily_avg_scans: 142,
+        verified_active: true,
+        payout_frequency: "Daily Settlement",
+        badge: "PhonePe Top Merchant",
+        payout_amount_inr: 42850.00
+      }
+    ],
+    monthly_inflow: 42850.00,
+    active_days: 87,
+    total_window_days: 90,
+    shift_consistency: 0.966,
+    stability: 0.95,
+    margin: 0.65,
+    longevity: 0.85,
+    daily_avg_scans: 142,
+    cri_score: 84.2,
+    resilience_tier: "PRIME_RESILIENT",
+    max_prime_credit_limit_inr: 29995.00,
+    instant_safe_floor_inr: 21425.00,
+    soundbox_details: {
+      provider: "PhonePe Business Soundbox Rail",
+      vpa: "murugantea@ybl",
+      bank: "Canara Bank (A/C ****4821)",
+      scans: 4260,
+      avg_daily_scans: 142,
+      gross_volume: 42850.00,
+      avg_daily: 1428.33,
+      credential_id: "urn:uuid:soundbox-settlement-phonepe-4821"
+    },
+    telemetry_summary: {
+      telemetry_period_days: 90,
+      active_working_days: 87,
+      active_days_ratio: 0.966,
+      consistency_rate: "96.6%",
+      consistency_ratio: 0.966,
+      stability_rate: "95.0%",
+      stability_index: 0.95,
+      monthly_inflow_inr: 42850.00,
+      gross_earnings_180d_inr: 257100.00,
+      net_earnings_180d_inr: 167115.00,
+      zero_income_weeks: 0,
+      daily_avg_scans: 142,
+      margin_rate: 0.65,
+      tenure_score: 0.85,
+      is_zktls_verified: true,
+      is_soundbox_verified: true,
+      verification_status: "ZKTLS_VERIFIED"
+    }
+  },
+
   "vikram-singh-1029": {
     worker_id: "vikram-singh-1029",
     worker_name: "Vikram Singh",
     email: "vikram@zomato.com",
     phone: "+91 98222 33445",
     did: "did:india:worker:1029",
+    persona_type: "GIG_WORKER",
     category: "Entry-Level Food Delivery Partner",
     credit_bureau_status: "THIN_FILE_UNBANKED",
     platform_badges: ["Zomato"],
@@ -374,6 +453,7 @@ export function findAccountByEmail(inputEmail: string): ResolvedAccount {
 
   // 2. Check aliases for workers
   if (normalized.includes('ramesh')) return { type: 'worker', worker: WORKER_PERSONAS['ramesh-kumar-9872'] };
+  if (normalized.includes('murugan') || normalized.includes('tea')) return { type: 'worker', worker: WORKER_PERSONAS['murugan-tea-4821'] };
   if (normalized.includes('priya')) return { type: 'worker', worker: WORKER_PERSONAS['priya-sharma-3411'] };
   if (normalized.includes('vikram')) return { type: 'worker', worker: WORKER_PERSONAS['vikram-singh-1029'] };
 

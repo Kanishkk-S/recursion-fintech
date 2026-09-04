@@ -42,9 +42,15 @@ export interface WorkerTelemetry {
   is_zktls_verified?: boolean;
   verification_status?: 'UNVERIFIED_MANUAL_CLAIM' | 'ZKTLS_VERIFIED' | string;
   is_soundbox_verified?: boolean;
+  daily_avg_scans?: number;
+  margin_rate?: number;
+  tenure_score?: number;
   soundbox_details?: {
     provider: string;
+    vpa?: string;
+    bank?: string;
     scans: number;
+    avg_daily_scans?: number;
     gross_volume: number;
     avg_daily: number;
     credential_id: string;
@@ -54,16 +60,28 @@ export interface WorkerTelemetry {
 export interface WorkerProfile {
   worker_id: string;
   worker_name: string;
+  name?: string;
+  email?: string;
+  persona_type?: 'GIG_WORKER' | 'UPI_MERCHANT' | string;
   did: string;
   category: string;
   credit_bureau_status: string;
   platform_badges: string[];
   platform_details?: PlatformRecord[];
+  sources?: any[];
   telemetry_summary: WorkerTelemetry;
   cri_score: number;
   resilience_tier: string;
   max_prime_credit_limit_inr: number;
   instant_safe_floor_inr: number;
+  monthly_inflow?: number;
+  active_days?: number;
+  total_window_days?: number;
+  shift_consistency?: number;
+  stability?: number;
+  margin?: number;
+  longevity?: number;
+  daily_avg_scans?: number;
   daily_wages_30d?: number[];
   earning_bracket?: 'entry' | 'standard' | 'high' | string;
   primary_domain?: string;
@@ -73,7 +91,10 @@ export interface WorkerProfile {
   is_soundbox_verified?: boolean;
   soundbox_details?: {
     provider: string;
+    vpa?: string;
+    bank?: string;
     scans: number;
+    avg_daily_scans?: number;
     gross_volume: number;
     avg_daily: number;
     credential_id: string;
