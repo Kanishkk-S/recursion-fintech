@@ -640,32 +640,32 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#07030F] text-[#F3F4F6] flex flex-col font-sans selection:bg-purple-600 selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#060913] text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white relative overflow-x-hidden">
       
       {/* Subtle background ambient illumination */}
-      <div className="fixed top-0 left-1/3 w-[500px] h-[350px] bg-[#240552]/08 rounded-full blur-[160px] pointer-events-none -translate-y-1/2"></div>
-      <div className="fixed bottom-0 right-1/4 w-[400px] h-[400px] bg-[#7E22CE]/05 rounded-full blur-[180px] pointer-events-none translate-y-1/2"></div>
+      <div className="fixed top-0 left-1/3 w-[600px] h-[350px] bg-blue-600/05 rounded-full blur-[160px] pointer-events-none -translate-y-1/2"></div>
+      <div className="fixed bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-600/05 rounded-full blur-[180px] pointer-events-none translate-y-1/2"></div>
 
       {/* ==================================================================== */}
       {/* GLOBAL TOP NAVIGATION BAR                                            */}
       {/* ==================================================================== */}
-      <header className="w-full bg-[#0D061C]/90 backdrop-blur-md border-b border-[#1C0B3B] sticky top-0 z-40">
+      <header className="w-full bg-[#090D1A]/90 backdrop-blur-md border-b border-[#17223B] sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
           
           {/* Left: GIgnite Brand Badge */}
           <div className="flex items-center gap-3 self-start md:self-auto">
-            <div className="w-10 h-10 rounded-2xl bg-[#140929] border border-purple-500/30 flex items-center justify-center shadow-md shadow-purple-950/40 p-1">
-              <GIgniteLogo size={32} className="w-8 h-8" />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 border border-blue-400/30 flex items-center justify-center shadow-lg shadow-blue-900/40 p-1">
+              <GIgniteLogo size={32} className="w-8 h-8 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-lg tracking-tight text-white">GIgnite</span>
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#7E22CE]/15 text-[#D8B4FE] border border-purple-500/20 tracking-wider">
-                  AIRLOCK
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-blue-500/15 text-blue-300 border border-blue-500/20 tracking-wider">
+                  STUDIO
                 </span>
               </div>
-              <p className="text-[10px] text-[#9CA3AF] font-medium hidden sm:block">
-                Zero-Trust Verifiable Financial Identity Engine
+              <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
+                Zero-Trust Verifiable Financial Identity & Underwriting Engine
               </p>
             </div>
           </div>
@@ -684,23 +684,23 @@ export default function App() {
           <div className="flex items-center gap-2.5 self-end md:self-auto">
             
             {/* Live Engine Indicator */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#07030F] border border-[#1C0B3B]">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0E1424] border border-[#17223B]">
               {isLiveEngine ? (
                 <>
-                  <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
-                  <span className="text-[11px] font-bold text-[#10B981] tracking-wider font-mono">LIVE</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-[11px] font-bold text-emerald-400 tracking-wider font-mono">LIVE ENGINE</span>
                 </>
               ) : (
                 <>
                   <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                  <span className="text-[11px] font-bold text-amber-400 tracking-wider font-mono">MOCK</span>
+                  <span className="text-[11px] font-bold text-amber-400 tracking-wider font-mono">MOCK ENGINE</span>
                 </>
               )}
             </div>
 
             {/* Logged in User Pill */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-[#140929] border border-purple-500/30 text-xs">
-              <span className="text-[#9CA3AF]">Logged in:</span>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-[#0E1424] border border-[#17223B] text-xs">
+              <span className="text-slate-400">Logged in:</span>
               <span className="font-bold text-white truncate max-w-[120px]">
                 {activeRole === 'worker' ? profile.worker_name.split(' ')[0] : activeLender.name.split(' ')[0]}
               </span>
@@ -710,7 +710,7 @@ export default function App() {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#180933] border border-[#1C0B3B] hover:border-rose-500/40 text-xs font-semibold text-[#9CA3AF] hover:text-rose-300 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#121B30] border border-[#17223B] hover:border-rose-500/40 text-xs font-semibold text-slate-300 hover:text-rose-300 transition-colors cursor-pointer"
               title="Sign Out to Login Portal"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -753,7 +753,7 @@ export default function App() {
       </main>
 
       {/* Footer Strip */}
-      <footer className="w-full border-t border-[#1C0B3B] py-4 text-center text-xs text-[#6B7280] font-mono">
+      <footer className="w-full border-t border-[#17223B] py-4 text-center text-xs text-slate-500 font-mono">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>GIgnite Protocol • Multi-Tenant Verifiable Identity Architecture</span>
           <span>RFC 8785 Canonical JSON • Ed25519 Cryptographic Proofs</span>
