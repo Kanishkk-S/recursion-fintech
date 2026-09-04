@@ -357,23 +357,54 @@ def format_profile(data: dict) -> dict:
 # PYDANTIC SCHEMAS
 # ==============================================================================
 
+# ==============================================================================
+# AUTO-DETECTION HELPER
+# ==============================================================================
+
+def detect_persona_from_identifier(identifier: str) -> str:
+    """
+    Auto-detects persona type from identifier:
+    - UPI handle (@ybl, @upi, @okhdfcbank, @paytm, @axl, etc. or no TLD dot after @) -> UPI_MERCHANT
+    - Email address (@gmail.com, @yahoo.com, etc.) -> GIG_WORKER
+    """
+    clean = identifier.strip().lower()
+    upi_handles = [
+        "@ybl", "@upi", "@okhdfcbank", "@paytm", "@axl", "@ibl", 
+        "@oksbi", "@okaxis", "@icici", "@barodampay", "@kotak", 
+        "@freecharge", "@idfcbank", "@aubank", "@pingpay", "@apl"
+    ]
+    for handle in upi_handles:
+        if handle in clean:
+            return "UPI_MERCHANT"
+    
+    if "@" in clean:
+        parts = clean.split("@", 1)
+        domain_part = parts[1]
+        if "." not in domain_part:
+            return "UPI_MERCHANT"
+    
+    return "GIG_WORKER"
+
+# ==============================================================================
+# PYDANTIC SCHEMAS
+# ==============================================================================
+
 class WorkerOnboardRequest(BaseModel):
-    worker_id: Optional[str] = None
     full_name: str
-    persona_type: str = "GIG_WORKER"  # "GIG_WORKER" | "UPI_MERCHANT"
-    source_name: str = "PhonePe Business"
-    monthly_inflow: float = 40000.0
-    active_days: int = 85
-    total_window_days: int = 90
-    margin_rate: float = 0.70
-    tenure_score: float = 0.85
-    stability: Optional[float] = 0.95
+    identifier: Optional[str] = None
     email: Optional[str] = None
-    vpa: Optional[str] = None
-    bank_account: Optional[str] = None
+    worker_id: Optional[str] = None
+    monthly_inflow: float = 45000.0
+    active_days: int = 85
+    total_window_days: Optional[int] = 90
+    persona_type: Optional[str] = None  # Auto-detected if omitted
+    source_name: Optional[str] = None
+    margin_rate: Optional[float] = 0.70
+    tenure_score: Optional[float] = 0.90
+    stability: Optional[float] = None
     daily_avg_scans: Optional[int] = None
-    rating: Optional[float] = 4.85
-    trips_completed: Optional[int] = 500
+    rating: Optional[float] = None
+    trips_completed: Optional[int] = None
 
 class WorkerRegisterRequest(BaseModel):
     email: str
@@ -443,11 +474,11 @@ def get_worker_profile(
     if worker_id and worker_id in USERS_DB:
         return format_profile(USERS_DB[worker_id])
 
-    # 2. Email lookup in USERS_DB
+    # 2. Email / Identifier lookup in USERS_DB
     if email:
         clean_email = email.strip().lower()
         for u in USERS_DB.values():
-            if u.get("email", "").lower() == clean_email:
+            if u.get("email", "").lower() == clean_email or u.get("worker_id", "").lower() == clean_email:
                 return format_profile(u)
 
     # 3. Partial prefix search in USERS_DB
@@ -516,80 +547,130 @@ def get_worker_profile(
 @app.post("/api/worker/onboard", status_code=201)
 def onboard_worker(req: WorkerOnboardRequest):
     """
-    Onboards a new earner (Gig Worker or UPI Merchant), computes CRI dynamically,
-    stores profile into USERS_DB, and returns the structured profile.
+    Unified onboarding endpoint:
+    - Accepts full_name, identifier (Email ID or UPI ID), monthly_inflow, active_days.
+    - Auto-detects UPI Merchant vs Gig Platform Partner.
+    - Computes CRI dynamically:
+      consistency = min(1.0, active_days / 90.0)
+      stability = 0.95 (merchant) or 1.0 (gig delivery)
+      CRI = (0.35 * stability + 0.35 * consistency + 0.20 * 0.70 + 0.10 * 0.90) * 100
+      tier = "PRIME_RESILIENT" if CRI >= 75.0 else "GROWTH_NEAR_PRIME"
+    - Persists in USERS_DB & SQLite.
     """
-    # 1. Clean and generate identifiers
+    # 1. Resolve Identifier and Persona Type
     name_clean = req.full_name.strip()
-    slug = name_clean.lower().replace(" ", "-").replace("'", "").replace(".", "")
-    worker_id = req.worker_id.strip().lower() if req.worker_id and req.worker_id.strip() else f"{slug}-{datetime.now().strftime('%M%S')}"
-    
-    email_clean = req.email.strip().lower() if req.email and req.email.strip() else f"{slug}@gignite.network"
-    did = f"did:india:merchant:{worker_id}" if req.persona_type == "UPI_MERCHANT" else f"did:india:worker:{worker_id}"
+    identifier_clean = (req.identifier or req.email or "").strip().lower()
+    if not identifier_clean:
+        slug_prefix = name_clean.lower().replace(" ", "-").replace("'", "").replace(".", "")
+        identifier_clean = f"{slug_prefix}@gignite.network"
 
-    # 2. Consistency & CRI Calculation
-    window_days = max(1, req.total_window_days)
-    active_days = min(window_days, max(1, req.active_days))
-    consistency = round(active_days / window_days, 3)
-    stability = req.stability if req.stability is not None else 0.95
-    margin = req.margin_rate if req.margin_rate is not None else 0.70
-    longevity = req.tenure_score if req.tenure_score is not None else 0.85
-
-    computed_cri = calculate_cri(stability, consistency, margin, longevity)
-    tier = get_resilience_tier(computed_cri)
-
-    # 3. Build Source / Platform Records
-    if req.persona_type == "UPI_MERCHANT":
-        source_record = {
-            "platform": req.source_name,
-            "role": "Verified QR Merchant",
-            "vpa": req.vpa or f"{slug}@ybl",
-            "bank_account": req.bank_account or "HDFC Bank (A/C ****8821)",
-            "daily_avg_scans": req.daily_avg_scans or int(req.monthly_inflow / (30 * 180)),
-            "verified_active": True,
-            "payout_frequency": "Daily Settlement",
-            "badge": f"{req.source_name} Top Merchant",
-            "payout_amount_inr": req.monthly_inflow
-        }
-        category = f"{req.source_name} QR Merchant & Micro-Vendor"
+    # Auto-detect persona if not explicitly specified
+    if req.persona_type in ["UPI_MERCHANT", "GIG_WORKER"]:
+        detected_persona = req.persona_type
     else:
-        source_record = {
-            "platform": req.source_name,
-            "role": f"{req.source_name} Fleet Partner",
-            "rating": req.rating or 4.88,
-            "trips_completed": req.trips_completed or 450,
-            "verified_active": True,
-            "payout_frequency": "Weekly",
-            "badge": f"{req.source_name} Verified Partner",
-            "payout_amount_inr": req.monthly_inflow
-        }
-        category = f"{req.source_name} Fleet Partner"
+        detected_persona = detect_persona_from_identifier(identifier_clean)
 
-    # 4. Construct Complete Profile Dict
+    is_merchant = (detected_persona == "UPI_MERCHANT")
+
+    # 2. Worker ID & DID Generation
+    clean_slug = name_clean.lower().replace(" ", "-").replace("'", "").replace(".", "")
+    if req.worker_id and req.worker_id.strip():
+        worker_id = req.worker_id.strip().lower()
+    elif "@" in identifier_clean:
+        prefix = identifier_clean.split("@")[0].replace(".", "-")
+        worker_id = f"{prefix}-{datetime.now().strftime('%M%S')}"
+    else:
+        worker_id = f"{clean_slug}-{datetime.now().strftime('%M%S')}"
+
+    did = f"did:india:merchant:{worker_id}" if is_merchant else f"did:india:worker:{worker_id}"
+
+    # 3. Dynamic Consistency & CRI Calculation
+    window_days = req.total_window_days or 90
+    active_days = max(1, min(window_days, req.active_days))
+    consistency = round(min(1.0, active_days / 90.0), 3)
+
+    stability = req.stability if req.stability is not None else (0.95 if is_merchant else 1.0)
+    margin = req.margin_rate if req.margin_rate is not None else 0.70
+    longevity = req.tenure_score if req.tenure_score is not None else 0.90
+
+    # CRI Formula: (0.35 * stability + 0.35 * consistency + 0.20 * 0.70 + 0.10 * 0.90) * 100
+    computed_cri = calculate_cri(stability, consistency, margin, longevity)
+    tier = "PRIME_RESILIENT" if computed_cri >= 75.0 else "GROWTH_NEAR_PRIME"
+
+    # 4. Persona Source & Badges Auto-Configuration
+    monthly_inflow = float(req.monthly_inflow)
+    if is_merchant:
+        source_name = req.source_name or "PhonePe / UPI Merchant QR"
+        category = "PhonePe / UPI QR Merchant"
+        platform_badges = ["PhonePe Business", "UPI Merchant QR"]
+        scans = req.daily_avg_scans or max(30, int(monthly_inflow / (30 * 180)))
+        sources = [
+            {
+                "platform": "PhonePe Business",
+                "role": "Verified QR Merchant",
+                "vpa": identifier_clean,
+                "bank_account": "Canara Bank (A/C ****4821)",
+                "daily_avg_scans": scans,
+                "verified_active": True,
+                "payout_frequency": "T+0 Daily Settlement",
+                "badge": "PhonePe Top Merchant",
+                "payout_amount_inr": monthly_inflow
+            }
+        ]
+    else:
+        source_name = req.source_name or "Swiggy / Uber Telemetry"
+        category = "Swiggy + Uber Fleet Partner"
+        platform_badges = ["Swiggy", "Uber India"]
+        trips = req.trips_completed or int(active_days * 12)
+        sources = [
+            {
+                "platform": "Swiggy",
+                "role": "Food Delivery Partner",
+                "rating": req.rating or 4.92,
+                "trips_completed": int(trips * 0.6),
+                "verified_active": True,
+                "payout_frequency": "Weekly",
+                "badge": "Swiggy Star Rider",
+                "payout_amount_inr": round(monthly_inflow * 0.56, 2)
+            },
+            {
+                "platform": "Uber India",
+                "role": "Premier Ride Driver",
+                "rating": 4.88,
+                "trips_completed": int(trips * 0.4),
+                "verified_active": True,
+                "payout_frequency": "Daily Instant",
+                "badge": "Uber Diamond Partner",
+                "payout_amount_inr": round(monthly_inflow * 0.44, 2)
+            }
+        ]
+
+    # 5. Build Complete Profile
     new_profile = {
         "worker_id": worker_id,
         "name": name_clean,
         "full_name": name_clean,
         "worker_name": name_clean,
-        "email": email_clean,
-        "persona_type": req.persona_type,
+        "email": identifier_clean,
+        "identifier": identifier_clean,
+        "persona_type": detected_persona,
         "did": did,
         "category": category,
         "credit_bureau_status": "THIN_FILE_VERIFIED_BY_GIGNITE",
-        "platform_badges": [req.source_name],
-        "sources": [source_record],
-        "monthly_inflow": req.monthly_inflow,
+        "platform_badges": platform_badges,
+        "sources": sources,
+        "monthly_inflow": monthly_inflow,
         "active_days": active_days,
         "total_window_days": window_days,
         "shift_consistency": consistency,
         "stability": stability,
         "margin": margin,
         "longevity": longevity,
-        "daily_avg_scans": req.daily_avg_scans,
+        "daily_avg_scans": req.daily_avg_scans if is_merchant else None,
         "cri_score": computed_cri,
         "resilience_tier": tier,
-        "max_prime_credit_limit_inr": round(req.monthly_inflow * 0.70, 2),
-        "instant_safe_floor_inr": round(req.monthly_inflow * 0.50, 2),
+        "max_prime_credit_limit_inr": round(monthly_inflow * 0.70, 2),
+        "instant_safe_floor_inr": round(monthly_inflow * 0.50, 2),
         "telemetry_summary": {
             "telemetry_period_days": window_days,
             "active_working_days": active_days,
@@ -598,34 +679,34 @@ def onboard_worker(req: WorkerOnboardRequest):
             "consistency_ratio": consistency,
             "stability_rate": f"{round(stability * 100, 1)}%",
             "stability_index": stability,
-            "monthly_inflow_inr": req.monthly_inflow,
-            "gross_earnings_180d_inr": round(req.monthly_inflow * (180 / 30), 2),
-            "net_earnings_180d_inr": round(req.monthly_inflow * margin * (180 / 30), 2),
-            "zero_income_weeks": 0 if consistency > 0.85 else 1,
+            "monthly_inflow_inr": monthly_inflow,
+            "gross_earnings_180d_inr": round(monthly_inflow * 6, 2),
+            "net_earnings_180d_inr": round(monthly_inflow * margin * 6, 2),
+            "zero_income_weeks": 0,
             "margin_rate": margin,
             "tenure_score": longevity,
+            "daily_avg_scans": (req.daily_avg_scans or int(monthly_inflow / (30 * 180))) if is_merchant else None,
             "is_zktls_verified": True,
-            "is_soundbox_verified": (req.persona_type == "UPI_MERCHANT"),
+            "is_soundbox_verified": is_merchant,
             "verification_status": "ZKTLS_VERIFIED"
         }
     }
 
-    if req.persona_type == "UPI_MERCHANT":
+    if is_merchant:
         new_profile["soundbox_details"] = {
-            "provider": f"{req.source_name} Rail",
-            "vpa": req.vpa or f"{slug}@ybl",
-            "bank": req.bank_account or "HDFC Bank (A/C ****8821)",
-            "scans": (req.daily_avg_scans or 120) * 30,
-            "avg_daily_scans": req.daily_avg_scans or 120,
-            "gross_volume": req.monthly_inflow,
-            "avg_daily": round(req.monthly_inflow / 30, 2),
+            "provider": "PhonePe Business Soundbox Rail",
+            "vpa": identifier_clean,
+            "bank": "Canara Bank (A/C ****4821)",
+            "scans": (req.daily_avg_scans or int(monthly_inflow / (30 * 180))) * 30,
+            "avg_daily_scans": req.daily_avg_scans or int(monthly_inflow / (30 * 180)),
+            "gross_volume": monthly_inflow,
+            "avg_daily": round(monthly_inflow / 30.0, 2),
             "credential_id": f"urn:uuid:soundbox-{worker_id}"
         }
 
-    # 5. Save to USERS_DB
+    # 6. Save in USERS_DB and Sync with SQLite
     USERS_DB[worker_id] = new_profile
 
-    # 6. Sync to SQLite for persistence
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -633,14 +714,14 @@ def onboard_worker(req: WorkerOnboardRequest):
         INSERT OR REPLACE INTO workers (email, name, did, cri_score, resilience_tier, monthly_inflow, shift_consistency, platforms_json)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            email_clean,
+            identifier_clean,
             name_clean,
             did,
             computed_cri,
             tier,
-            req.monthly_inflow,
+            monthly_inflow,
             consistency,
-            json.dumps([source_record])
+            json.dumps(sources)
         ))
         conn.commit()
         conn.close()
